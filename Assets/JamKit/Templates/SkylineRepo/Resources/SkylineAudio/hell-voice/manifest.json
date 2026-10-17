@@ -1,0 +1,757 @@
+{
+ "about": "PLACEHOLDER voices for timing only (Kokoro-82M TTS). The creator writes all dialogue and picks the final voices. Source: docs/HELL-SCRIPT.md; rebuild with make_hell_voices.py.",
+ "loudnessLufs": -18.0,
+ "sampleRate": 24000,
+ "speakers": {
+  "god": {
+   "voice": "bf_isabella",
+   "speed": 1.0
+  },
+  "vesper": {
+   "voice": "af_kore",
+   "speed": 0.92
+  },
+  "narrator": {
+   "voice": "bm_george",
+   "speed": 0.92
+  }
+ },
+ "lines": [
+  {
+   "key": "open-01",
+   "speaker": "narrator",
+   "text": "Your sister is dead.",
+   "resource": "SkylineAudio/hell-voice/narrator/open-01",
+   "seconds": 2.41,
+   "trigger": "Start pressed, card 1"
+  },
+  {
+   "key": "open-02",
+   "speaker": "narrator",
+   "text": "You didn't grieve. You went, furious, to the one who took her.",
+   "resource": "SkylineAudio/hell-voice/narrator/open-02",
+   "seconds": 4.29,
+   "trigger": "card 2"
+  },
+  {
+   "key": "open-03",
+   "speaker": "god",
+   "text": "Mortals usually wait their turn. You're early. I could fix that.",
+   "resource": "SkylineAudio/hell-voice/god/open-03",
+   "seconds": 4.08,
+   "trigger": "card 3"
+  },
+  {
+   "key": "open-04",
+   "speaker": "god",
+   "text": "...Wait. I've had the funniest idea.",
+   "resource": "SkylineAudio/hell-voice/god/open-04",
+   "seconds": 2.64,
+   "trigger": "card 4"
+  },
+  {
+   "key": "open-05",
+   "speaker": "god",
+   "text": "Lucifer took a bride down there alive. Vesper. Kill her. Teach him whose souls these are. And do me a few favours on the way.",
+   "resource": "SkylineAudio/hell-voice/god/open-05",
+   "seconds": 7.51,
+   "trigger": "card 5"
+  },
+  {
+   "key": "open-06",
+   "speaker": "god",
+   "text": "Shadow to hide in. Time to bend. A door into Hell, which I don't have. Your sister is down there too. Oh, and don't take too long.",
+   "resource": "SkylineAudio/hell-voice/god/open-06",
+   "seconds": 7.47,
+   "trigger": "card 6"
+  },
+  {
+   "key": "tut-paths",
+   "speaker": "god",
+   "text": "Two ways through every room. The long safe one, and the one I'd take.",
+   "resource": "SkylineAudio/hell-voice/god/tut-paths",
+   "seconds": 4.31,
+   "trigger": "the first room's entry, floor 1"
+  },
+  {
+   "key": "tut-step",
+   "speaker": "god",
+   "text": "See the dark there? Step into it. Shadows are doors, if you're mine.",
+   "resource": "SkylineAudio/hell-voice/god/tut-step",
+   "seconds": 4.09,
+   "trigger": "the first dark landing in Step range"
+  },
+  {
+   "key": "tut-dilate",
+   "speaker": "god",
+   "text": "Aim while you're flying. The faster you move, the longer the world waits.",
+   "resource": "SkylineAudio/hell-voice/god/tut-dilate",
+   "seconds": 4.5,
+   "trigger": "the first time you are fast and airborne with an enemy in view"
+  },
+  {
+   "key": "tut-rewind",
+   "speaker": "god",
+   "text": "That looked fatal. Take four seconds back. I'm only lending them.",
+   "resource": "SkylineAudio/hell-voice/god/tut-rewind",
+   "seconds": 4.02,
+   "trigger": "the first hit that leaves you under 30 health, or the first lethal bolt in flight"
+  },
+  {
+   "key": "tut-lava",
+   "speaker": "god",
+   "text": "That's lava. It's hot. I really shouldn't have to tell you this.",
+   "resource": "SkylineAudio/hell-voice/god/tut-lava",
+   "seconds": 3.88,
+   "trigger": "the first lava contact"
+  },
+  {
+   "key": "tut-collapse",
+   "speaker": "god",
+   "text": "The floor's leaving. I'd leave with it. Ahead of it, ideally.",
+   "resource": "SkylineAudio/hell-voice/god/tut-collapse",
+   "seconds": 4.04,
+   "trigger": "the Collapse room's start"
+  },
+  {
+   "key": "tut-carry",
+   "speaker": "god",
+   "text": "Both hands. No stepping through shadows until you put it down.",
+   "resource": "SkylineAudio/hell-voice/god/tut-carry",
+   "seconds": 3.79,
+   "trigger": "first pick-up of the Soul Lantern (or the hourglass)"
+  },
+  {
+   "key": "tut-pick",
+   "speaker": "god",
+   "text": "A gift. Pick one. Don't make me regret my generosity.",
+   "resource": "SkylineAudio/hell-voice/god/tut-pick",
+   "seconds": 3.88,
+   "trigger": "the first skill pick opens"
+  },
+  {
+   "key": "tut-job",
+   "speaker": "god",
+   "text": "Oh, while you're down there. A small favour. You'll see my mark.",
+   "resource": "SkylineAudio/hell-voice/god/tut-job",
+   "seconds": 3.7,
+   "trigger": "the first job pocket comes into view"
+  },
+  {
+   "key": "death-01",
+   "speaker": "god",
+   "text": "No, no. You die when I say. Up.",
+   "resource": "SkylineAudio/hell-voice/god/death-01",
+   "seconds": 2.83,
+   "trigger": "a death (rotation)"
+  },
+  {
+   "key": "death-02",
+   "speaker": "god",
+   "text": "That one comes off her clock, you know.",
+   "resource": "SkylineAudio/hell-voice/god/death-02",
+   "seconds": 2.41,
+   "trigger": "a death (rotation)"
+  },
+  {
+   "key": "death-03",
+   "speaker": "god",
+   "text": "Embarrassing. For both of us. Again.",
+   "resource": "SkylineAudio/hell-voice/god/death-03",
+   "seconds": 2.95,
+   "trigger": "a death (rotation)"
+  },
+  {
+   "key": "death-04",
+   "speaker": "god",
+   "text": "I'm counting. She's counting too.",
+   "resource": "SkylineAudio/hell-voice/god/death-04",
+   "seconds": 2.47,
+   "trigger": "a death (rotation)"
+  },
+  {
+   "key": "death-05",
+   "speaker": "god",
+   "text": "She let you live once. Don't make it a habit.",
+   "resource": "SkylineAudio/hell-voice/god/death-05",
+   "seconds": 3.08,
+   "trigger": "a death in the boss fight"
+  },
+  {
+   "key": "job-viscount-brief",
+   "speaker": "god",
+   "text": "There's a viscount on a balcony down there who keeps sending me fruit baskets. Make it stop. Permanently.",
+   "resource": "SkylineAudio/hell-voice/god/job-viscount-brief",
+   "seconds": 6.31,
+   "trigger": "The Viscount of Cinders (Six Sigils, floor 1): briefing"
+  },
+  {
+   "key": "job-viscount-done",
+   "speaker": "god",
+   "text": "No more pears. Bless you.",
+   "resource": "SkylineAudio/hell-voice/god/job-viscount-done",
+   "seconds": 2.17,
+   "trigger": "done"
+  },
+  {
+   "key": "job-viscount-fail",
+   "speaker": "god",
+   "text": "He got away. Expect a basket. Addressed to YOU.",
+   "resource": "SkylineAudio/hell-voice/god/job-viscount-fail",
+   "seconds": 3.43,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-overdue-brief",
+   "speaker": "god",
+   "text": "Albrecht Huss is three hundred years overdue. He's hiding in a cage. Cute. Step in and collect him.",
+   "resource": "SkylineAudio/hell-voice/god/job-overdue-brief",
+   "seconds": 6.12,
+   "trigger": "The Overdue Soul (Break the Chains, floor 1): briefing"
+  },
+  {
+   "key": "job-overdue-done",
+   "speaker": "god",
+   "text": "Filed. Three centuries late, but filed.",
+   "resource": "SkylineAudio/hell-voice/god/job-overdue-done",
+   "seconds": 3.0,
+   "trigger": "done"
+  },
+  {
+   "key": "job-overdue-fail",
+   "speaker": "god",
+   "text": "You walked past him. He waved. I saw.",
+   "resource": "SkylineAudio/hell-voice/god/job-overdue-fail",
+   "seconds": 2.85,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-hourglass-brief",
+   "speaker": "god",
+   "text": "One of my reapers dropped my good hourglass down there. Fetch it. Don't shake it.",
+   "resource": "SkylineAudio/hell-voice/god/job-hourglass-brief",
+   "seconds": 4.74,
+   "trigger": "The Lost Hourglass (Ooze Wells, floor 1): briefing"
+  },
+  {
+   "key": "job-hourglass-done",
+   "speaker": "god",
+   "text": "Oh, it's even still running. Good boy.",
+   "resource": "SkylineAudio/hell-voice/god/job-hourglass-done",
+   "seconds": 2.9,
+   "trigger": "done"
+  },
+  {
+   "key": "job-hourglass-fail",
+   "speaker": "god",
+   "text": "You left it. On the floor. In HELL.",
+   "resource": "SkylineAudio/hell-voice/god/job-hourglass-fail",
+   "seconds": 2.44,
+   "trigger": "failed"
+  },
+  {
+   "key": "v1-01",
+   "speaker": "vesper",
+   "text": "Who let a living thing down here? ...Oh. You smell of her. The bone collector.",
+   "resource": "SkylineAudio/hell-voice/vesper/v1-01",
+   "seconds": 4.83,
+   "trigger": "the Lantern picked up (or the fallback)"
+  },
+  {
+   "key": "v1-02",
+   "speaker": "vesper",
+   "text": "Turn around. Whatever she promised you, she's lying, or she's bored.",
+   "resource": "SkylineAudio/hell-voice/vesper/v1-02",
+   "seconds": 4.52,
+   "trigger": "follows"
+  },
+  {
+   "key": "v1-03",
+   "speaker": "vesper",
+   "text": "I'll be at the bottom. Everything reaches the bottom eventually.",
+   "resource": "SkylineAudio/hell-voice/vesper/v1-03",
+   "seconds": 4.3,
+   "trigger": "follows"
+  },
+  {
+   "key": "v1-god",
+   "speaker": "god",
+   "text": "Don't chat with the target. It's unprofessional.",
+   "resource": "SkylineAudio/hell-voice/god/v1-god",
+   "seconds": 3.08,
+   "trigger": "after the beat"
+  },
+  {
+   "key": "job-ledger-brief",
+   "speaker": "god",
+   "text": "Some clerk is stamping my dead 'CANCELLED'. Burn his book. Not him. Well. Him too, if he fusses.",
+   "resource": "SkylineAudio/hell-voice/god/job-ledger-brief",
+   "seconds": 5.79,
+   "trigger": "The Ledger of Ash (Soul Lantern, floor 2): briefing"
+  },
+  {
+   "key": "job-ledger-done",
+   "speaker": "god",
+   "text": "Ashes. Lovely. Paperwork is the real Hell.",
+   "resource": "SkylineAudio/hell-voice/god/job-ledger-done",
+   "seconds": 3.31,
+   "trigger": "done"
+  },
+  {
+   "key": "job-ledger-fail",
+   "speaker": "god",
+   "text": "Filed. In triplicate. I hate him so much.",
+   "resource": "SkylineAudio/hell-voice/god/job-ledger-fail",
+   "seconds": 3.26,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-poacher-brief",
+   "speaker": "god",
+   "text": "A scythe demon is poaching my souls and selling them by the jar. Kill him from the dark. He spooks.",
+   "resource": "SkylineAudio/hell-voice/god/job-poacher-brief",
+   "seconds": 6.18,
+   "trigger": "The Poacher (Hold the Brand, floor 2): briefing"
+  },
+  {
+   "key": "job-poacher-done",
+   "speaker": "god",
+   "text": "Quietly done. I didn't even hear it, and I hear everything.",
+   "resource": "SkylineAudio/hell-voice/god/job-poacher-done",
+   "seconds": 3.57,
+   "trigger": "done"
+  },
+  {
+   "key": "job-poacher-fail",
+   "speaker": "god",
+   "text": "He spooked. Through a rift, with my jars.",
+   "resource": "SkylineAudio/hell-voice/god/job-poacher-fail",
+   "seconds": 2.96,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-whelp-brief",
+   "speaker": "god",
+   "text": "Someone chained up my dog. My SMALL dog. Break the chains. The smith keeps re-forging them, so... deal with that.",
+   "resource": "SkylineAudio/hell-voice/god/job-whelp-brief",
+   "seconds": 6.7,
+   "trigger": "The Whelp (the Collapse, floor 2): briefing"
+  },
+  {
+   "key": "job-whelp-done",
+   "speaker": "god",
+   "text": "Who's a good boy. Not you. HIM.",
+   "resource": "SkylineAudio/hell-voice/god/job-whelp-done",
+   "seconds": 2.3,
+   "trigger": "done"
+  },
+  {
+   "key": "job-whelp-fail",
+   "speaker": "god",
+   "text": "You left my dog in chains. Noted.",
+   "resource": "SkylineAudio/hell-voice/god/job-whelp-fail",
+   "seconds": 3.01,
+   "trigger": "failed"
+  },
+  {
+   "key": "v2-01",
+   "speaker": "vesper",
+   "text": "You're still coming. Why? ...Someone, then. Someone you lost.",
+   "resource": "SkylineAudio/hell-voice/vesper/v2-01",
+   "seconds": 3.76,
+   "trigger": "floor 2's shaft"
+  },
+  {
+   "key": "v2-02",
+   "speaker": "vesper",
+   "text": "I had a daughter. A fever, a week to live. I gave him forever for her week.",
+   "resource": "SkylineAudio/hell-voice/vesper/v2-02",
+   "seconds": 5.18,
+   "trigger": "follows"
+  },
+  {
+   "key": "v2-03",
+   "speaker": "vesper",
+   "text": "She grew old. She was happy, I'm told. He kept me like a trophy. For a century, he even looked.",
+   "resource": "SkylineAudio/hell-voice/vesper/v2-03",
+   "seconds": 6.86,
+   "trigger": "follows"
+  },
+  {
+   "key": "v2-04",
+   "speaker": "vesper",
+   "text": "Then he got bored. Do you know what forever is, with no one watching? A very long afternoon.",
+   "resource": "SkylineAudio/hell-voice/vesper/v2-04",
+   "seconds": 6.09,
+   "trigger": "follows"
+  },
+  {
+   "key": "job-thief-brief",
+   "speaker": "god",
+   "text": "A demon has been skimming seconds off my hourglass. He undoes any wound that doesn't finish him. So finish him.",
+   "resource": "SkylineAudio/hell-voice/god/job-thief-brief",
+   "seconds": 6.71,
+   "trigger": "The Seconds Thief (Six Sigils, floor 3): briefing"
+  },
+  {
+   "key": "job-thief-done",
+   "speaker": "god",
+   "text": "My seconds. Every last one.",
+   "resource": "SkylineAudio/hell-voice/god/job-thief-done",
+   "seconds": 2.56,
+   "trigger": "done"
+  },
+  {
+   "key": "job-thief-fail",
+   "speaker": "god",
+   "text": "He's still out there, being ten seconds younger than me.",
+   "resource": "SkylineAudio/hell-voice/god/job-thief-fail",
+   "seconds": 3.42,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-bather-brief",
+   "speaker": "god",
+   "text": "A soul's been soaking in a lava spring for six hundred years and calls it a spa. Wade in. Reap him.",
+   "resource": "SkylineAudio/hell-voice/god/job-bather-brief",
+   "seconds": 6.43,
+   "trigger": "The Lava Bather (Ooze Wells, floor 3): briefing"
+  },
+  {
+   "key": "job-bather-done",
+   "speaker": "god",
+   "text": "Out of the bath. Finally. He was SO pruney.",
+   "resource": "SkylineAudio/hell-voice/god/job-bather-done",
+   "seconds": 3.08,
+   "trigger": "done"
+  },
+  {
+   "key": "job-bather-fail",
+   "speaker": "god",
+   "text": "He's still in the tub. Smug.",
+   "resource": "SkylineAudio/hell-voice/god/job-bather-fail",
+   "seconds": 2.32,
+   "trigger": "failed"
+  },
+  {
+   "key": "job-notice-brief",
+   "speaker": "god",
+   "text": "A demon is renting out my old cottage down there. Stand at his door while my notice burns in. He'll send friends.",
+   "resource": "SkylineAudio/hell-voice/god/job-notice-brief",
+   "seconds": 7.12,
+   "trigger": "The Notice on the Door (Soul Lantern, floor 3): briefing"
+  },
+  {
+   "key": "job-notice-done",
+   "speaker": "god",
+   "text": "Evicted. I may visit. I won't.",
+   "resource": "SkylineAudio/hell-voice/god/job-notice-done",
+   "seconds": 2.57,
+   "trigger": "done"
+  },
+  {
+   "key": "job-notice-fail",
+   "speaker": "god",
+   "text": "The notice fell off. He's subletting now.",
+   "resource": "SkylineAudio/hell-voice/god/job-notice-fail",
+   "seconds": 3.09,
+   "trigger": "failed"
+  },
+  {
+   "key": "v3-01",
+   "speaker": "vesper",
+   "text": "I know that walk. I walked it, with that same face.",
+   "resource": "SkylineAudio/hell-voice/vesper/v3-01",
+   "seconds": 3.68,
+   "trigger": "floor 3's last room entry"
+  },
+  {
+   "key": "v3-02",
+   "speaker": "vesper",
+   "text": "You'll get her back. And then what will you be for?",
+   "resource": "SkylineAudio/hell-voice/vesper/v3-02",
+   "seconds": 3.21,
+   "trigger": "follows"
+  },
+  {
+   "key": "v3-03",
+   "speaker": "vesper",
+   "text": "Come down. Let's see which of us is still looking for something.",
+   "resource": "SkylineAudio/hell-voice/vesper/v3-03",
+   "seconds": 4.07,
+   "trigger": "follows"
+  },
+  {
+   "key": "boss-intro",
+   "speaker": "vesper",
+   "text": "So she sent you. I made a deal once too. Let me see what yours bought you.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-intro",
+   "seconds": 4.91,
+   "trigger": "the fight begins"
+  },
+  {
+   "key": "boss-phase2",
+   "speaker": "vesper",
+   "text": "Time? I have had nothing BUT time. Watch.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-phase2",
+   "seconds": 3.07,
+   "trigger": "phase 2 (Undo)"
+  },
+  {
+   "key": "boss-rewound",
+   "speaker": "vesper",
+   "text": "Again. I have all of it to spare.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-rewound",
+   "seconds": 2.6,
+   "trigger": "her Rewind lands"
+  },
+  {
+   "key": "boss-rewind-broken",
+   "speaker": "vesper",
+   "text": "...You broke it. No one has done that in a long time.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-rewind-broken",
+   "seconds": 3.81,
+   "trigger": "you break her Rewind"
+  },
+  {
+   "key": "boss-phase3",
+   "speaker": "vesper",
+   "text": "He grew bored of the light. So did I. Come and find me.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-phase3",
+   "seconds": 3.97,
+   "trigger": "phase 3 (Nightfall)"
+  },
+  {
+   "key": "boss-mercy",
+   "speaker": "vesper",
+   "text": "Get up.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-mercy",
+   "seconds": 1.71,
+   "trigger": "she pulls a killing blow"
+  },
+  {
+   "key": "boss-mercy2",
+   "speaker": "vesper",
+   "text": "Not like this. Get up.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-mercy2",
+   "seconds": 2.32,
+   "trigger": "the second pulled blow"
+  },
+  {
+   "key": "boss-restart",
+   "speaker": "vesper",
+   "text": "Again, then.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-restart",
+   "seconds": 1.92,
+   "trigger": "the fight restarts after your death"
+  },
+  {
+   "key": "boss-defeat",
+   "speaker": "vesper",
+   "text": "...There. Something new, at last.",
+   "resource": "SkylineAudio/hell-voice/vesper/boss-defeat",
+   "seconds": 2.53,
+   "trigger": "her health reaches 0"
+  },
+  {
+   "key": "dec-01",
+   "speaker": "vesper",
+   "text": "Go on. She's waiting for my soul. I'd be waiting too.",
+   "resource": "SkylineAudio/hell-voice/vesper/dec-01",
+   "seconds": 3.72,
+   "trigger": "her defeat, kneeling"
+  },
+  {
+   "key": "dec-god-01",
+   "speaker": "god",
+   "text": "Well? Chop chop. I have a lunch.",
+   "resource": "SkylineAudio/hell-voice/god/dec-god-01",
+   "seconds": 2.38,
+   "trigger": "8 s with no choice"
+  },
+  {
+   "key": "dec-god-02",
+   "speaker": "god",
+   "text": "It's one shot. You've done a thousand today.",
+   "resource": "SkylineAudio/hell-voice/god/dec-god-02",
+   "seconds": 2.95,
+   "trigger": "16 s with no choice"
+  },
+  {
+   "key": "dec-spare-01",
+   "speaker": "vesper",
+   "text": "...Something to do. It's been so long since anyone asked.",
+   "resource": "SkylineAudio/hell-voice/vesper/dec-spare-01",
+   "seconds": 3.86,
+   "trigger": "the hand offered"
+  },
+  {
+   "key": "dec-spare-02",
+   "speaker": "vesper",
+   "text": "All right. Run, then. I know the way up.",
+   "resource": "SkylineAudio/hell-voice/vesper/dec-spare-02",
+   "seconds": 2.88,
+   "trigger": "she takes it"
+  },
+  {
+   "key": "dec-kill-01",
+   "speaker": "vesper",
+   "text": "Thank you. Tell her she took her time.",
+   "resource": "SkylineAudio/hell-voice/vesper/dec-kill-01",
+   "seconds": 2.85,
+   "trigger": "you fire"
+  },
+  {
+   "key": "esc-vesper-01",
+   "speaker": "vesper",
+   "text": "Left! The bridge still remembers me.",
+   "resource": "SkylineAudio/hell-voice/vesper/esc-vesper-01",
+   "seconds": 2.85,
+   "trigger": "the escape starts (spared)"
+  },
+  {
+   "key": "esc-vesper-02",
+   "speaker": "vesper",
+   "text": "Don't look back. It's the oldest rule down here.",
+   "resource": "SkylineAudio/hell-voice/vesper/esc-vesper-02",
+   "seconds": 3.39,
+   "trigger": "halfway (spared)"
+  },
+  {
+   "key": "esc-god-01",
+   "speaker": "god",
+   "text": "Lovely. Now run. The whole place is sulking.",
+   "resource": "SkylineAudio/hell-voice/god/esc-god-01",
+   "seconds": 3.1,
+   "trigger": "the escape starts (killed)"
+  },
+  {
+   "key": "end-kill-01",
+   "speaker": "god",
+   "text": "Lucifer is sulking. Delightful. A deal's a deal: one sister, slightly singed.",
+   "resource": "SkylineAudio/hell-voice/god/end-kill-01",
+   "seconds": 5.13,
+   "trigger": "ending: you killed her"
+  },
+  {
+   "key": "end-kill-02",
+   "speaker": "god",
+   "text": "Do come by again. Not soon.",
+   "resource": "SkylineAudio/hell-voice/god/end-kill-02",
+   "seconds": 2.47,
+   "trigger": "follows"
+  },
+  {
+   "key": "end-favour-01",
+   "speaker": "god",
+   "text": "You spared her. You disobeyed me. ...And you did every one of my chores. Ha!",
+   "resource": "SkylineAudio/hell-voice/god/end-favour-01",
+   "seconds": 4.63,
+   "trigger": "ending: spared, most jobs done"
+  },
+  {
+   "key": "end-favour-02",
+   "speaker": "god",
+   "text": "Fine. Keep her. Something new for her to live for. You'll owe me one.",
+   "resource": "SkylineAudio/hell-voice/god/end-favour-02",
+   "seconds": 3.95,
+   "trigger": "follows"
+  },
+  {
+   "key": "end-few-01",
+   "speaker": "god",
+   "text": "You spared her, and you did nothing I asked. Someone pays for that, darling. Time pays.",
+   "resource": "SkylineAudio/hell-voice/god/end-few-01",
+   "seconds": 5.34,
+   "trigger": "ending: spared, few jobs done"
+  },
+  {
+   "key": "end-few-02",
+   "speaker": "god",
+   "text": "Your sister keeps her years. I'll take mine out of yours.",
+   "resource": "SkylineAudio/hell-voice/god/end-few-02",
+   "seconds": 3.75,
+   "trigger": "follows"
+  },
+  {
+   "key": "sting",
+   "speaker": "god",
+   "text": "Lucifer sent me a fruit basket. ...I'm going to need someone again.",
+   "resource": "SkylineAudio/hell-voice/god/sting",
+   "seconds": 4.34,
+   "trigger": "after the credits, over black, before the title"
+  },
+  {
+   "key": "tr-01",
+   "speaker": "narrator",
+   "text": "When your sister died, you didn't grieve.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-01",
+   "seconds": 3.21,
+   "trigger": "trailer 0:02, the sister's death"
+  },
+  {
+   "key": "tr-02",
+   "speaker": "narrator",
+   "text": "You went looking for the one who took her.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-02",
+   "seconds": 2.99,
+   "trigger": "0:06, the God of Death"
+  },
+  {
+   "key": "tr-03",
+   "speaker": "god",
+   "text": "...Oh. I've had the funniest idea.",
+   "resource": "SkylineAudio/hell-voice/god/tr-03",
+   "seconds": 2.65,
+   "trigger": "0:11, her face"
+  },
+  {
+   "key": "tr-04",
+   "speaker": "narrator",
+   "text": "A deal. Shadow to hide in. Time to bend. A door into Hell.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-04",
+   "seconds": 4.9,
+   "trigger": "0:15, the deal"
+  },
+  {
+   "key": "tr-05",
+   "speaker": "narrator",
+   "text": "Your sister is down there. So is the woman you were sent to kill.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-05",
+   "seconds": 4.74,
+   "trigger": "0:22, Hell's gate"
+  },
+  {
+   "key": "tr-06",
+   "speaker": "narrator",
+   "text": "Every floor burns hotter. Every second is borrowed.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-06",
+   "seconds": 4.15,
+   "trigger": "act 2 start, about 1:15"
+  },
+  {
+   "key": "tr-07",
+   "speaker": "narrator",
+   "text": "She made the same deal, centuries ago.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-07",
+   "seconds": 3.25,
+   "trigger": "act 3 start, about 2:15"
+  },
+  {
+   "key": "tr-08",
+   "speaker": "vesper",
+   "text": "You'll get her back. And then what will you be for?",
+   "resource": "SkylineAudio/hell-voice/vesper/tr-08",
+   "seconds": 3.21,
+   "trigger": "act 3, her face in the dark"
+  },
+  {
+   "key": "tr-09",
+   "speaker": "narrator",
+   "text": "Kill the Evening Star. Or offer her your hand.",
+   "resource": "SkylineAudio/hell-voice/narrator/tr-09",
+   "seconds": 3.67,
+   "trigger": "2:48, before the title"
+  }
+ ]
+}
