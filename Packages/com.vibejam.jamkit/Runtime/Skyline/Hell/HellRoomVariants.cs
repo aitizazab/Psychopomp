@@ -88,7 +88,7 @@ namespace JamKit.Skyline
                 bool ground = s.role != HellEnemyRole.Imp;
                 kept.Add(new HellSpawn
                 {
-                    role = HellEnemyRole.Imp, position = ground ? s.position + new Vector3(0, HellEnemies.ImpHover, 0) : s.position,
+                    role = HellEnemyRole.Imp, position = ground ? s.position + new Vector3(0, HellRoomEnemies.ImpHover, 0) : s.position,
                     yawDeg = s.yawDeg, wave = s.wave, minFloor = s.minFloor,
                 });
             }

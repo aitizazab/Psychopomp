@@ -15,7 +15,7 @@ namespace JamKit.Skyline
     /// slide under it).</summary>
     public enum HellHazardKind { Lava, Collapse, Beam }
 
-    public static class HellEnemies
+    public static class HellRoomEnemies
     {
         /// <summary>The kit's enemy id for a role (the existing type ids, unchanged).</summary>
         public static string IdFor(HellEnemyRole r)
