@@ -117,7 +117,9 @@ session merges, runs Unity, and the creator plays. Art and the trailer in the ev
   no link required; a later link is possible.) In-game speaker names now read BAJA.
 - **Time, the newer idea (replaces "the sister's clock" in HELL-THEME-REVIEW fix 4):** Baja sets up an escape for you.
   Spending too long in Hell closes it, leaving you and your sister to suffer eternal damnation. The fix must be redesigned
-  around this before it is built (pitch in the session; waiting on the creator).
+  around this before it is built (pitch in the session; waiting on the creator). **Agreed and built (2026-10-18):
+  Baja's hour, docs/HELL-HOUR.md** (a budget by difficulty, an ember hourglass, the escape's closing gate, damnation and
+  the Lucifer cliffhanger endings).
 - **Trailer theme cards: not explicit.** A card saying "Shadow" over the Shadow abilities is too on the nose. Better
   implicit wording, e.g. "Make the denizens of Hell suffer a new nightmare" on a shadowy stylised card, cutting to your
   abilities; even that may read as too obvious, and any such claim must be backed up in gameplay.

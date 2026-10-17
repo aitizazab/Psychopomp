@@ -183,6 +183,44 @@ namespace JamKit.SkylineRepo
             _errandMenu.Add(MenuItem(_errandBox, HellFlowText.ErrandsYes, 40f));
             _errandMenu.Add(MenuItem(_errandBox, HellFlowText.ErrandsNo, 40f));
             _errandBox.style.display = DisplayStyle.None;
+            BuildDifficulty();
+        }
+
+        // ---- Start asks the difficulty first: how long Baja's hour is (docs/HELL-HOUR.md); saved in SkylineOptions.difficulty
+        readonly List<KeylinedLabel> _difficultyMenu = new List<KeylinedLabel>();
+        VisualElement _difficultyBox;
+        bool _difficultyOpen;
+
+        void BuildDifficulty()
+        {
+            _difficultyBox = MenuBox(_title);
+            var q = new KeylinedLabel(44f, 3f, Display);
+            q.SetText(HellHourLines.DifficultyTitle);
+            q.SetColor(Ember);
+            foreach (var c in q.Children()) c.style.letterSpacing = 12f;
+            _difficultyBox.Add(q);
+            var body = new KeylinedLabel(34f, 2.5f, null);
+            body.SetWrap(true, TextAnchor.MiddleCenter);
+            body.SetText(HellHourLines.DifficultyBody);
+            body.SetColor(Ash);
+            body.style.maxWidth = 1100f;
+            body.style.marginTop = 14f;
+            body.style.marginBottom = 30f;
+            _difficultyBox.Add(body);
+            foreach (var word in HellHourLines.DifficultyChoices) _difficultyMenu.Add(MenuItem(_difficultyBox, word, 40f));
+            _difficultyBox.style.display = DisplayStyle.None;
+        }
+
+        void OpenDifficulty(bool open)
+        {
+            _difficultyOpen = open;
+            _mainBox.style.display = open ? DisplayStyle.None : DisplayStyle.Flex;
+            _difficultyBox.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+            _menu.Clear();
+            _menu.AddRange(open ? _difficultyMenu : _titleMenu);
+            _sel = open ? (int)HellHourRules.FromInt(SkylineSettings.Options.difficulty) : 0;
+            _hint.text = open ? HellFlowText.MenuHint + "      ESC / B  back" : HellFlowText.MenuHint;
+            SyncMenu();
         }
 
         static VisualElement MenuBox(VisualElement parent)
@@ -208,6 +246,8 @@ namespace JamKit.SkylineRepo
         {
             _chaptersOpen = open;
             _errandsOpen = false;
+            _difficultyOpen = false;
+            if (_difficultyBox != null) _difficultyBox.style.display = DisplayStyle.None;
             _mainBox.style.display = open ? DisplayStyle.None : DisplayStyle.Flex;
             _chapterBox.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             _errandBox.style.display = DisplayStyle.None;
@@ -352,6 +392,7 @@ namespace JamKit.SkylineRepo
             BigStat(big, "TIME", s.TotalSeconds, HellRunStats.Clock, 1.6f);
             BigStat(big, "DEATHS", s.Deaths, Whole, 1f);
             BigStat(big, "ENEMIES", s.EnemiesKilled, Whole, 1f);
+            if (HellHour.Current != null) Word(big, HellHourLines.StatsLabel(HellHour.Current), HellHourLines.StatsValue(HellHour.Current));   // Baja's hour
 
             var mid = Row(_stats, 30f);
             BigStat(mid, "REWINDS", s.Rewinds, Whole, 0.8f);
@@ -573,10 +614,19 @@ namespace JamKit.SkylineRepo
             if (ConfirmPressed() || click) Activate(_sel);
             else if (_errandsOpen && SkipPressed()) { OpenChapters(true); _sel = HellFlow.VesperChapter; SyncMenu(); }
             else if (_chaptersOpen && SkipPressed()) OpenChapters(false);
+            else if (_difficultyOpen && SkipPressed()) OpenDifficulty(false);
         }
 
         void Activate(int i)
         {
+            if (_difficultyOpen)
+            {
+                SkylineSettings.Options.difficulty = (int)HellHourRules.FromInt(i);
+                SkylineSettings.Commit();
+                Debug.Log("HELL_FLOW difficulty " + HellHourRules.FromInt(i));
+                Finish(Screen.Title, ChoiceStart);
+                return;
+            }
             if (_errandsOpen)
             {
                 VesperErrands = i == 0;
@@ -592,7 +642,7 @@ namespace JamKit.SkylineRepo
             }
             switch (i)
             {
-                case 0: Finish(Screen.Title, ChoiceStart); break;
+                case 0: OpenDifficulty(true); break;      // Start asks how long Baja's hour is first
                 case 1: OpenChapters(true); break;
                 case 2:
                     if (!SkylinePauseMenu.OpenMenu()) Debug.LogWarning("HELL_FLOW no pause menu in this scene: Settings unavailable");

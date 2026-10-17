@@ -399,6 +399,7 @@ namespace JamKit.SkylineRepo
                     AddButton(() => "Controls", () => ShowPage(Page.Controls));
                     AddButton(() => "Look", () => ShowPage(Page.Look));
                     AddButton(() => "Subtitles", () => ShowPage(Page.Subtitles));
+                    AddChoice("Difficulty", HellHourRules.DifficultyNames, () => o.difficulty, v => o.difficulty = v);   // Baja's hour (docs/HELL-HOUR.md)
                     // The Relay test mode (docs/SKYLINE-RELAY.md): restarts the arena in (or back out of) it.
                     AddButton(() => SkylineRelayMode.Active ? "Relay (test): new run" : "Relay (test)", () => { Close(); SkylineRelayMode.Restart(true); });
                     if (SkylineRelayMode.Active) AddButton(() => "Back to the normal mode", () => { Close(); SkylineRelayMode.Restart(false); });
