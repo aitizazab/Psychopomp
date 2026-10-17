@@ -58,6 +58,13 @@ namespace JamKit.Skyline
             new HellEndingLine("end-few-01", God, "[PLACEHOLDER] You spared her, and you did nothing I asked. Someone pays for that, darling. Time pays."),
             new HellEndingLine("end-few-02", God, "[PLACEHOLDER] Your sister keeps her years. I'll take mine out of yours."),
             new HellEndingLine("end-few-card", Card, "[PLACEHOLDER] Your sister went home. You stayed below, paying off the hours. Vesper waits with you. She has the time."),
+            // ---- Baja's hour (docs/HELL-HOUR.md): the gate shut (damnation), and the Lucifer cliffhanger after the kill or the favoured spare
+            new HellEndingLine("end-damned-01", God, "[PLACEHOLDER] I held that door for an hour, darling. You took longer."),
+            new HellEndingLine("end-damned-02", God, "[PLACEHOLDER] Well. You wanted to be with her. Forever is a long time to be right."),
+            new HellEndingLine("end-damned-card", Card, "[PLACEHOLDER] The gate closed. Two souls stayed below, together, for good."),
+            new HellEndingLine("end-lucifer-01", God, "[PLACEHOLDER] Every errand, and on time. I could get used to you."),
+            new HellEndingLine("end-lucifer-02", God, "[PLACEHOLDER] One more. The Morning Star himself. Bring me his crown; keep the change."),
+            new HellEndingLine("end-lucifer-card", Card, "[PLACEHOLDER] Far below, Lucifer looked up. TO BE CONTINUED."),
         };
 
         /// <summary>The on-screen prompts (UI words, not dialogue). {Use}, {Fire}, {Reload} are the controls' names.</summary>

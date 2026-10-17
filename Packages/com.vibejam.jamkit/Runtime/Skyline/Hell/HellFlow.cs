@@ -38,6 +38,10 @@ namespace JamKit.Skyline
         public const string BossOnly = "boss-defeated";
         /// <summary>The last shaft with no boss in the build.</summary>
         public const string Bottom = "bottom";
+        /// <summary>Baja's hour ran out on the escape: the gate shut before you reached it (docs/HELL-HOUR.md).</summary>
+        public const string Damned = "damned";
+        /// <summary>The kill, or the favoured spare, with every job done and time left: Baja sends you after Lucifer.</summary>
+        public const string KillLucifer = "kill-lucifer", SpareLucifer = "spare-lucifer";
 
         public static string Title(string id)
         {
@@ -48,6 +52,9 @@ namespace JamKit.Skyline
                 case SpareCost: return "SPARED, AT A PRICE";
                 case BossOnly: return "VESPER FELL";
                 case Bottom: return "THE BOTTOM OF HELL";
+                case Damned: return "DAMNED, BOTH OF YOU";
+                case KillLucifer: return "THE SOUL DELIVERED. THE MORNING STAR NEXT";
+                case SpareLucifer: return "THE EVENING STAR SPARED. THE MORNING STAR NEXT";
                 case null: case "": return "NO ENDING";
                 default: return id.ToUpperInvariant();
             }

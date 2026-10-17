@@ -58,7 +58,7 @@ namespace JamKit.SkylineRepo
         readonly List<MonoBehaviour> _zoneOwners = new List<MonoBehaviour>();
         Vector3 _kneelAt, _decisionSpot;
         float _decisionYaw;
-        bool _killed, _scripted, _autoSpare, _skipSweep;
+        bool _killed, _scripted, _autoSpare, _skipSweep, _damned;
         float _phaseT, _nextLineAt, _rumbleAt, _cardUntil, _cardShownAt;
         readonly Queue<string> _lines = new Queue<string>();
         HellRoom _room;
@@ -500,12 +500,28 @@ namespace JamKit.SkylineRepo
                 Debug.Log("HELL_ENDING the soul followed you out (missed on the way)");
             }
             HellRewindRegistry.Unregister(this);
+            if (HellHour.Current != null) HellHour.Current.Stop();     // Baja's hour stops at the exit (docs/HELL-HOUR.md)
             SkylineSounds.PlayAt(HellEndingCues.Out, player.transform.position);
             _hud.SetLine("");
             _cards.ClearText();
             _cards.Fade(1f, 0.8f);
             _phase = Phase.Out;
             Debug.Log("HELL_ENDING out of the Collapse after " + _escapeTries + " tr" + (_escapeTries == 1 ? "y" : "ies"));
+        }
+
+        /// <summary>Baja's hour: the exit gate shut before you reached it (<see cref="HellHourDirector"/>). The escape ends here,
+        /// and the ending is damnation whatever you chose (docs/HELL-HOUR.md).</summary>
+        public void Damn()
+        {
+            if (_phase != Phase.Escape) return;
+            _damned = true;
+            HellRewindRegistry.Unregister(this);
+            if (HellHour.Current != null) HellHour.Current.Stop();
+            _hud.SetLine("");
+            _cards.ClearText();
+            _cards.Fade(1f, 2.4f);
+            _phase = Phase.Out;
+            Debug.Log("HELL_ENDING the gate shut before you reached it (try " + _escapeTries + "): damned");
         }
 
         void MakeSoulViews()
@@ -651,8 +667,12 @@ namespace JamKit.SkylineRepo
             _hud.Clear();
             HushVoice();
             SkylineDeviceInput.Paused = true;        // the game holds still under the cards
-            _endingId = HellEndingRules.Pick(_killed, HellJobs.OfferedCount, HellJobs.DoneCount, HellJobs.AssumedErrands);
-            _cardKeys = HellEndingRules.Sequence(_endingId);
+            // Baja's hour: damnation if the gate shut; the Lucifer cliffhanger on top with every job done and time left at the exit
+            var hour = HellHour.Current;
+            if (hour != null) hour.Stop();
+            _endingId = HellHourEndings.Pick(_killed, HellJobs.OfferedCount, HellJobs.DoneCount, HellJobs.AssumedErrands, _damned,
+                hour != null ? hour.Left : float.PositiveInfinity);
+            _cardKeys = HellHourEndings.Sequence(_endingId);
             _cardIndex = -1;
             _phase = Phase.Cards;
             Debug.Log("HELL_ENDING ending " + _endingId + " (" + (_killed ? "killed" : "spared") + ", jobs " + HellJobs.DoneCount + "/" + HellJobs.OfferedCount
@@ -717,6 +737,7 @@ namespace JamKit.SkylineRepo
             _follower = null;
             _room = null;
             _soul = null;
+            _damned = false;
             _phase = Phase.Idle;
         }
 

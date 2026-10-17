@@ -8,14 +8,14 @@ the pure tests and the Unity-side compile check pass. The play checks are at the
 
 | Stage | What shows | Moves on when |
 |---|---|---|
-| Title | "HELL DESCENT" (working name), START / CHAPTERS / SETTINGS / QUIT | Start: the opening. Chapters: a chapter start (below). Settings opens the kit's pause menu (Audio, Controls, Look, Subtitles; Resume comes back). Quit closes the game |
+| Title | "HELL DESCENT" (working name), START / CHAPTERS / SETTINGS / QUIT | Start: the difficulty (BAJA'S HOUR: Easy / Normal / Hard, saved; docs/HELL-HOUR.md), then the opening. Chapters: a chapter start (below). Settings opens the kit's pause menu (Audio, Controls, Look, Subtitles, Difficulty; Resume comes back). Quit closes the game |
 | Opening | The God of Death's premise: 6 text cards over black and ember | The last card, or a skip |
 | FloorIntro | The floor's card: "FLOOR ONE / THE EMBER GATE" and a tagline, 2.8 s | Its time, or any press |
 | Playing | The rooms, the shafts, the skill picks | The last floor's shaft |
 | Boss | The boss lane's fight | `HellRunEvents.BossDefeated()` |
 | Ending | The ending lane's decision scene and escape | `HellRunEvents.RaiseEnding(id)` |
 | Credits | A scrolling list (hold Enter / A to speed it up) | Its end, or a skip |
-| Stats | Big numbers that count up, the ending's name, CONTINUE | Enter / A / a click: the scene reloads on the title |
+| Stats | Big numbers that count up, the ending's name, Baja's hour left (or TIME OWED), CONTINUE | Enter / A / a click: the scene reloads on the title |
 
 With no boss listener the Boss stage passes at once; with no ending listener the credits roll at once. The fallback
 endings are `bottom` (no boss) and `boss-defeated` (a boss, no ending scene).
@@ -35,6 +35,8 @@ straight into the first room, show the floor names as HUD banners, and stop on t
 
 **CHAPTERS** on the title lists FLOOR 1, FLOOR 2, FLOOR 3, VESPER and BACK. All are open from the start.
 - **A chapter skips the opening.** Floor N starts at floor N's first room, with its card.
+- **Baja's hour is part spent** (docs/HELL-HOUR.md): Floor 2 a third, Floor 3 two thirds, Vesper 0.85, of the difficulty's
+  budget. Chapters use the saved difficulty (only the full game's START asks).
 - **Vesper** first asks whether you ran the God of Death's errands on the way down (the chapter offers no jobs; the answer
   decides the spare ending, docs/HELL-ENDING.md; Escape / B goes back to the list), then goes straight to the boss hook.
 - **Skills first:** a chapter first opens the normal skill pick once per floor it skips (Floor 2: one pick; Floor 3 and

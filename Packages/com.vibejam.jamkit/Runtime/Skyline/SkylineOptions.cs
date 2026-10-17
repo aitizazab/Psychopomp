@@ -49,6 +49,10 @@ namespace JamKit.Skyline
         /// <summary>Camera shake strength (the Look page's slider): 0 off, 1 as designed (docs/HELL-FX.md).</summary>
         public float screenShake = 1f;
 
+        /// <summary>The difficulty (<see cref="HellDifficulty"/> as a number; Normal by default): the title's Start asks, the pause
+        /// menu changes it. It sets the length of Baja's hour (docs/HELL-HOUR.md) and nothing else yet.</summary>
+        public int difficulty = (int)HellDifficulty.Normal;
+
         public SkylineOptions Clone() => (SkylineOptions)MemberwiseClone();
 
         /// <summary>Puts every value back in its range (a non-number becomes the default).</summary>
@@ -65,6 +69,7 @@ namespace JamKit.Skyline
             if (!Enum.IsDefined(typeof(SubtitleMode), subtitleMode)) subtitleMode = SubtitleMode.Dialogue;
             if (!Enum.IsDefined(typeof(SubtitleSize), subtitleSize)) subtitleSize = SubtitleSize.Medium;
             if (frameCap < 0 || frameCap >= FrameCaps.Length) frameCap = 0;
+            difficulty = (int)HellHourRules.FromInt(difficulty);
         }
 
         static float Unit(float v, float fallback) => Range(v, 0f, 1f, fallback);
@@ -93,6 +98,7 @@ namespace JamKit.Skyline
             sb.Append("aimAssist=").Append(aimAssist ? "1" : "0").Append('\n');
             sb.Append("frameCap=").Append(frameCap).Append('\n');
             sb.Append("vsync=").Append(vsync ? "1" : "0").Append('\n');
+            sb.Append("difficulty=").Append(difficulty).Append('\n');
             return sb.ToString();
         }
 
@@ -130,6 +136,7 @@ namespace JamKit.Skyline
                         case "aimAssist": o.aimAssist = value != "0"; break;
                         case "frameCap": if (isNumber) o.frameCap = (int)f; break;
                         case "vsync": o.vsync = value == "1"; break;
+                        case "difficulty": if (isNumber) o.difficulty = (int)f; break;
                     }
                 }
             }

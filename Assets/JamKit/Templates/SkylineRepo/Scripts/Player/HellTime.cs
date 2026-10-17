@@ -26,6 +26,7 @@ namespace JamKit.SkylineRepo
         }
 
         public static void Clear(string key) => Request(key, 1f);
+        public static bool Has(string key) => _requests.Has(key);     // a beat's hold (Baja's hour skips it)
 
         public static void ClearAll()
         {

@@ -121,6 +121,14 @@ Each card lasts its voice plus a second; Enter, Space, Escape, a click, A or B s
 | Kill: her endless time pays for your sister's; you carry what you did | `kill` | `end-kill-01`, `end-kill-02`, `end-kill-card` | THE SOUL DELIVERED |
 | Spare, favoured: the God of Death respects the nerve, all of you walk out | `spare-kept` | `end-favour-01`, `end-favour-02`, `end-favour-card` | THE EVENING STAR SPARED |
 | Spare, not favoured: the time comes from you; your sister lives, you don't leave | `spare-cost` | `end-few-01`, `end-few-02`, `end-few-card` | SPARED, AT A PRICE |
+| Kill or favoured spare, with **every** job done and time left on Baja's hour at the exit: the base ending's cards, then Baja sends you after Lucifer (cliffhanger) | `kill-lucifer`, `spare-lucifer` | the base three, then `end-lucifer-01`, `end-lucifer-02`, `end-lucifer-card` | ... THE MORNING STAR NEXT |
+| Damnation: Baja's gate shut before you reached it, whatever you chose | `damned` | `end-damned-01`, `end-damned-02`, `end-damned-card` | DAMNED, BOTH OF YOU |
+
+**Baja's hour (docs/HELL-HOUR.md)** adds the last two rows: the ending is now picked by `HellHourEndings.Pick(killed,
+offered, done, assumedErrands, damned, hourLeftAtExit)` (damnation first, then `HellEndingRules.Pick` below, lifted to its
+Lucifer form) and played from `HellHourEndings.Sequence`. The escape's exit doorway carries Baja's gate, closing on a window
+set by the hour left when each attempt starts; `HellEndingDirector.Damn()` ends the escape when it shuts. The hour stops at
+the exit.
 
 **The Vesper chapter asks instead:** it skips the floors, so no job is offered. Picking VESPER under CHAPTERS opens a
 question first ("ON THE WAY DOWN": did you run the God of Death's errands through the floors, even if it meant reaching
