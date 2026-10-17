@@ -21,6 +21,10 @@ namespace JamKit.Skyline
         /// <summary>-1 = any (the drone).</summary>
         public int mood = -1, speed = -1, phase;
         public HellMusicRole role;
+        /// <summary>A "stinger_into_cue" part: the cue it hands over to, and the stinger's sample where that cue's first downbeat
+        /// lands (0 = none).</summary>
+        public string intoCue;
+        public int downbeatSample;
     }
 
     /// <summary>A cue of the composer's manifest (Resources/SkylineAudio/hell-music/hell-music-manifest.json).</summary>
@@ -86,6 +90,7 @@ namespace JamKit.Skyline
         {
             id = id, resource = Str(o, "resource"), kind = Str(o, "kind"), mood = MoodOf(Str(o, "mood")), speed = SpeedOf(Str(o, "speed")),
             role = RoleOf(Str(o, "role")), phase = Int(o, "phase", 0),
+            intoCue = Str(o, "into_cue"), downbeatSample = Int(o, "downbeat_sample", 0),
         };
 
         public static int MoodOf(string s) => s == "quiet" ? 0 : s == "normal" ? 1 : s == "danger" ? 2 : -1;
@@ -199,6 +204,11 @@ namespace JamKit.Skyline
             double p = (now - start) % loop;
             return p < 0 ? p + loop : p;
         }
+
+        /// <summary>A "stinger_into_cue" scheduled at <paramref name="stingerAt"/>: when the cue it hands over to starts (its clock),
+        /// so the stinger's hit lands on that cue's first downbeat.</summary>
+        public static double IntoCueStart(double stingerAt, int downbeatSample, int sampleRate) =>
+            stingerAt + (sampleRate > 0 ? (double)Math.Max(0, downbeatSample) / sampleRate : 0);
 
         /// <summary>The sample a source must start from to join the clock at <paramref name="at"/> (for PlayScheduled + timeSamples).</summary>
         public static int JoinSample(double start, double loop, double at, int sampleRate) =>
@@ -449,6 +459,13 @@ namespace JamKit.Skyline
                 cue = Fallback(cue);
             }
             return null;
+        }
+
+        /// <summary>The opening's hand-over part: a "stinger_into_cue" part named "fall" (null when the opening has none).</summary>
+        public static HellMusicStem OpeningFall(HellMusicManifest m)
+        {
+            var p = m != null ? m.Ready(HellMusicManifest.Opening)?.Part("fall") : null;
+            return p != null && p.kind == "stinger_into_cue" && p.resource != null ? p : null;
         }
 
         /// <summary>The floor card stinger of a 0-based floor.</summary>

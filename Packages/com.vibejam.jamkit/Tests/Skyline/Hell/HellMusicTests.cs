@@ -76,6 +76,30 @@ namespace JamKit.Tests.Skyline
             Assert.AreEqual(1, inrun.stems.FindAll(s => s.role == HellMusicRole.Drone).Count);
             Assert.AreEqual(9, inrun.stems.FindAll(s => s.role == HellMusicRole.Drums).Count);
             Assert.NotNull(m.Get("vesper_boss").Part("kneel"));
+            var fall = m.Get("baja_opening").Part("fall");
+            Assert.NotNull(fall, "the opening's hand-over");
+            Assert.AreEqual("stinger_into_cue", fall.kind);
+            Assert.AreEqual("inrun", fall.intoCue);
+            Assert.Greater(fall.downbeatSample, 0);
+            if (m.Ready("baja_opening") != null) Assert.AreSame(fall, HellMusicStageRules.OpeningFall(m));
+        }
+
+        [Test]
+        public void Opening_FallHandsOverOnTheDownbeat()
+        {
+            const string json = @"{ ""sample_rate"": 48000, ""cues"": {
+  ""baja_opening"": { ""kind"": ""parts"", ""status"": ""ready"", ""parts"": {
+    ""sister"": { ""kind"": ""loop"", ""resource"": ""o/s"" },
+    ""fall"": { ""kind"": ""stinger_into_cue"", ""resource"": ""o/f"", ""into_cue"": ""inrun"", ""downbeat_sample"": 170667 } } } } }";
+            var m = HellMusicManifest.Parse(json);
+            var fall = HellMusicStageRules.OpeningFall(m);
+            Assert.NotNull(fall);
+            Assert.AreEqual(170667, fall.downbeatSample);
+            Assert.AreEqual(100 + 170667 / 48000.0, HellMusicClock.IntoCueStart(100, fall.downbeatSample, 48000), 1e-9);
+            Assert.AreEqual(3.555563, HellMusicClock.IntoCueStart(0, 170667, 48000), 1e-6);
+            Assert.IsNull(HellMusicStageRules.OpeningFall(HellMusicManifest.Parse(Sample)), "no opening: no hand-over");
+            m.Get("baja_opening").status = "pending";
+            Assert.IsNull(HellMusicStageRules.OpeningFall(m), "a pending opening isn't played");
         }
 
         [Test]

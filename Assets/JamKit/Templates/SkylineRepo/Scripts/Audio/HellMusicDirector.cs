@@ -89,7 +89,7 @@ namespace JamKit.SkylineRepo
         HellMusicSpeed _appliedSpeed = HellMusicSpeed.Still;
         int _bossPhase, _lastFloorCard = -1;
         bool _bossKneel, _wasPaused, _wasPick, _decided;
-        double _duckUntil;
+        double _duckUntil, _fallUntil;
         float _duck = 1f;
         string _endingId;
         HellRunDirector _run;
@@ -177,6 +177,10 @@ namespace JamKit.SkylineRepo
         {
             if (floor == _lastFloorCard) return;
             _lastFloorCard = floor;
+            // the opening's fall stinger is floor 1's arrival: it blows up into the in-run set (same frame as the hand-over, or
+            // while it still rings)
+            if (Scene == HellMusicScene.Opening && HellMusicStageRules.OpeningFall(Manifest) != null) return;
+            if (AudioSettings.dspTime < _fallUntil) return;
             Sting(HellMusicStageRules.FloorCard(floor));
         }
         void OnJobOffered(string id) => Sting(HellMusicManifest.JobBrief);
@@ -198,7 +202,10 @@ namespace JamKit.SkylineRepo
             if (p != null && p.resource != null) PlayStinger(Resources.Load<AudioClip>(p.resource), cue.duckDb);
         }
 
-        void PlayStinger(AudioClip clip, double duckDb)
+        void PlayStinger(AudioClip clip, double duckDb) => PlayStingerAt(clip, duckDb, -1);
+
+        /// <summary>A stinger now (<paramref name="at"/> &lt; 0) or scheduled on the audio clock at <paramref name="at"/>.</summary>
+        void PlayStingerAt(AudioClip clip, double duckDb, double at)
         {
             if (clip == null) return;
             var v = _stingers[_nextStinger];
@@ -207,9 +214,9 @@ namespace JamKit.SkylineRepo
             v.src.clip = clip;
             v.src.loop = false;
             v.fade = HellMusicFade.Hold(1f);
-            v.src.Play();
+            if (at >= 0) v.src.PlayScheduled(at); else v.src.Play();
             v.playing = true;
-            if (duckDb < 0) { _duck = HellMusicMods.Db((float)duckDb); _duckUntil = AudioSettings.dspTime + clip.length; }
+            if (duckDb < 0) { _duck = HellMusicMods.Db((float)duckDb); _duckUntil = Math.Max(at, AudioSettings.dspTime) + clip.length; }
         }
 
         // ------------------------------------------------------------------ the frame
@@ -244,6 +251,7 @@ namespace JamKit.SkylineRepo
             var from = Scene;
             Scene = scene;
             if (scene == HellMusicScene.Title && from != HellMusicScene.Silence) LoadManifest();
+            if (from == HellMusicScene.Opening && scene == HellMusicScene.InRun && FallIntoInRun(dsp)) return;
             string cue = HellMusicStageRules.Resolve(Manifest, HellMusicStageRules.CueFor(scene, _endingId));
 
             bool inrun = cue == HellMusicManifest.InRun;
@@ -255,15 +263,39 @@ namespace JamKit.SkylineRepo
             PlayBed(inrun || boss ? null : cue, dsp);
         }
 
+        /// <summary>The opening hands over to play: the "fall" stinger at T, the in-run set's clock at T + downbeat_sample / rate
+        /// (Quiet or Normal, Still), so the stinger's hit lands on the set's first downbeat. The opening's loop stops at T.</summary>
+        bool FallIntoInRun(double dsp)
+        {
+            var fall = HellMusicStageRules.OpeningFall(Manifest);
+            if (fall == null || _inrun == null || _inrun.voices.Length == 0 || _inrun.running) return false;
+            var clip = Resources.Load<AudioClip>(fall.resource);
+            if (clip == null) return false;
+            double t = dsp + StartLead;
+            FadeOutVoice(_bedA, t, 0.03);
+            FadeOutVoice(_bedB, t, 0.03);
+            _bedCue = null;
+            StopGroup(_boss, dsp);
+            PlayStingerAt(clip, 0, t);
+            _fallUntil = t + clip.length;
+            rules.Reset();
+            StartGroup(_inrun, dsp, HellMusicClock.IntoCueStart(t, fall.downbeatSample, Manifest.sampleRate), true);
+            return true;
+        }
+
         // ------------------------------------------------------------------ groups (one clock each)
 
-        void StartGroup(Group g, double dsp)
+        void StartGroup(Group g, double dsp) => StartGroup(g, dsp, dsp + StartLead, false);
+
+        /// <summary>Starts a group's clock at <paramref name="clockAt"/> (dsp); <paramref name="full"/>: at full gain from its first
+        /// sample (no scene fade: a stinger hands over onto its downbeat).</summary>
+        void StartGroup(Group g, double dsp, double clockAt, bool full)
         {
             if (g == null || g.voices.Length == 0) return;
-            g.gain.Retarget(1f, dsp, SceneFade);
+            if (full) g.gain = HellMusicFade.Hold(1f); else g.gain.Retarget(1f, dsp, SceneFade);
             if (g.running) { foreach (var v in g.voices) v.stopAt = -1; return; }
             g.running = true;
-            g.clockStart = dsp + StartLead;
+            g.clockStart = clockAt;
             foreach (var v in g.voices)
             {
                 v.src.Stop();

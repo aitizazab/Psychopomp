@@ -51,7 +51,7 @@ The lowest cutoff wins. Each music source has its own `AudioLowPassFilter` (ther
 | Stage | Cue | While pending |
 |---|---|---|
 | Title | `title` | silence |
-| Opening | `baja_opening` (its first loop part; page hooks later) | silence |
+| Opening | `baja_opening`: its `sister` loop under the cards; on the hand-over to play, its `fall` part (below) | silence |
 | FloorIntro / Playing | `inrun`; floor cards `floor_card_1..3` on `FloorStarted` | silence |
 | Boss | `vesper_boss`: the phase's bed + drums on one clock, switched on the next bar (1 s) at Vesper's phase change; `kneel` when she's defeated | `inrun`, Danger |
 | Ending: Decision / AfterChoice | `vesper_decision` `hold`; `kill` (the loop stops dead) or `spare` when decided | silence |
@@ -63,6 +63,19 @@ The lowest cutoff wins. Each music source has its own `AudioLowPassFilter` (ther
 
 Not wired yet (no cue or no hook): the death sting (the SFX covers it), Vesper's history cutscene parts and the opening's
 page parts (they need page-change hooks from the cutscene player), the boss Rewind-tell effect, `baja_cliffhanger`.
+
+## The opening's fall (round 3)
+
+`baja_opening.parts.fall` is a `stinger_into_cue` (`into_cue: inrun`, `downbeat_sample: 170667` at 48 kHz). When the stage
+goes from the opening to play, the director schedules the stinger at dspTime T (`PlayScheduled`), stops the opening's loop at
+T, and starts ALL in-run stems at T + 170667/48000 (3.56 s) at full gain on the cell the rules give (Quiet or Normal, Still,
+after `rules.Reset()`): the stinger's hit lands on the set's first downbeat and rings over it. Floor 1's card stinger is
+skipped (the fall is that arrival). Without the part (or a pending opening) the set starts as before.
+
+The opening's music does NOT follow the cards yet (sister -> hall -> wait -> idea): `HellScreens` keeps its card index
+private and raises no per-card event, and the screens are another lane's file. The hook it needs: a
+`public static event Action<int> OpeningCard` (or a public `CardIndex`) on `HellScreens`; the director would then map card
+numbers to parts and switch loops on their bar lines (`bar_seconds` per part is in the manifest).
 
 ## Rules kept
 
