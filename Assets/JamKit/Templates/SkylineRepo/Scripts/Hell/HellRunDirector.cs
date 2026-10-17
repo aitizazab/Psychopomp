@@ -78,6 +78,7 @@ namespace JamKit.SkylineRepo
                 EndingHook = HellRunEvents.RaiseEndingRequested,
             };
             Flow.StageChanged += OnStage;
+            if (HellRunEvents.Stage != HellFlowStage.Title) HellRunEvents.RaiseStageChanged(HellRunEvents.Stage, HellFlowStage.Title);
             Flow.RewindBoundary += HellRunEvents.RaiseRewindBoundary;
 
             _skipScreens = SkylineRunArgs.Demo || SkylineRunArgs.Has("-hellSkipTitle") || player == null || player.ScriptedInput != null;
@@ -165,7 +166,11 @@ namespace JamKit.SkylineRepo
                 case HellFlowStage.Credits:
                     if (Current != null) Current.End();
                     if (Screens != null) Screens.ShowCredits();
-                    else Debug.Log("HELL_FLOW credits (no screens): ending " + Flow.Stats.EndingId);
+                    else
+                    {
+                        Debug.Log("HELL_FLOW credits (no screens): ending " + Flow.Stats.EndingId);
+                        Flow.CreditsDone();       // a scripted run stops on the stats (logged), never reloads
+                    }
                     break;
                 case HellFlowStage.Stats:
                     if (Screens != null) Screens.ShowStats(Flow.Stats, Flow.Stats.EndingId);
