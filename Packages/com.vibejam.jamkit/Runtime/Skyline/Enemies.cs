@@ -93,6 +93,27 @@ namespace JamKit.Skyline
         public float mineTriggerRadius = 1.5f, mineBlastRadius = 2.5f;
         /// <summary>How long (s) an untouched mine stays on the wall before it expires.</summary>
         public float mineLifetime = 12f;
+
+        // ---- Hell (the event game, docs/HELL-ENEMIES.md): the same three bots' functions in a new body and attack.
+        /// <summary>Which Hell enemy this def is (None: a Skyline bot). Set only by <see cref="HellEnemies"/>.</summary>
+        public HellKind hell;
+        /// <summary>The scythe demon's volley (<see cref="ScytheVolley"/>, <see cref="ScytheBeam"/>): how many scythes, how long each
+        /// projects its path before it beams (s), how fast the beam sweeps along it (m/s), the path's length (m), how close to the
+        /// beam counts as touching it (m), how long the full beam holds after the sweep (s), its height above the ground (m), the
+        /// gap between parallel lanes near the player (m), and the damage of one scythe (once per scythe).</summary>
+        public int scytheCount = 3;
+        public float scytheTelegraph = 0.9f, scytheBeamSpeed = 45f, scytheLength = 14f, scytheHitRadius = 0.55f, scytheHold = 0.2f,
+            scytheHeight = 1.0f, scytheSpacing = 3.6f, scytheDamage = 30f;
+        /// <summary>m/s the scythe demon strides toward the player while it is further than <see cref="walkKeepDistance"/> (0: it holds).</summary>
+        public float walkSpeed, walkKeepDistance = 16f;
+        /// <summary>The lava ooze's pool (<see cref="LavaPool"/>): its radius (m), how long it takes to spread (s), burns (s) and
+        /// cools and fades (s, no damage), the damage per second while it burns, the damage tick (s), and the most pools one ooze
+        /// keeps at once (laying one more cools the oldest).</summary>
+        public float poolRadius = 3.2f, poolGrowSeconds = 0.3f, poolBurnSeconds = 3f, poolCoolSeconds = 1.5f, poolDps = 22f, poolTick = 0.25f;
+        public int poolMax = 3;
+        /// <summary>The lava ooze's throb (<see cref="OozePulse"/>): beats per second asleep, awake, and at the end of its wind-up,
+        /// and how far a beat swells it (a share of its size).</summary>
+        public float pulseIdleHz = 1.1f, pulseAwakeHz = 1.7f, pulseTelegraphHz = 5f, pulseAmount = 0.12f;
     }
 
     /// <summary>M1's four bots (11.2; the gondola came with Task 9b). Each call returns a new instance.</summary>
