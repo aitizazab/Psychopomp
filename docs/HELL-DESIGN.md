@@ -9,6 +9,21 @@ code (movement engine, guns, bots, waves, objective circles, floor builder from 
 - Your sibling died. You refuse to accept it and make a deal with a powerful entity: powers over time and shadow in
   exchange for going into Hell, bringing your sibling back, and doing some jobs for the entity on the way. (Who the
   entity is, why it can send you and grant powers, what it wants, why it can't go itself: OPEN, decide later.)
+- **The creator's story pitch (2026-10-17 evening; overrides the entity notes above where they differ):**
+  - The entity is **a God of Death** (maybe **Baja**, Skyline's planned secret boss; Skyline's docs call Baja "she";
+    the creator isn't sure yet who Baja or the God of Death is).
+  - She wants to reap the soul of **<name>**, whom **Lucifer took to Hell still alive**, effectively immortalising her,
+    as his bride. That irritates the God of Death, but she doesn't care enough to do anything about it, until you come
+    along in a furious rage, willing to do anything to fix things.
+  - She's about to kill you when she gets "the funniest idea": send you to the depths of Hell to kill <name> and bring
+    her soul back to Baja. Baja flippantly warns you about taking too long; you go into Hell to find the person you're
+    trying to save.
+  - **Final boss:** likely <name> or Lucifer, then an **escape sequence**.
+  - **A possible ending choice:** spare <name> (drawing Baja's ire, or Baja's respect for daring to disrespect such a
+    powerful being), or accept the dichotomy of taking another's partner to save your own flesh and blood, and deliver
+    <name>'s soul to Baja. <name> then needs development as a character.
+  - Then the credits, an end screen with cool stats, and back to the title screen.
+  - Open questions after the pitch: `HELL-RESTART.md`, "Story".
 - Three floors, descending. After each floor: pick one new skill (shadow, time or fire flavoured) from three offered.
 
 ## The player's abilities

@@ -92,9 +92,25 @@ changes game speed, the stand-in stubs deleted. A build command for a Hell-only 
 4. **Art**, then **the trailer** at 90-120 fps (trailer plan: 30 s cinematic premise with a narrator; act 1 movement and
    combat, act 2 escalation, act 3 story hook, title card; enemy cards; no text over gameplay). The capture gaps from the
    audit (clean-picture switch first: an empty HUD layout, minutes of work) come before recording.
-5. **Story:** decide the entity's open questions, then titles.
+5. **Story:** the creator pitched it 2026-10-17 evening (`HELL-DESIGN.md`, "The creator's story pitch"): a God of
+   Death (maybe Baja) sends you to kill <name>, Lucifer's living bride, and bring back her soul; final boss <name> or
+   Lucifer, an escape, an ending choice, credits, a stats screen, the title screen. Still open:
+   - Is the God of Death Baja, and is Baja "she"?
+   - <name>: her name, who she was, why Lucifer took her, whether she wants to be there, and where we meet her on the
+     way (the third ending needs her developed).
+   - The deal: does Baja give your sibling back for <name>'s soul? Is the sibling in Hell? What does "taking too long"
+     mean in play (a run clock?) and in story?
+   - Why a death god's gift is time and shadow; are the "jobs on the way" from the first premise kept or dropped?
+   - The final boss (<name> or Lucifer) and how the ending choice is made in play; which ending the trailer hints at.
+   - Then titles.
+   Build items it adds: a title screen, a boss, an escape sequence (The Collapse is the base), the ending choice,
+   credits, the stats screen.
 6. **Publish:** `gh repo create aitizazab/HellDescent --public --source . --push` (the creator runs it; the handbook
    needs a public repo with all assets).
+
+## Settled
+- **The organisers allow the pre-published kit** (2026-10-17): our own assets are fine, copying released games
+  one-to-one is not; reusing the unreleased Skyline code is fine.
 
 ## Waiting on the creator's yes
 - **Disk** (about 12 GB free; 120 fps capture needs more). Candidates, nothing deleted yet:
