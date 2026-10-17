@@ -28,6 +28,7 @@ namespace JamKit.SkylineRepo
         internal static void RaiseOffered(HellJobDef j)
         {
             Ledger.Offer(j.id);
+            HellRunEvents.Stats?.RecordJobOffered();
             Offered?.Invoke(j);
         }
 
@@ -37,7 +38,7 @@ namespace JamKit.SkylineRepo
             if (!Ledger.MarkDone(j.id)) return null;
             string paid = Pay(j);
             Debug.Log("HELL_JOB done " + j.id + " (" + paid + "), " + Ledger.DoneCount + "/" + Ledger.OfferedCount);
-            // TODO(lane 1, hell-flow): HellRunStats.RecordJobDone(j.id);   (or subscribe to HellJobs.Done)
+            HellRunEvents.Stats?.RecordJobDone();
             Done?.Invoke(j, paid);
             return paid;
         }
@@ -46,7 +47,6 @@ namespace JamKit.SkylineRepo
         {
             if (!Ledger.MarkFailed(j.id)) return;
             Debug.Log("HELL_JOB failed " + j.id + " (" + why + "), " + Ledger.DoneCount + "/" + Ledger.OfferedCount);
-            // TODO(lane 1, hell-flow): HellRunStats.RecordJobFailed(j.id);   (or subscribe to HellJobs.Failed)
             Failed?.Invoke(j, why);
         }
 
