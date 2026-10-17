@@ -7,9 +7,10 @@ namespace JamKit.Skyline
     /// <summary>
     /// The run's counters for the stats screen and the endings (pure; docs/HELL-FLOW.md). <see cref="Current"/> is the run in
     /// progress (made by <see cref="HellFlow.StartGame"/>; null before the first run). Anyone records into it with the Record*
-    /// methods. <b>Rewind-safe:</b> what the world can take back (kills, jobs offered and done) is saved and restored with the
-    /// Rewind (<see cref="SaveWorld"/>, <see cref="RestoreWorld"/>: an imp killed, rewound alive and killed again counts once);
-    /// what the player did (deaths, Rewinds, Shadow Steps, fast paths, the times) is never rewound.
+    /// methods. <b>Rewind-safe:</b> what the world can take back (kills) is saved and restored with the Rewind
+    /// (<see cref="SaveWorld"/>, <see cref="RestoreWorld"/>: an imp killed, rewound alive and killed again counts once); what
+    /// the player did (deaths, Rewinds, Shadow Steps, fast paths, the times) is never rewound, and neither are the jobs (the
+    /// jobs lane's ledger settles each job once).
     /// </summary>
     public sealed class HellRunStats
     {
@@ -27,11 +28,12 @@ namespace JamKit.Skyline
         /// <summary>The counters a Rewind takes back. Reuse one per snapshot (no garbage).</summary>
         public sealed class World
         {
-            public int kills, jobsOffered, jobsDone;
+            public int kills;
         }
 
         readonly float[] _floorSeconds = new float[Floors];
         readonly World _w = new World();
+        int _jobsOffered, _jobsDone, _jobsFailed;
         float _boss, _ending;
         int _deaths, _rewinds, _steps, _fastTaken, _fastOffered;
         string _endingId;
@@ -56,8 +58,9 @@ namespace JamKit.Skyline
         public int FastPathsTaken => _fastTaken;
         public int FastPathsOffered => _fastOffered;
         public int EnemiesKilled => _w.kills;
-        public int JobsOffered => _w.jobsOffered;
-        public int JobsDone => _w.jobsDone;
+        public int JobsOffered => _jobsOffered;
+        public int JobsDone => _jobsDone;
+        public int JobsFailed => _jobsFailed;
         /// <summary>The ending reached (<see cref="HellEndings"/>), or null.</summary>
         public string EndingId => _endingId;
 
@@ -81,25 +84,26 @@ namespace JamKit.Skyline
         }
         public void RecordKill() => _w.kills++;
         /// <summary>A job (one of the God of Death's favours) was offered to the player.</summary>
-        public void RecordJobOffered() => _w.jobsOffered++;
-        public void RecordJobDone() => _w.jobsDone++;
+        public void RecordJobOffered() => _jobsOffered++;
+        public void RecordJobDone() => _jobsDone++;
+        public void RecordJobFailed() => _jobsFailed++;
         public void RecordEnding(string endingId) => _endingId = endingId;
 
         /// <summary>The share of offered jobs done (0 when none were offered).</summary>
-        public float JobsShare => _w.jobsOffered <= 0 ? 0f : _w.jobsDone / (float)_w.jobsOffered;
+        public float JobsShare => _jobsOffered <= 0 ? 0f : _jobsDone / (float)_jobsOffered;
 
         /// <summary>Fills <paramref name="reuse"/> (or a new one) with the rewindable counters.</summary>
         public World SaveWorld(World reuse = null)
         {
             var s = reuse ?? new World();
-            s.kills = _w.kills; s.jobsOffered = _w.jobsOffered; s.jobsDone = _w.jobsDone;
+            s.kills = _w.kills;
             return s;
         }
 
         public void RestoreWorld(World s)
         {
             if (s == null) return;
-            _w.kills = s.kills; _w.jobsOffered = s.jobsOffered; _w.jobsDone = s.jobsDone;
+            _w.kills = s.kills;
         }
 
         /// <summary>m:ss.t (h:mm:ss past an hour).</summary>

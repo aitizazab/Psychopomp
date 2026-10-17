@@ -236,9 +236,11 @@ namespace JamKit.Tests.Skyline
             Assert.That(s.JobsDone, Is.EqualTo(2));
             s.RestoreWorld(saved);
             Assert.That(s.EnemiesKilled, Is.EqualTo(2), "the imp is alive again: its kill is undone");
-            Assert.That(s.JobsDone, Is.EqualTo(1));
+            Assert.That(s.JobsDone, Is.EqualTo(2), "jobs are settled once by the jobs ledger: never rewound");
             Assert.That(s.JobsOffered, Is.EqualTo(2));
-            Assert.That(s.JobsShare, Is.EqualTo(0.5f));
+            Assert.That(s.JobsShare, Is.EqualTo(1f));
+            s.RecordJobFailed();
+            Assert.That(s.JobsFailed, Is.EqualTo(1));
             Assert.That(s.Rewinds, Is.EqualTo(1), "what the player did stays");
             Assert.That(s.ShadowSteps, Is.EqualTo(2));
             Assert.That(s.Deaths, Is.EqualTo(1));

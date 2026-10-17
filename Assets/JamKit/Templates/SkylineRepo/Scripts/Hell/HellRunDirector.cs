@@ -151,6 +151,7 @@ namespace JamKit.SkylineRepo
                     else Flow.OpeningDone();
                     break;
                 case HellFlowStage.FloorIntro:
+                    HellRunEvents.RaiseFloorStarted(Flow.IntroFloor);
                     if (Screens != null) Screens.ShowFloorCard(Flow.IntroFloor);
                     else
                     {
@@ -251,6 +252,9 @@ namespace JamKit.SkylineRepo
         void OnWrecked()
         {
             if (Run == null || player == null || Flow == null) return;
+            string where = Flow.Stage == HellFlowStage.Boss ? "boss" : Flow.Stage == HellFlowStage.Ending ? "ending"
+                : Run.Phase == HellRunPhase.InRoom && Current != null ? Current.kind.ToString() : "shaft";
+            HellRunEvents.RaisePlayerDied(Run.Floor, where);
             if (Flow.Stage == HellFlowStage.Boss || Flow.Stage == HellFlowStage.Ending)
             {
                 // the boss and ending lanes put the player back themselves (player.Wrecked); the run only counts it
@@ -346,8 +350,17 @@ namespace JamKit.SkylineRepo
             if (a != null) a.Stepped += OnStepped;
         }
 
-        void OnStepped(Vector3 from, Vector3 to) { if (InRun) Flow.Stats.RecordShadowStep(); }
-        void OnRewound() { if (InRun) Flow.Stats.RecordRewind(); }
+        void OnStepped(Vector3 from, Vector3 to)
+        {
+            if (InRun) Flow.Stats.RecordShadowStep();
+            HellRunEvents.RaiseShadowStepUsed(from, to);
+        }
+
+        void OnRewound()
+        {
+            if (InRun) Flow.Stats.RecordRewind();
+            HellRunEvents.RaiseRewindUsed();
+        }
         void OnBotWrecked(SkylineBot bot) { if (InRun) Flow.Stats.RecordKill(); }
 
         bool InRun => Flow != null && Flow.Stats != null
