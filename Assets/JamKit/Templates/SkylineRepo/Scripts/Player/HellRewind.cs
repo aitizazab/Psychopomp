@@ -82,6 +82,15 @@ namespace JamKit.SkylineRepo
             if (Instance == this) Instance = null;
         }
 
+        void OnEnable() => HellRunEvents.RoomRestarted += ClearHistory;
+        void OnDisable() => HellRunEvents.RoomRestarted -= ClearHistory;
+
+        /// <summary>Forgets every recorded frame (a room restarted after a death: a rewind never reaches back past it).</summary>
+        public void ClearHistory()
+        {
+            if (_ring != null) _ring.Clear();
+        }
+
         void Update()
         {
             Cooldown.Duration = cooldown;

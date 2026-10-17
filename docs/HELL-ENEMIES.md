@@ -204,6 +204,9 @@ for the Rewind)`.
 
 ## Rewind
 
+> **Superseded at the merge (2026-10-17):** the ledger is gone and bots have one snapshot path; see
+> `docs/HELL-INTEGRATION.md`. The text below is the enemies branch as built.
+
 Every Hell enemy, ember bolt, scythe and lava pool, and every beam lane, implements `IHellRewindable`. It registers with
 `HellRewindRegistry` in `OnEnable` and unregisters in `OnDisable`. All of them run on scaled time (`Time.deltaTime`), so Time
 Dilation and Stasis slow them.

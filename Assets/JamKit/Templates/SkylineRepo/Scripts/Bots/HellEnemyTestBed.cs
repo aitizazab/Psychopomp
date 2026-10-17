@@ -11,7 +11,8 @@ namespace JamKit.SkylineRepo
     /// in front of the player, a fire imp (14 m out, hovering 3 m up), a scythe demon (22 m out) and a lava ooze (9 m out), each
     /// awake in its own group, and a beam lane across the way 6 m ahead. Keys: <b>T</b> spawns the set again, <b>R</b> uses the
     /// real <see cref="HellRewind"/> on the player for free (no cooldown; added to the player if the abilities aren't on), so
-    /// the player rewinds too (docs/HELL-INTEGRATION.md). Logs <c>HELL_TESTBED ...</c>.
+    /// the player rewinds too when HellAbilities is on it, as it is after every scene load (docs/HELL-INTEGRATION.md). Logs
+    /// <c>HELL_TESTBED ...</c>.
     /// </summary>
     [AddComponentMenu("JamKit/Hell/Enemy Test Bed")]
     public sealed class HellEnemyTestBed : MonoBehaviour

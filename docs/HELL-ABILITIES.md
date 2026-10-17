@@ -57,6 +57,9 @@ Hooks a skill can use: `HellAbilities.Stepped(from, to)`, `StepCharges` (charges
 
 ## What rewinds
 
+> **Merged with the enemies branch (2026-10-17):** bots, bolts and the Hell attacks now follow
+> `docs/HELL-INTEGRATION.md`; it wins where this list differs.
+
 - **The player:** the whole movement state (`MoveSim.SaveState`: position, velocity, mode, every timer, the capsule
   height), the look, plating and chassis, the boost charge, which gun is out, both guns' magazine and reserve (a reload in
   progress is cancelled), the special-ammo reserve. Ability charges and cooldowns do not rewind.
@@ -75,7 +78,7 @@ Hooks a skill can use: `HellAbilities.Stepped(from, to)`, `StepCharges` (charges
 ## Contracts with the other branches
 
 - `Common/HellRewindable.cs` and `Common/HellRewindRegistry.cs`: exactly as agreed (guids `4be1c9d2...`, `9d3a7e61...`).
-- `Common/HellRunEventsStub.cs`: a stub `HellRunEvents` inside `#if !HELL_ROOMS`. **Delete it at the merge** (the rooms
+- `Common/HellRunEventsStub.cs`: a stub `HellRunEvents` inside `#if !HELL_ROOMS`. **Deleted at the rooms merge (2026-10-17)** (the rooms
   branch owns the real one).
 - For the rooms branch: `HellDarkness.RegisterZone/UnregisterZone/RegisterLight`, `HellAbilities.LavaQuery` (set it: is this
   point lava?), `HellAbilities.LavaImmune`, `HellAbilities.LavaHop` and `HellAbilities.TryLavaBounce()` (call it every frame

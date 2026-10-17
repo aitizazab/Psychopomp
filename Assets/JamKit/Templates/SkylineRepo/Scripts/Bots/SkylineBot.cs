@@ -314,7 +314,7 @@ namespace JamKit.SkylineRepo
         // ISkylineAimable
         public Vector3 Center => Parts != null ? Rig.TransformPoint(Parts.centerLocal) : transform.position;
         public float Radius => Def != null ? Def.bodyRadius : 0.5f;
-        public bool Alive => _initialized && Body != null && !Body.Wrecked;
+        public bool Alive => _initialized && Body != null && !Body.Wrecked && !_hellRetired;   // a bot a Rewind retired is gone (SkylineBot.HellRewind.cs)
 
         bool _initialized, _everSeen, _sawLastStep, _beamStartedThisFrame, _lockBeeped, _practiceNoticed, _practiceBarked;
         BotArrival _arrival;

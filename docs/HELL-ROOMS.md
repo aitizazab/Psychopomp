@@ -235,6 +235,10 @@ Run only the Hell tests with `dotnet test core-tests/Skyline/Skyline.Tests.cspro
   `HellRoomFlags.Carry` already sets `HellAbilities.ShadowStepBlocked`, so no extra wiring is needed. `HellRewind`
   should drop its history on `HellRunEvents.RoomRestarted`.
 
+**Done in HellDescent (2026-10-17):** both stubs deleted; `HellRewind.ClearHistory` runs on `RoomRestarted`; `HellRoom`
+no longer calls the removed `HellRewindLedger`; the ooze wells count `Alive` bots instead of dropping dead ones (a
+Rewind can bring one back). See `docs/HELL-INTEGRATION.md`.
+
 ## What's left (honest list)
 
 **Not checked in play:**

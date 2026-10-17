@@ -91,7 +91,6 @@ namespace JamKit.SkylineRepo
         public void Begin(SkylinePlayer player)
         {
             _player = player;
-            HellRewindLedger.Ensure();
             var b = Def.bounds;
             SkylineBot.SearchArea = Rect.MinMaxRect(b.min.X + 1f, b.min.Z + 1f, b.max.X - 1f, b.max.Z - 1f);
             SkylineBot.Nav = ArenaNav.Build(HellRoomLint.NavSolids(Def));
@@ -190,8 +189,12 @@ namespace JamKit.SkylineRepo
                 case OozeWells wells:
                     for (int i = 0; i < _wellBots.Count; i++)
                     {
-                        _wellBots[i].RemoveAll(x => x == null || !x.Alive);
-                        _living[i] = _wellBots[i].Count;
+                        // count, don't drop, the dead: a Rewind can bring a dead ooze back (the same object); a bot it
+                        // retired (spawned after its snapshot) is gone for good (docs/HELL-INTEGRATION.md)
+                        _wellBots[i].RemoveAll(x => x == null || x.HellRetiredByRewind);
+                        int alive = 0;
+                        foreach (var x in _wellBots[i]) if (x.Alive) alive++;
+                        _living[i] = alive;
                     }
                     int sealedNow = wells.Tick(dt, feet, _living, _spawnAt);
                     foreach (int i in _spawnAt)
