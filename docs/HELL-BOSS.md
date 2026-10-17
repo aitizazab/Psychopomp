@@ -182,8 +182,14 @@ boss instead of finishing the run.
 
 ## What's left (honest list)
 - Nothing has been played; no Unity-side (EditMode/PlayMode) test.
-- **Her body is a primitive stand-in.** No CC0 model was downloaded (the art folder holds only previews); a prefab at
-  `Resources/HellModels/vesper` with a `Heart` child replaces it (see `HellVesperBody`). No animation beyond pose tilts.
+- **Her body is a model (2026-10-18)**, `Resources/HellModels/vesper` (built by `HellModelsBuild` from
+  `Look/HellLook/Models/vesper.fbx`, made by `tools/hell-models/vesper.py`): Quaternius' "Woman in Dress" (CC0, rigged)
+  re-dressed as the Evening Star: obsidian skin with lava cracks, long fire hair, a floor-length black-violet gown with an
+  ember hem, a gold crown with a violet eight-point star on her brow, earrings, a choker with a violet pendant, a high
+  standing collar, gold shoulder plates, cuffs and belt. Her Animator plays Idle (a breath loop), Cast (also Rewind and
+  Strike), Reel, Kneel by the int `Pose` (= `HellVesperBody.Pose`), and the Blink clip (a lunge, arms swept back) on the
+  trigger `Blink` at each blink tell. The `Heart` rides her chest bone; capsules on her chest and hips and a sphere on her
+  head are the body zones; decorations have disabled boxes. Without the prefab the primitive stand-in returns.
 - **Her bolts are the imps' ember bolts** (orange), not violet shadow bolts: a tint wouldn't survive the bolt pool's rewind.
 - The arena is built at run time, not by the scene builder (the builder belongs to the rooms lane); it isn't in the
   scene file, so it isn't visible in the editor before Play and costs one build of ~70 primitives at `Begin`.
