@@ -8,3 +8,5 @@ cliff_diff.jpg, cliff_nor.jpg: Poly Haven 'cliff_side' https://polyhaven.com/a/c
 brick_diff.jpg, brick_nor.jpg: Poly Haven 'dark_brick_wall' https://polyhaven.com/a/dark_brick_wall (CC0 1.0)
 plate_diff.jpg, plate_nor.jpg: Poly Haven 'metal_plate' https://polyhaven.com/a/metal_plate (CC0 1.0)
 obsid_diff.jpg, obsid_nor.jpg: Poly Haven 'dark_rock_02' https://polyhaven.com/a/dark_rock_02 (CC0 1.0)
+scorch_diff.jpg, scorch_nor.jpg: Poly Haven 'cracked_red_ground' https://polyhaven.com/a/cracked_red_ground (CC0 1.0)
+corrode_diff.jpg, corrode_nor.jpg: Poly Haven 'rust_coarse_01' https://polyhaven.com/a/rust_coarse_01 (CC0 1.0)

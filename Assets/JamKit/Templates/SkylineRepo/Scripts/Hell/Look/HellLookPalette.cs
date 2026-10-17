@@ -6,8 +6,8 @@ namespace JamKit.SkylineRepo
     /// <summary>
     /// Every number of the Hell look in one place (docs/HELL-LIGHTING.md), per art direction and per floor: the surfaces' textures
     /// and tints, the lights (lava, braziers, the sky's glow), the ambient gradient, the fog and the sky beyond the rooms.
-    /// Floors: 0 The Ember Gate (ash and cliff rock, orange fire), 1 The Molten Works (dark brick and iron plate, red foundry
-    /// glow), 2 The Black Glass (black glassy rock, violet dark, embers). Light intensities are URP's (inverse-square: a light of
+    /// Floors: 0 The Ember Gate (ash and cliff rock, orange fire), 1 The Molten Works (dark brick, scorched ground and corroded
+    /// iron, red foundry glow), 2 The Black Glass (black glassy rock, violet dark, embers). Light intensities are URP's (inverse-square: a light of
     /// intensity I lights a surface d metres away with about I / d^2).
     /// </summary>
     public sealed class HellFloorLook
@@ -87,11 +87,13 @@ namespace JamKit.SkylineRepo
                     L.rim = C(1.4f, 0.35f, 0.06f); L.pillar = C(3f, 0.9f, 0.2f); L.seed = 1.7f;
                     L.spireTint = C(0.55f, 0.45f, 0.42f); L.spireVein = C(2.5f, 0.6f, 0.1f);
                     break;
-                case 1: // The Molten Works: dark foundry brick, iron floor plate, rust walkways, hot rust trims
-                    L.wallTex = "brick"; L.floorTex = "plate"; L.deckTex = "rust"; L.coverTex = "rust"; L.trimTex = "rust";
-                    L.wallTint = C(1.0f, 0.62f, 0.5f); L.floorTint = C(0.75f, 0.5f, 0.42f); L.deckTint = C(1.0f, 0.8f, 0.7f);
-                    L.coverTint = C(0.9f, 0.7f, 0.6f); L.trimTint = C(0.95f, 0.45f, 0.2f);
-                    L.wallTile = 4f; L.floorTile = 3f; L.floorSmooth = 0.45f;
+                case 1: // The Molten Works: dark foundry brick, scorched cracked ground, corroded ember-rust walkways and trims
+                    // (2026-10-18, the creator's pick note: the iron diamond plate read "too industrially metallic, not tarnished
+                    // enough for Hell" and off-palette; the painted rust sheet read grey-blue. Both replaced.)
+                    L.wallTex = "brick"; L.floorTex = "scorch"; L.deckTex = "corrode"; L.coverTex = "corrode"; L.trimTex = "corrode";
+                    L.wallTint = C(1.0f, 0.62f, 0.5f); L.floorTint = C(1.7f, 1.2f, 1.0f); L.deckTint = C(0.75f, 0.52f, 0.4f);
+                    L.coverTint = C(0.7f, 0.48f, 0.38f); L.trimTint = C(1.05f, 0.5f, 0.24f);
+                    L.wallTile = 4f; L.floorTile = 2f; L.deckTile = 3f; L.floorSmooth = 0.18f;
                     L.veinColor = C(1.8f, 0.4f, 0.05f);
                     L.lavaLight = C(1f, 0.32f, 0.08f); L.lavaIntensity = 19f;
                     L.ambientSky = C(0.07f, 0.05f, 0.07f); L.ambientEquator = C(0.075f, 0.03f, 0.02f); L.ambientGround = C(0.28f, 0.07f, 0.02f);

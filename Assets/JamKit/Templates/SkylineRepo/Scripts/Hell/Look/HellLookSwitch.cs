@@ -36,6 +36,11 @@ namespace JamKit.SkylineRepo
 
         public const string ResourceFolder = "HellLook/";
 
+        /// <summary>The game's look per floor with no switches (the creator's pick, 2026-10-18): floor 1 A Inked Inferno, floors 2
+        /// and 3 B Molten Grit (floor 2's floor re-textured: scorched cracked ground, corroded walkways). Baked into the scene by
+        /// <c>HellLookBuild.BakeDefault</c>; a scene without a switch gets it at run time too.</summary>
+        public static readonly HellLookDirection[] DefaultFloorLooks = { HellLookDirection.A, HellLookDirection.B, HellLookDirection.B };
+
         /// <summary>The look in force on floor 1 (None outside the look test): the imp's model swap reads it.</summary>
         public static HellLookDirection ActiveLook { get; private set; }
         public static HellOutlineVariant ActiveOutline { get; private set; }
@@ -87,11 +92,11 @@ namespace JamKit.SkylineRepo
             var sw = Object.FindAnyObjectByType<HellLookSwitch>();
             if (sw == null)
             {
-                // Always in the Hell scene since the creator's outline pick (2026-10-17): with no look it restyles nothing, it only
-                // turns on the soulfire pulse outline (an outlines-only ink pass) and the bone-white studs. -hellOutline off skips it.
-                if (!opts.Any && opts.outline == HellOutlineVariant.Off) return;
+                // Always in the Hell scene. Since the creator's pick (2026-10-18) the game's default is DefaultFloorLooks (floor 1
+                // Inked Inferno, floors 2 and 3 Molten Grit); -hellLook / -hellLookFloors override it for comparison and capture.
                 sw = new GameObject("Hell Look (switch)").AddComponent<HellLookSwitch>();
-                sw.look = opts.look;
+                sw.look = DefaultFloorLooks[0];
+                sw.floorLooks = (HellLookDirection[])DefaultFloorLooks.Clone();
                 sw.outline = opts.outline;
                 sw.studs = opts.studs;
             }
@@ -121,6 +126,8 @@ namespace JamKit.SkylineRepo
         public static GameObject ModelOverride(string enemyName)
         {
             if (ActiveLook == HellLookDirection.None || enemyName != "fire-imp") return null;
+            // a real drop-in model (Resources/HellModels/fire-imp, the enemy-models lane) wins over the look test's stand-in
+            if (Resources.Load<GameObject>(HellBodies.ModelFolder + enemyName) != null) return null;
             return Resources.Load<GameObject>(ResourceFolder + "fire-imp");
         }
 

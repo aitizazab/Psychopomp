@@ -257,17 +257,33 @@ namespace JamKit.SkylineRepo.EditorTools
         {
             PrepareAssets();
             SkylineArenaBuilder.BuildHell(SkylineArenaBuilder.HellScenePath);
-            if (look != HellLookDirection.None)
-            {
-                var scene = EditorSceneManager.OpenScene(SkylineArenaBuilder.HellScenePath, OpenSceneMode.Single);
-                var sw = new GameObject("Hell Look (switch)").AddComponent<HellLookSwitch>();
-                sw.look = look;
-                sw.outline = HellLookOptions.DefaultOutline(look);
-                sw.studs = HellLookOptions.DefaultStuds;
-                EditorSceneManager.SaveScene(scene);
-            }
+            BakeLook(look);
             AssetDatabase.Refresh();
-            Debug.Log("HELL_LOOK_BUILD scene " + SkylineArenaBuilder.HellScenePath + " look " + look);
+            Debug.Log("HELL_LOOK_BUILD scene " + SkylineArenaBuilder.HellScenePath + " look " + (look == HellLookDirection.None ? "default A,B,B" : look.ToString()));
+        }
+
+        /// <summary>Adds the <see cref="HellLookSwitch"/> to the built Hell scene: one direction for every floor, or with None the
+        /// game's default (<see cref="HellLookSwitch.DefaultFloorLooks"/>: A, B, B, the creator's pick of 2026-10-18). The player's
+        /// -hellLook / -hellLookFloors still override it.</summary>
+        public static void BakeLook(HellLookDirection look)
+        {
+            var scene = EditorSceneManager.OpenScene(SkylineArenaBuilder.HellScenePath, OpenSceneMode.Single);
+            foreach (var old in Object.FindObjectsByType<HellLookSwitch>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                Object.DestroyImmediate(old.gameObject);
+            var sw = new GameObject("Hell Look (switch)").AddComponent<HellLookSwitch>();
+            if (look == HellLookDirection.None)
+            {
+                sw.floorLooks = (HellLookDirection[])HellLookSwitch.DefaultFloorLooks.Clone();
+                sw.look = sw.floorLooks[0];
+            }
+            else
+            {
+                sw.look = look;
+                sw.floorLooks = new[] { look, look, look };
+            }
+            sw.outline = HellLookOptions.DefaultOutline(sw.look);
+            sw.studs = HellLookOptions.DefaultStuds;
+            EditorSceneManager.SaveScene(scene);
         }
 
         static HellLookDirection LookArg() => HellLookOptions.Parse(System.Environment.GetCommandLineArgs()).look;

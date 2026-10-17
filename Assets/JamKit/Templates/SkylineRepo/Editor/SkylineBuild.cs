@@ -67,8 +67,8 @@ namespace JamKit.SkylineRepo.EditorTools
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(exe));
                 if (File.Exists(exe)) File.Delete(exe);
-                SkylineArenaBuilder.BuildHell(SkylineArenaBuilder.HellScenePath);
-                AssetDatabase.Refresh();
+                // the look's assets, the scene, and the creator's look baked in (floor 1 A, floors 2-3 B: HellLookBuild.BakeLook)
+                HellLookBuild.BuildScene(JamKit.Skyline.HellLookDirection.None);
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
                     scenes = new[] { SkylineArenaBuilder.HellScenePath },

@@ -51,7 +51,7 @@ lighting model (bands or PBR) and the post. Every number is in `HellLookPalette.
   whiteout-blended normal maps, an **edge trim** (a band along wall tops and a curb round every slab), darker towards the
   floor, and **heated veins** (the side texture's deepest crevices glow at the lava line). A: posterized "painted" textures
   with ink bands; B: URP PBR; C: desaturated near-black, PBR. Sets: floor 1 cliff walls / burned ash floors / volcanic tile
-  walkways; floor 2 dark brick walls / iron plate floors / rust walkways; floor 3 black glassy rock / glossy basalt. New CC0
+  walkways; floor 2 dark brick walls / scorched cracked floors / corroded walkways (was iron plate and painted rust until the creator's note); floor 3 black glassy rock / glossy basalt. New CC0
   downloads (Poly Haven 1k): cliff_side, dark_brick_wall, metal_plate, dark_rock_02 (`Resources/HellLook/Textures/CREDITS.txt`).
 - **Beyond the bounds** (`HellBeyond`, `Hell/Sky`): a procedural skybox per floor (smoke ceiling lit from below, horizon
   fire glow, two ranges of jagged crags, eruption columns, embers), the cameras clear to it, and round each room 26 rock
@@ -98,8 +98,7 @@ work was 6.6 ms / 30 ms 1% lows, so the spikes are not new: hitches (spawns, sha
 - No volumetric light shafts (URP has none built in); halos and haze stand in.
 - C's carried ember is dim: the floor at your feet reads but is dark; tune `carryLight` after the pick.
 - The scythe demon and ooze are still primitive stand-ins (now textured and cracked).
-- The game's default (no `-hellLook`) is still the grey-box scene: once the creator picks, bake the pick
-  (`HellLookBuild.BuildA/B/C`, or a `HellLookSwitch` with `floorLooks`) into the scene the trailer build uses.
+- Done 2026-10-18: the creator's pick (A, B, B) is the game's default (docs/HELL-LOOK-TEST.md); floor 2's floor re-textured.
 
 ## How to run
 
