@@ -30,7 +30,7 @@ namespace JamKit.SkylineRepo.EditorTools
         const string ModelObj = "Assets/JamKit/Templates/SkylineRepo/Look/HellLook/Models/fire-imp-quaternius.obj";
         const string ModelMatFolder = "Assets/JamKit/Templates/SkylineRepo/Look/HellLook/Models/";
         /// <summary>The imp's size: the Quaternius demon's 5.5 m wingspan brought to about 2 m (the stand-in's is 1.6 m).</summary>
-        const float ImpScale = 0.37f;
+        const float ImpScale = 0.45f;
 
         [MenuItem("JamKit/Hell/Look test/Prepare the assets")]
         public static void PrepareAssetsMenu() => PrepareAssets();
@@ -45,6 +45,10 @@ namespace JamKit.SkylineRepo.EditorTools
         public static void PrepareAssets()
         {
             AssetDatabase.Refresh();
+            // The comic-ink renderer feature: HellDescent's PC renderer didn't have it (2026-10-18: the first captures had no ink
+            // and no outlines). It does nothing unless a volume turns SkylineInk on; it also brings the composite shader into the build.
+            SkylineInkSetup.InstallFeature();
+            SkylineInkConvert.EnsureResourceMaterials();
             NormalMaps();
             LitTemplates();
             ImpPrefab();
@@ -111,7 +115,9 @@ namespace JamKit.SkylineRepo.EditorTools
         /// head flame. Logs and leaves the stand-in in place if the OBJ didn't import.</summary>
         static void ImpPrefab()
         {
-            var meshes = AssetDatabase.LoadAllAssetsAtPath(ModelObj).OfType<Mesh>().ToList();
+            var assets = AssetDatabase.LoadAllAssetsAtPath(ModelObj);
+            var meshes = assets.OfType<Mesh>().ToList();
+            var imported = AssetDatabase.LoadAssetAtPath<GameObject>(ModelObj);
             if (meshes.Count == 0)
             {
                 Debug.LogWarning("HELL_LOOK_BUILD the imp OBJ has no meshes (" + ModelObj + "): the look test keeps the stand-in imp");
@@ -139,15 +145,30 @@ namespace JamKit.SkylineRepo.EditorTools
             model.localScale = Vector3.one * ImpScale;
             Bounds main = new Bounds();
             bool haveMain = false;
-            foreach (var mesh in meshes)
+            Material Pick(string n) => n.Contains("Eye_White") ? eyeMat : n.Contains("Eye_Black") ? charMat : n.Contains("Demon_Main") ? skinMat : charMat;
+            // Each imported renderer keeps its submeshes; its imported materials (named after the OBJ's usemtl) say which is which.
+            var sources = imported != null ? imported.GetComponentsInChildren<MeshFilter>(true) : new MeshFilter[0];
+            foreach (var mf in sources)
             {
-                string n = mesh.name;
-                Material mat = n.Contains("Eye_White") ? eyeMat : n.Contains("Eye_Black") ? charMat : n.Contains("Demon_Main") ? skinMat : charMat;
-                var go = new GameObject(n.Contains("Demon_Main") ? "Body" : n.Contains("Eye_White") ? "Eyes" : "Char " + n);
+                var mesh = mf.sharedMesh;
+                if (mesh == null) continue;
+                var mr = mf.GetComponent<MeshRenderer>();
+                var srcMats = mr != null ? mr.sharedMaterials : new Material[0];
+                var mats = new Material[mesh.subMeshCount];
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    string n = i < srcMats.Length && srcMats[i] != null ? srcMats[i].name : mf.name;
+                    mats[i] = Pick(n);
+                    if (n.Contains("Demon_Main")) { main = mesh.GetSubMesh(i).bounds; haveMain = true; }
+                }
+                var go = new GameObject("Body " + mf.name);
                 go.transform.SetParent(model, false);
+                go.transform.localPosition = mf.transform.localPosition;
+                go.transform.localRotation = mf.transform.localRotation;
+                go.transform.localScale = mf.transform.localScale;
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
-                go.AddComponent<MeshRenderer>().sharedMaterial = mat;
-                if (n.Contains("Demon_Main")) { main = mesh.bounds; haveMain = true; }
+                go.AddComponent<MeshRenderer>().sharedMaterials = mats;
+                Debug.Log("HELL_LOOK_BUILD imp part " + mf.name + ": " + mesh.subMeshCount + " submeshes, materials " + string.Join(", ", srcMats.Select(m => m != null ? m.name : "null")));
             }
             if (!haveMain) main = meshes[0].bounds;
             // the rig's origin is the imp's centre (it hovers there); the OBJ is centred on its bounds already
