@@ -16,6 +16,7 @@ Every Hell sound is cut, layered or synthesised from these recordings (Freesound
 | gong | nkuitse | CC0 1.0 | https://freesound.org/people/nkuitse/sounds/18654/ | `world/sigil` |
 | Four Heartbeats HQ_BeatSmith | Lunardrive | CC0 1.0 | https://freesound.org/people/Lunardrive/sounds/22416/ | `abilities/dilation_heartbeat` |
 | reverse cymbal | John Rayson | CC0 1.0 | https://freesound.org/people/John Rayson/sounds/23127/ | `abilities/rewind`, `abilities/rewind_end` |
+| BreathOfDeath | gabemiller74 | CC BY 4.0 | https://freesound.org/people/gabemiller74/sounds/60571/ | `abilities/shade` |
 | Final angelic sound | hjohnl | CC0 1.0 | https://freesound.org/people/hjohnl/sounds/61521/ | `world/lantern_place` |
 | wingflap_fast | philberts | CC0 1.0 | https://freesound.org/people/philberts/sounds/71417/ | `fire-imp/hover_loop` |
 | To Hell With Vinyl | dland | CC0 1.0 | https://freesound.org/people/dland/sounds/74385/ | `abilities/rewind` |
@@ -41,12 +42,11 @@ Every Hell sound is cut, layered or synthesised from these recordings (Freesound
 | assymetric_tick | Diboz | CC0 1.0 | https://freesound.org/people/Diboz/sounds/211203/ | `abilities/borrowed_time` |
 | Cracking Earthquake (cracking soil, cracking stone) | uagadugu | CC0 1.0 | https://freesound.org/people/uagadugu/sounds/222521/ | `world/platform_shake` |
 | Deep Monster Growl | uagadugu | CC0 1.0 | https://freesound.org/people/uagadugu/sounds/222523/ | `scythe-demon/alert` |
-| Creepy Whispering | RaspberryTickle | CC0 1.0 | https://freesound.org/people/RaspberryTickle/sounds/234044/ | `abilities/ambush`, `abilities/shade`, `world/lantern_pickup` |
+| Creepy Whispering | RaspberryTickle | CC0 1.0 | https://freesound.org/people/RaspberryTickle/sounds/234044/ | `abilities/ambush`, `world/lantern_pickup` |
 | Steam/hiss | wubitog | CC0 1.0 | https://freesound.org/people/wubitog/sounds/234782/ | `abilities/lava_hop`, `world/lava_touch`, `world/sink` |
 | Goblin Death | spookymodem | CC0 1.0 | https://freesound.org/people/spookymodem/sounds/249813/ | `fire-imp/wreck` |
 | Kirkstall Rock Crumble  | rokenjocu | CC0 1.0 | https://freesound.org/people/rokenjocu/sounds/262118/ | `scythe-demon/footstep` |
 | Short-Fireball-Woosh | wjl | CC0 1.0 | https://freesound.org/people/wjl/sounds/267887/ | `fire-imp/attack` |
-| Dragons Dying Breath | MickBoere | CC0 1.0 | https://freesound.org/people/MickBoere/sounds/276577/ | `scythe-demon/wreck` |
 | Fast reverse vortex | earlcash05 | CC0 1.0 | https://freesound.org/people/earlcash05/sounds/280222/ | `abilities/rewind` |
 | viscous liquid fall in | bevibeldesign | CC0 1.0 | https://freesound.org/people/bevibeldesign/sounds/315931/ | `world/sink` |
 | Concrete Hit 2 | dslrguide | CC0 1.0 | https://freesound.org/people/dslrguide/sounds/321478/ | `lava-ooze/plate_shed`, `world/platform_fall` |
@@ -55,8 +55,8 @@ Every Hell sound is cut, layered or synthesised from these recordings (Freesound
 | Bubbling Mud with Steam | ProductionNow | CC0 1.0 | https://freesound.org/people/ProductionNow/sounds/352904/ | `lava-ooze/telegraph` |
 | Steam | sniperous | CC0 1.0 | https://freesound.org/people/sniperous/sounds/365071/ | `lava-ooze/pool_cool`, `world/well_sealed` |
 | Quick Zoom / Slow Down | bevibeldesign | CC0 1.0 | https://freesound.org/people/bevibeldesign/sounds/366092/ | `abilities/dilation_in` |
+| Dragon Death | bevibeldesign | CC0 1.0 | https://freesound.org/people/bevibeldesign/sounds/366096/ | `scythe-demon/wreck` |
 | Energy Blast | Kinoton | CC0 1.0 | https://freesound.org/people/Kinoton/sounds/369516/ | `scythe/beam` |
-| Chains | cribbler | CC0 1.0 | https://freesound.org/people/cribbler/sounds/370877/ | `world/anchor_hit` |
 | Sizzle / Acid Burn | bottles | CC0 1.0 | https://freesound.org/people/bottles/sounds/382313/ | `lava-ooze/pool_loop` |
 | chain | nettimato | CC0 1.0 | https://freesound.org/people/nettimato/sounds/387240/ | `world/anchor_break` |
 | Industrial ambience | Lewente | CC0 1.0 | https://freesound.org/people/Lewente/sounds/393398/ | `beds/molten_works` |
@@ -73,7 +73,6 @@ Every Hell sound is cut, layered or synthesised from these recordings (Freesound
 | Backwards Whoosh | SlavicMagic | CC0 1.0 | https://freesound.org/people/SlavicMagic/sounds/446010/ | `abilities/shadowstep_out`, `abilities/shadowstep_out_free` |
 | Blast + Flamethrower cooldown | Breviceps | CC0 1.0 | https://freesound.org/people/Breviceps/sounds/447941/ | `scythe/beam` |
 | Hot Bubbling Mud | Breviceps | CC0 1.0 | https://freesound.org/people/Breviceps/sounds/456806/ | `lava-ooze/throb`, `lava-ooze/alert` |
-| Opening the sarcophagus | Breviceps | CC0 1.0 | https://freesound.org/people/Breviceps/sounds/457529/ | `world/well_grind` |
 | Long Ethereal Woosh | newagesoup | CC0 1.0 | https://freesound.org/people/newagesoup/sounds/462879/ | `ui/skill_open` |
 | Lava Loop 4 | Fission9 | CC0 1.0 | https://freesound.org/people/Fission9/sounds/474852/ | `beds/ember_gate`, `beds/molten_works`, `beds/black_glass` |
 | BODY FALL - V HVY - DIRT | leonelmail | CC0 1.0 | https://freesound.org/people/leonelmail/sounds/504626/ | `abilities/shadowstep_in`, `scythe-demon/footstep`, `world/shaft_land` |
@@ -81,7 +80,7 @@ Every Hell sound is cut, layered or synthesised from these recordings (Freesound
 | Metal Impact | Rickplayer | CC0 1.0 | https://freesound.org/people/Rickplayer/sounds/530486/ | `scythe-demon/plate_shed`, `world/anchor_hit` |
 | Lighting a Fire | plasterbrain | CC0 1.0 | https://freesound.org/people/plasterbrain/sounds/534702/ | `fire-imp/telegraph` |
 | Fire Burst Flash | Za-Games | CC0 1.0 | https://freesound.org/people/Za-Games/sounds/539972/ | `fire-imp/bolt_hit` |
-| Heavy Stone Push | msavioti | CC0 1.0 | https://freesound.org/people/msavioti/sounds/558254/ | `world/well_sealed` |
+| Heavy Stone Push | msavioti | CC0 1.0 | https://freesound.org/people/msavioti/sounds/558254/ | `world/well_grind`, `world/well_sealed` |
 | Bricks/Stones/Rocks/Gravel Falling | iwanPlays | CC0 1.0 | https://freesound.org/people/iwanPlays/sounds/567249/ | `world/platform_fall` |
 | magicShield_block | rafaelzimrp | CC0 1.0 | https://freesound.org/people/rafaelzimrp/sounds/570853/ | `world/anchor_deflect` |
 | Sword draw unsheathe | SamsterBirdies | CC0 1.0 | https://freesound.org/people/SamsterBirdies/sounds/581594/ | `scythe-demon/telegraph` |
@@ -102,6 +101,7 @@ Credit lines (CC BY: required; CC0: thanks):
 - "gong" by nkuitse (https://freesound.org/people/nkuitse/sounds/18654/), CC0 1.0
 - "Four Heartbeats HQ_BeatSmith" by Lunardrive (https://freesound.org/people/Lunardrive/sounds/22416/), CC0 1.0
 - "reverse cymbal" by John Rayson (https://freesound.org/people/John Rayson/sounds/23127/), CC0 1.0
+- "BreathOfDeath" by gabemiller74 (https://freesound.org/people/gabemiller74/sounds/60571/) licensed under CC BY 4.0
 - "Final angelic sound" by hjohnl (https://freesound.org/people/hjohnl/sounds/61521/), CC0 1.0
 - "wingflap_fast" by philberts (https://freesound.org/people/philberts/sounds/71417/), CC0 1.0
 - "To Hell With Vinyl" by dland (https://freesound.org/people/dland/sounds/74385/), CC0 1.0
@@ -132,7 +132,6 @@ Credit lines (CC BY: required; CC0: thanks):
 - "Goblin Death" by spookymodem (https://freesound.org/people/spookymodem/sounds/249813/), CC0 1.0
 - "Kirkstall Rock Crumble " by rokenjocu (https://freesound.org/people/rokenjocu/sounds/262118/), CC0 1.0
 - "Short-Fireball-Woosh" by wjl (https://freesound.org/people/wjl/sounds/267887/), CC0 1.0
-- "Dragons Dying Breath" by MickBoere (https://freesound.org/people/MickBoere/sounds/276577/), CC0 1.0
 - "Fast reverse vortex" by earlcash05 (https://freesound.org/people/earlcash05/sounds/280222/), CC0 1.0
 - "viscous liquid fall in" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/315931/), CC0 1.0
 - "Concrete Hit 2" by dslrguide (https://freesound.org/people/dslrguide/sounds/321478/), CC0 1.0
@@ -141,8 +140,8 @@ Credit lines (CC BY: required; CC0: thanks):
 - "Bubbling Mud with Steam" by ProductionNow (https://freesound.org/people/ProductionNow/sounds/352904/), CC0 1.0
 - "Steam" by sniperous (https://freesound.org/people/sniperous/sounds/365071/), CC0 1.0
 - "Quick Zoom / Slow Down" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/366092/), CC0 1.0
+- "Dragon Death" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/366096/), CC0 1.0
 - "Energy Blast" by Kinoton (https://freesound.org/people/Kinoton/sounds/369516/), CC0 1.0
-- "Chains" by cribbler (https://freesound.org/people/cribbler/sounds/370877/), CC0 1.0
 - "Sizzle / Acid Burn" by bottles (https://freesound.org/people/bottles/sounds/382313/), CC0 1.0
 - "chain" by nettimato (https://freesound.org/people/nettimato/sounds/387240/), CC0 1.0
 - "Industrial ambience" by Lewente (https://freesound.org/people/Lewente/sounds/393398/), CC0 1.0
@@ -159,7 +158,6 @@ Credit lines (CC BY: required; CC0: thanks):
 - "Backwards Whoosh" by SlavicMagic (https://freesound.org/people/SlavicMagic/sounds/446010/), CC0 1.0
 - "Blast + Flamethrower cooldown" by Breviceps (https://freesound.org/people/Breviceps/sounds/447941/), CC0 1.0
 - "Hot Bubbling Mud" by Breviceps (https://freesound.org/people/Breviceps/sounds/456806/), CC0 1.0
-- "Opening the sarcophagus" by Breviceps (https://freesound.org/people/Breviceps/sounds/457529/), CC0 1.0
 - "Long Ethereal Woosh" by newagesoup (https://freesound.org/people/newagesoup/sounds/462879/), CC0 1.0
 - "Lava Loop 4" by Fission9 (https://freesound.org/people/Fission9/sounds/474852/), CC0 1.0
 - "BODY FALL - V HVY - DIRT" by leonelmail (https://freesound.org/people/leonelmail/sounds/504626/), CC0 1.0

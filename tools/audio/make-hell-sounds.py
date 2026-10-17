@@ -162,6 +162,9 @@ def level(x, lufs):
     peak = np.max(np.abs(y))
     if peak > PEAK:
         y *= PEAK / peak   # never above -1 dBFS (past the limiter's reach it lands quieter than its target: see the build log)
+    tp = np.max(np.abs(signal.resample_poly(y, 4, 1, axis=0)))   # and no true peak (between the samples) over -1 dBTP either
+    if tp > PEAK:
+        y *= PEAK / tp
     return y, now
 
 
@@ -303,7 +306,9 @@ out(A + "dilation_in", [L("dilation_in__366092", 0.6, 2.2, fi=0.05, fo=0.4)], AB
 out(A + "dilation_heartbeat", [L("dilation_in__22416", 0.0, 3.6, lp=900)], -28, loop=0.05)
 out(A + "dilation_out", [L("dilation_out__123438", 0.5, 1.86, fi=0.05, fo=0.1)], ABILITY)
 out(A + "ambush", [L("ambush__512389", 0.05, 1.3, fo=0.6), L("shade__234044", 0.5, 1.2, at=0.1, db=-10, fi=0.1, fo=0.4)], -20)
-out(A + "shade", [L("shade__234044", 0.4, 2.4, fi=0.1, fo=0.6)], -24)
+# the creator's pick (2026-10-18): "Breath of Death" (60571, CC BY 4.0). Its 1.4 s fade-up is cut: the decoy appears at once, so the
+# breath starts 1.6 s in (15 dB under its peak) and dies away by 3.6 s
+out(A + "shade", [L("shade__60571", 1.6, 3.6, fi=0.12, fo=0.8)], -24)
 out(A + "nightfall", [Synth(0.6, inrush, db=-4), L("nightfall__657541", 0.3, 2.8, at=0.1, fi=0.05, fo=0.8),
                       L("nightfall__189779", 0.0, 2.5, at=0.5, lp=200, fo=1.5, db=-2)], -20)
 out(A + "borrowed_time", [L("borrowed_time__211203", 0.0, 0.26, fo=0.08)], -26)
@@ -336,10 +341,14 @@ out(E + "scythe-demon/hurt", [L("demon_alert__444445", 0.28, 0.9, fo=0.3)], -18)
 out(E + "scythe-demon/telegraph", [L("demon_telegraph__581594", 0.27, 0.95, fo=0.3)], -18)
 out(E + "scythe-demon/attack", [L("scythe_appear__657653", 0.11, 0.7, fo=0.3), L("demon_telegraph__107589", 0.1, 0.6, semis=-5, db=-3),
                                 Synth(0.6, whir, db=-6)], -18, fo=0.25)
-out(E + "scythe-demon/footstep", [L("demon_stride__504626", 0.28, 0.55, semis=-4, fo=0.12),
-                                  L("ooze_plate__262118", 0.01, 0.3, at=0.03, db=-10, fo=0.2)], -18)
+# made the way the sound pass describes (the creator's pick, 2026-10-18): the heavy body fall's impact, its first 0.25 s from the
+# hit (onset 0.36 s; the old cut started 80 ms early, in the scuff), pitched down 4 semitones, with a small stone-debris tail
+out(E + "scythe-demon/footstep", [L("demon_stride__504626", 0.355, 0.605, semis=-4, fi=0.002, fo=0.1),
+                                  L("ooze_plate__262118", 0.01, 0.3, at=0.12, db=-12, fi=0.01, fo=0.2)], -18)
 out(E + "scythe-demon/plate_shed", [L("demon_plate__616492", 0.0, 0.41), L("demon_plate__530486", 0.04, 0.35, db=-4, fo=0.2)], -18)
-out(E + "scythe-demon/wreck", [L("demon_wreck__276577", 0.3, 2.8, fo=0.9), L("combustion__431174", 0.0, 0.78, at=0.1, db=-3)], -16)
+# the creator's pick (2026-10-18): the first part of "Dragon death" (366096): the roar from its rise (0.08 s) to just before its
+# second breath (1.44 s), faded out over the last 0.5 s, with the fireball low under it (the death is in a burst of fire)
+out(E + "scythe-demon/wreck", [L("demon_wreck__366096", 0.08, 1.42, fo=0.5), L("combustion__431174", 0.0, 0.78, at=0.05, db=-8)], -16)
 out(E + "scythe/warn", [Synth(0.9, scythe_warn)], -16, length=0.9)
 out(E + "scythe/beam", [L("scythe_beam__369516", 0.5, 1.5, fi=0.004, fo=0.35), L("scythe_beam__447941", 0.15, 1.0, db=-4, fo=0.3)], -16)
 
@@ -374,13 +383,17 @@ out(W + "sigil", [L("sigil__18654", 0.0, 3.5, fo=1.5), L("spawn_warning__186374"
 out(W + "lantern_pickup", [L("lantern_pick__171939", 0.0, 0.33), L("shade__234044", 1.0, 1.6, at=0.1, db=-10, fi=0.1, fo=0.3)], -21)
 out(W + "lantern_carry", [L("lantern_loop__808032", 1.0, 7.0, lp=4000)], -30, loop=1.0)
 out(W + "lantern_place", [L("lantern_place__61521", 0.4, 4.4, fo=2.0)], WORLD)
-out(W + "anchor_hit", [L("demon_plate__530486", 0.04, 0.2, fo=0.05), L("anchor_hit__370877", 0.2, 0.8, at=0.03, db=-3, fo=0.3)], -18)
+# the creator's pick (2026-10-18): the "Metal impact" (530486) alone, from its hit (0.063 s; 30 ms of handling noise before it cut) with its ring cut to 0.55 s
+out(W + "anchor_hit", [L("demon_plate__530486", 0.063, 0.63, fi=0.002, fo=0.3)], -18)
 out(W + "anchor_deflect", [L("anchor_deflect__570853", 0.02, 0.9, fo=0.4)], WORLD)
 out(W + "anchor_break", [L("anchor_break__703247", 0.0, 2.5, fo=1.2), L("anchor_break__387240", 0.08, 1.07, at=0.15, db=-3)], -17)
 out(W + "brand_charge", [L("brand_charge__407052", 4.0, 7.0)], -24, loop=0.5)
 out(W + "brand_done", [L("brand_done__854670", 0.09, 3.0, fo=1.2)], -19)
-out(W + "well_grind", [L("well_seal__457529", 1.5, 4.5)], -24, loop=0.5)
-out(W + "well_sealed", [L("well_seal__558254", 0.2, 1.11), L("well_seal__365071", 0.1, 1.6, at=0.5, db=-4, fo=0.9)], -19)
+# the creator's pick (2026-10-18): "Heavy Stone Push" (558254) for the sealing and the closing. The grind loop is the push's
+# body (0.10-0.78 s) twice, the second a semitone lower so the repeat is less obvious, crossfaded into a seamless loop; the sealed
+# one-shot is the whole push to its stop (0.04-0.86 s: the lid lands) and the steam hiss of the dying lava after it
+out(W + "well_grind", [L("well_seal__558254", 0.10, 0.78), L("well_seal__558254", 0.10, 0.78, at=0.55, semis=-1, fi=0.12)], -24, loop=0.12)
+out(W + "well_sealed", [L("well_seal__558254", 0.04, 0.86, fi=0.01, fo=0.06), L("well_seal__365071", 0.1, 1.6, at=0.75, db=-6, fi=0.05, fo=0.9)], -19)
 out(W + "gate_open", [L("gate_open__352829", 0.19, 3.5, fo=1.5)], -19)
 
 # --- the beds (2D, stereo; the Ambience bus): one per floor, the lava sea under each

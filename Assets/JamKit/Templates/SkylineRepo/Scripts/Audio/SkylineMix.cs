@@ -253,6 +253,7 @@ namespace JamKit.SkylineRepo
         {
             float g = CategoryGain[(int)CategoryOf(sound)];
             if (sound != null && TrimDb.TryGetValue(sound, out var db)) g *= (float)Math.Pow(10.0, db / 20.0);
+            if (sound != null && sound.StartsWith("hell/", StringComparison.Ordinal)) g *= HellSoundTable.GainOf(sound);   // the mix by importance
             return g;
         }
 

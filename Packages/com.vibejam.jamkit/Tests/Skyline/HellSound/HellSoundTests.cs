@@ -114,6 +114,23 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void TheMixByImportanceKeepsItsOrder()
+        {
+            // the per-cue gains (docs/HELL-SOUND-PASS.md, "The mix by importance"): in range, never pushing a bus past full,
+            // and a bed always under a warning
+            var busDb = new Dictionary<HellSoundBus, float>
+                { { HellSoundBus.Ability, -2f }, { HellSoundBus.Ui, -2f }, { HellSoundBus.World, -6f }, { HellSoundBus.Enemy, -12f }, { HellSoundBus.Bed, -8f } };
+            foreach (var r in HellSoundTable.Rows)
+            {
+                Assert.That(r.GainDb, Is.InRange(-15f, 12f), r.Cue);
+                Assert.That(busDb[r.Bus] + r.GainDb, Is.LessThanOrEqualTo(0.01f), r.Cue + ": bus x gain over 1");
+            }
+            Assert.That(HellSoundTable.GainOf("hell/not/in/table"), Is.EqualTo(1f));
+            Assert.That(HellSoundTable.GainOf("hell/bed/1"), Is.LessThan(1f));
+            Assert.That(HellSoundTable.GainOf("hell/scythe/warn"), Is.GreaterThanOrEqualTo(1f));
+        }
+
+        [Test]
         public void OneBedForAllSwapsEveryFloorToTheFirst()
         {
             try
