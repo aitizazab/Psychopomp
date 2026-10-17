@@ -79,6 +79,47 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void TheAbilitiesSitSmallLeftOfTheAmmoOnItsBaseline()
+        {
+            foreach (var (sw, sh) in new[] { (1920f, 1080f), (2560f, 1080f), (1920f, 1200f), (3440f, 1440f) })
+            {
+                HellHudPlaces.Panel(sw, sh, out float w, out float h);
+                var ammo = HellHudPlaces.Ammo.Resolve(w, h);
+                var ab = HellHudPlaces.Abilities.Resolve(w, h);
+                var sub = HellHudPlaces.Subtitles.Resolve(w, h);
+                Assert.That(ab.Right, Is.LessThanOrEqualTo(ammo.x), "left of the ammo counter and gun icon, not above it");
+                Assert.That(ab.Bottom, Is.EqualTo(ammo.Bottom).Within(0.01f), "on the ammo's baseline");
+                Assert.That(ab.h, Is.LessThan(100f), "smaller than the old 132 px row");
+                Assert.That(ab.y, Is.GreaterThanOrEqualTo(sub.Bottom), "under the subtitles");
+            }
+        }
+
+        [Test]
+        public void TheJobLineSitsUnderTheObjectiveAndItsClock()
+        {
+            var o = HellHudPlaces.Objective.Resolve(1920f, 1080f);
+            var clock = HellHudPlaces.RoomClock.Resolve(1920f, 1080f);
+            var line = HellHudPlaces.JobLine.Resolve(1920f, 1080f);
+            Assert.That(line.y, Is.GreaterThanOrEqualTo(o.Bottom));
+            Assert.That(line.y, Is.GreaterThanOrEqualTo(clock.Bottom));
+            Assert.That(line.x + line.w * 0.5f, Is.EqualTo(960f).Within(0.01f), "centred under the line");
+            Assert.That(HellHudPlaces.In(HellHudState.Job, 1080f).Any(b => b.name == "job-line"), Is.True, "tested with the job's HUD");
+            Assert.That(HellJobLineText.Of("Step into the cage"), Is.EqualTo("FAVOUR:  Step into the cage"));
+            Assert.That(HellJobLineText.Of(null), Is.EqualTo(""));
+        }
+
+        [Test]
+        public void TheDilationFuelGaugeMarksTheStartShare()
+        {
+            Assert.That(HellAbilityIcons.CanStartDilation(0.30f), Is.True);
+            Assert.That(HellAbilityIcons.CanStartDilation(0.20f), Is.False);
+            Assert.That(HellAbilityIcons.DilationStartShare, Is.EqualTo(0.25f));
+            Assert.That(HellAbilityIcons.Pips(1, 2, 0.5f), Is.EqualTo(new[] { 1f, 0.5f }));
+            Assert.That(HellAbilityIcons.Pips(2, 2, 0f), Is.EqualTo(new[] { 1f, 1f }));
+            Assert.That(HellAbilityIcons.Pips(0, 3, 0.25f), Is.EqualTo(new[] { 0.25f, 0f, 0f }));
+        }
+
+        [Test]
         public void SubtitlesClearTheLetterbox()
         {
             foreach (var (sw, sh) in new[] { (1920f, 1080f), (2560f, 1080f), (1920f, 1200f) })

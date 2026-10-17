@@ -99,18 +99,28 @@ both). So Hell keeps two layers, re-skinned (`HellHudVessel`, drawn into the sam
 - **The Ward** (the plating): a thin **bone** slab over the vessel; it **shatters** into shards when it breaks; the
   screen edges flash bone when a kill refills it.
 
-### The abilities (bottom right, above the ammo)
+### The abilities (bottom right, small, LEFT of the ammo)
 
-`HellHud` (rewritten). A row of tiles, right to left, each with its **control for the device in use** under it (Grenze Gotisch, e.g.
-"RIGHT MOUSE" / "LT", "V" / "LB", "E" / "RB", "G" / "D-PAD DOWN"; `HellInputDevice`):
+Moved 2026-10-18 after the creator's first playthrough ("custom icons for Rewind and Shadow Step, smaller, to the left of
+the gun ammo counter and icon, instead of above it"). `HellHud`: four small icons (60 px tiles, 88 px tall) on the ammo's
+baseline, left of the gun icon (`HellHudPlaces.Abilities`), right to left, each with its **control for the device in use**
+under it (Grenze Gotisch 18 px, e.g. "V" / "LB", "E" / "RB", "RIGHT MOUSE" / "LT", "G" / "D-PAD DOWN"; `HellInputDevice`):
 
-- **Time Dilation**: a sand dial with a little hourglass; it **empties while the world is slowed** (`TimeDilationState.HoldLeft01`), full when ready (it has no cooldown).
-- **Rewind**: a sand dial with a back-chevron, **filling as it cools down**.
-- **Shadow Step**: **one violet diamond per charge**, the recharging one filling from the bottom; grey while blocked (the lantern).
+- **Rewind** (nearest the gun): a sand **clock face (hands at ten to twelve) inside a counter-clockwise arrow** (300 degrees
+  from twelve, the head pointing back up). The arrow's shaft **fills round as it cools down**; the head and face light when
+  ready.
+- **Shadow Step**: a violet **footprint mid-stride** (a tilted sole and four toes) with three ink streaks trailing behind
+  it, in a ring that **fills as the next charge comes back**, and **a pip per charge** under it (`HellAbilityIcons.Pip`).
+  Grey while blocked (the lantern).
+- **Time Dilation**: a **fuel gauge**: a sand ring holding what is left round a small hourglass, a **bone tick at 25%**
+  (the share it needs to start, `HellAbilityIcons.DilationStartShare`), ember while the world is slowed, dim ember under
+  25%. It reads `HellHud.DilationFuel01`, **a stub** until the fuel-gauge change (`HellAbilities.DilationFuel01`) is on
+  main: swap the one line marked TODO.
 - **Nightfall** (when owned): a violet dial.
-- Above the tiles, **a chip per floor skill you own** (its glyph in its flavour's hue).
+- The **skill chips** (a chip per floor skill you own) moved over the ammo counter (`HellHudPlaces.SkillChips`), where
+  the old tile row was.
 
-A tile coming ready flashes white. It repaints only when a value it draws changes.
+An icon coming ready flashes white. It repaints only when a value it draws changes; no garbage a frame.
 
 ### The ability wheel
 
@@ -151,10 +161,9 @@ it (`HellHudStyle.Place`). Reference 1920 x 1080 panel units, scaled with the sc
                                     +            <- crosshair, hit marker, Brand ring, decision ring
                     [ HOLD [F] OFFER YOUR HAND (prompt, 60%) ]
                     [   HOLD [E] TO AIM (hint card, 65.5%)   ]
-                                                     [skill chips  ]
-                    [ subtitles, 50% wide, 132 up ]  [ ~  <<  <>  ( )]
- [<> vessel ======/]                                 [ RMB V  E  G ]
- [  ward ~~~~~~~~~/]                                 [  12  WRIT   ]
+                    [ subtitles, 50% wide, 132 up ]           [chips]
+ [<> vessel ======/]                      ( ) ~  <> <<  [ 12  ]
+ [  ward ~~~~~~~~~/]                       G RMB E  V   [WRIT ]
 ```
 
 The tests (`HellHudTests.NothingThatShowsTogetherOverlaps`) resolve every box in every state (play, job, beat hold, boss,
@@ -225,8 +234,12 @@ Each writes `<name>.png` into the folder and logs `HELL_UI_SHOT <name> <path>`, 
 
 1. **Fonts load** (no `SKYLINE_HUD font missing` in the log): PSYCHOPOMP in Cinzel Decorative on `title.png`; Metal Mania on
    the objective line, banners, job card title, wheel names, decision prompt; Grenze Gotisch on the key labels and pause menu rows.
-2. `play.png`: the vessel (ember, Ward over it), the tiles with key labels, three skill chips, the hourglass top right,
-   the objective line with the clock under it, nothing overlapping.
+2. `play.png`: the vessel (ember, Ward over it), the four small ability icons LEFT of the ammo on its baseline (Rewind's
+   arrow-and-clock, Shadow Step's footprint with its pip, Dilation's fuel ring with the 25% tick, Nightfall) with key
+   labels, three skill chips over the ammo, the hourglass top right, the objective line with the clock under it,
+   nothing overlapping.
+   `job-line.png`: "FAVOUR:  Shadow Step into the cage..." in violet Metal Mania under the objective line and clock (no
+   card). `job-near.png`: the same line pulsing toward ember, and the card with THE OVERDUE SOUL and the instruction.
 3. `low-health.png`: cracks across the drained vessel, the gem bright, no Ward.
 4. `wheel.png`: six slots (three gifts, Nightfall, Ambush, Deeper Rewind), slot 3 (Nightfall) pointed at with its name,
    state and description in the middle; the world slowed.
