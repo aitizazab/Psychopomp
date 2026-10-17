@@ -9,7 +9,7 @@ were merged. It lists every sound the game needs. For each one it gives:
 - 2-4 free candidates, with the best one picked.
 
 It also lists the sounds that have no good free match and how we'd make them, and the music direction options.
-Nothing is in the game yet. The creator picks on the listening page first.
+The sounds are now installed with defaults for the open questions (see "Installed" below); the creator's answers swap them in one place.
 
 **How the candidates were found and judged:**
 
@@ -44,7 +44,263 @@ Listening page: `FableAnimationTests/art/review/2026-10-17/hell-sound-pass.html`
 7. CC-BY is allowed with a credit line in the repo. Keep CC-BY picks, or CC0 only?
 8. Music: which direction do we compose toward (see the last section): DOOM-style metal with choir, Metal: Hellsinger's beat-driven metal, Hades' fast catchy rock, or dark ambient between fights with metal only in combat? And do you want a free CC0 track as a stand-in until ours is built?
 
-## How the sounds go in (for whoever wires them)
+## Installed (sprint lane 7, 2026-10-18)
+
+The sound is in the game. Nothing in it is final: the creator's ears decide, and every pick swaps in one place.
+
+**Where things are:**
+
+- **The swap table:** `Packages/com.vibejam.jamkit/Runtime/Skyline/HellSound/HellSoundTable.cs` (`HellSoundTable.Rows`). Every cue
+  maps to one file. To change a sound, change its row's file. An empty file silences the cue.
+- **The files:** `Assets/JamKit/Templates/SkylineRepo/Resources/SkylineAudio/hell/` (75 WAVs, 44.1 kHz 16-bit, mono except the
+  beds). They are built by `tools/audio/make-hell-sounds.py`, which also writes the credits, so a file never ships without its credit.
+  Re-run it after changing a recipe:
+  `uv run --with numpy --with scipy --with pyloudnorm --with soundfile python tools/audio/make-hell-sounds.py`.
+- **The wiring:** `Scripts/Audio/HellSoundBinder.cs`. It watches the game's public state and events and plays the cues, so
+  `Scripts/Hell/*` and the other lanes' scripts carry no sound code. `Scripts/Bots/SkylineBot.HellSound.cs` is a read-only view of
+  the ooze's beat, the demon's stride and the ooze's pools.
+- **The credits:** `CREDITS.md` (Audio section). The credits screen can read either
+  `Resources/HellAudioCredits.txt` (licence TAB credit line) or `JamKit.Skyline.HellAudioCredits.Lines()` (CC BY first).
+
+**The mix (`SkylineMix`, `SkylineSounds`):**
+
+- **New categories.** `Abilities` sits at the guns' level (-2 dB). The ability cues used to fall into Bots, 10 dB down. `World`
+  sits at -6 dB and holds the rooms.
+- **The rest of the routing.** Enemies stay in Bots (-12 dB). Beds go to Ambience (-8 dB), and the screen moments (the skill pick,
+  the death, room cleared) go to Feedback.
+- **How a name finds its bus.** `SkylineMix.CategoryOf` reads any `hell/...` name's bus from the table. `SkylineSounds.Get` plays
+  the file the table names.
+- **The scythe's beam is never voice-gated.** It is a warning.
+- **File levels:**
+
+  | Family | Level |
+  |---|---|
+  | Abilities | -22 LUFS |
+  | Enemy one-shots | -16 to -19 LUFS |
+  | World | -18 to -22 LUFS |
+  | Beds | -24 LUFS |
+  | Quiet loops (aim hum, lantern, heartbeat, pools) | -24 to -34 LUFS |
+
+  Every file peaks under -1 dBFS, through a soft limiter.
+
+**Time Dilation:**
+
+- `HellAbilityAudio.PitchChanged` drives `SkylineSounds.SetWorldTime`.
+- **What slows.** The Bots, World and Ambience categories play at the time scale, never lower than 0.6. A low-pass closes from
+  22 kHz down to 900 Hz at the slowest dilation.
+- **What doesn't.** The player's guns, abilities, feedback and the screen moments are untouched.
+- **The heartbeat.** A heartbeat loop fades in with the depth.
+
+**Rewind (decided):**
+
+- **One-shots fire only on a change seen in play.** A Rewind, a room restart or a room change re-bases every watch
+  (`HellSoundRules.Watch`) silently, whichever way the restore moved it. Doing the thing again afterwards plays again, because the
+  player really did it again.
+- **Loops follow the restored state.** If you rewind back into carrying the lantern, its hum comes back.
+- **A scythe's warning restarts where it still ENDS on its beam.** Its speed is bent every frame to match the time left, whatever
+  the time scale.
+- **The rewind's own sound** is `rewind` (played by HellAbilities). The binder adds `rewind_end`, the tick 0.3 s later, when the
+  flash ends.
+
+**Bound by the binder (no edits in the owners' scripts):**
+
+- **Abilities:**
+  - the aim hum while E is held;
+  - Umbral Chain's free step (a step that spent no charge);
+  - Ambush (it wraps `ShotDamageScale`, and a tripled shot plays the crack);
+  - Borrowed Time (`SkylineBot.Killed`);
+  - Ashwalker's lava steps.
+- **Enemies:**
+  - the imp's hover loop;
+  - the ooze's throb, one blorp on each `OozePulse` beat, so it quickens through the wind-up;
+  - the demon's footsteps, one per leg plant of its stride;
+  - the ooze's pools (a burning loop, then the cooling hiss);
+  - the scythes' warning and beam, for the demons' volleys and the rooms' beam lanes.
+- **Rooms:**
+  - a bed per floor;
+  - the 3 nearest fire lights (brazier crackle);
+  - random lava bubbles within 18 m;
+  - the lava sizzle every 0.5 s while burning;
+  - a sink (a teleport with no step, rewind, death or room change behind it);
+  - the platforms' shake and fall;
+  - the sigils, the lantern (pick up, carry hum, place), the anchors (hit, warded deflect, break), the brand (a charge loop whose
+    pitch follows the meter, then the seal), the wells (a grind while sealing, then sealed);
+  - when any objective is done, the gate grinding open and the room-cleared bell;
+  - the shaft (a start whoosh, wind rising with the fall, a landing thump);
+  - the skill pick's open and hover;
+  - the death boom.
+- **The bolt's hit** is the one cue that needed a line in another lane's file (below).
+
+**One-line edits in other lanes' files:**
+
+- `Scripts/Bots/HellEnemyFx.cs:44`, in `EmberHit`:
+  `SkylineSounds.PlayAt(JamKit.Skyline.HellSoundCues.BoltHit, at);`
+
+Nothing in `Scripts/Hell/*` was touched. The other edits are the sound system's own files: `SkylineMix.cs` and `SkylineSounds.cs`.
+
+**Not wired, on purpose:**
+
+- `hell/spawn/warning` (file `spawn/warning`) is ready for the enemy-readability lane. It is one `SkylineSounds.PlayAt` where the
+  warning starts.
+- **The bolt whiz-by.** No file was made. `SkylineBolt` would need a closest-approach check; the pick is 414422 (CC BY) or 855248
+  (CC0).
+- **The Nightfall hum and collapse.** The one-shot carries a 3 s tail.
+- **Music.** It stays silent. The hook is in `HellSoundBinder.TickBeds`: add `hell/music/<floor>` rows.
+
+### Synthesised or layered (the gaps)
+
+- **Scythe path warning:** synthesised. 0.9 s, a thin tone rising an octave, with a tremolo speeding from 8 to 30 Hz and a hard
+  stop. It is bent in code so it ends on the beam.
+- **Scythe appear** (the demon's `attack`): the dark-rift whoosh, the unsheath shing pitched down 5 semitones, and a synthesised
+  12 Hz whir.
+- **Demon footstep:** the heavy body fall's impact pitched down 4 semitones, with a stone-crumble tail.
+- **Imp death:** the goblin death cry cut at 0.4 s, straight into the fireball, with an ember crackle tail.
+- **Ooze throb:** one bubble, found automatically as the loudest event in the bubbling-mud recording, and retriggered on each beat
+  in code.
+- **Nightfall:** a synthesised dark inrush, the dark-spell rise and the sub boom (low-passed).
+- **Rewind:**
+  - the start: the tape stop into the reverse vortex, a synthesised sub swirl falling from 75 to 38 Hz with a wobble, and the
+    reverse cymbal;
+  - **rewind_end:** the reverse-cymbal swallow, then the clock tick, with a synthesised thump.
+- **Shaft:** synthesised gusting wind (a loop that rises in code), the low whoosh at the start, and a landing thump (the body fall
+  plus the sub boom).
+- **Platform shake:** the stone drag twice over the earthquake's low-passed rumble, rising, 0.9 s.
+- **Lava bubbles:** the three loudest single pops from the lava recording.
+- **Anchor hit:** the metal-impact transient and the chain jangle.
+- **Skill pick:**
+  - **open:** the long ethereal woosh with the dark rise under it;
+  - **hover:** a synthesised soft 1.3 kHz tick.
+- **Beds** (9 s seamless loops, stereo), each with the lava sea under it:
+  - Ember Gate: the tonal wind;
+  - Molten Works: the industrial drone plus chains;
+  - Black Glass: the terror drone.
+
+### Swap points for the creator's answers
+
+Every swap is in `HellSoundTable.cs`. Change a row's file, or flip a switch under the table:
+
+| Question | Default now | To swap |
+|---|---|---|
+| 1. Shadow Step | ghostly (backwards whoosh + cloth snap; puff + weight) | Punchy: point `shadowstep_out`/`_in` at new files (recipe: 735062 fast warp in + 512389 bass impact in `make-hell-sounds.py`) |
+| 2. Rewind | deep swirl ending on a tick | Tape-and-clock: rebuild `abilities/rewind` from 372876 tape rewind + 547305 tick tock |
+| 3. Time Dilation | muffle + slow + heartbeat | `DilationMuffle = false` (whooshes only), `DilationHeartbeat = false` |
+| 4. Enemy voices | the imp and the demon have voices | Voiceless: set the `alert` and `hurt` rows' file to `""` |
+| 5. Spawn warnings | file + cue ready, not wired | the enemy-readability lane calls `hell/spawn/warning` |
+| 6. Room tones | a bed per floor | `OneBedForAll = true` (the Ember Gate's everywhere) |
+| 7. CC BY | kept (3 ship: `dilation_out` 123438, `lava-ooze/wreck` 167074, `brand_done` 854670; credited) | CC0 only: `dilation_out` -> rebuild from 683101; `lava-ooze/wreck` -> 315931 + 155660; `brand_done` -> 18654 gong |
+| 8. Music | silent | add `hell/music/<floor>` rows and a `Loop` in `HellSoundBinder.TickBeds` |
+
+### Swap for the originals later
+
+Every Freesound file in the game is cut from the **HQ MP3 preview** (128 kbps; the same recording and licence as the original, but
+lossy). Originals need a Freesound login.
+
+- **Swap first** (long or airy sounds, where MP3 smear is audible):
+  - the three beds (397092, 393398, 155142, 474852, 108265);
+  - the bells and gong (76405, 18654, 61521);
+  - the whispers and pads (234044, 427292, 808032);
+  - the brand charge (407052);
+  - the steam (365071, 234782).
+- **Then the rest:** short transients hide it.
+
+To swap, put the original WAVs under `FableAnimationTests/art/hell-pass/sound/downloads/freesound/` and point `SRC` in the script at
+pieces cut from them.
+
+### Check in Unity, by ear
+
+1. **The ability level against the gun.** Abilities are now at the gun's level, where they used to be 10 dB under: Rewind, Shadow
+   Step and Nightfall should sit just under a Writ shot.
+2. **The scythe warning.** It must end exactly as the beam fires, at normal speed and in Time Dilation.
+3. **The Time Dilation muffle.** Is the depth right (900 Hz at the slowest; the pitch floor is 0.6)? Does the heartbeat sit under
+   the gunfire?
+4. **The ooze throb** at idle and through its wind-up: not machine-gunning.
+5. **The demon's footsteps** against its stride animation.
+6. **The beds' level** under combat, and whether the loops are seamless (9 s).
+7. **The sink detection.** It plays on a lava sink and must stay silent on a Shadow Step, a Rewind, a death and a room change.
+8. **The imp's hover loop.** Three imps at once: it is gated by distance only (22 m).
+9. **The brazier crackle** near the lava (the fire lights are made from the lava).
+
+### Every cue
+
+| Cue | File | Bus | Made from (Freesound id, licence) | Note |
+|---|---|---|---|---|
+| `shadowstep_aim` | `abilities/shadowstep_aim` (loop) | Abilities | 427292 "Another Atmospheric Pad" (CC0 1.0) | while E is held (the landing preview) |
+| `shadowstep_out` | `abilities/shadowstep_out` | Abilities | 446010 "Backwards Whoosh" (CC0 1.0); 428336 "Canvas Dropcloth Snap 2" (CC0 1.0) | ghostly: backwards whoosh + cloth snap |
+| `shadowstep_out_free` | `abilities/shadowstep_out_free` | Abilities | 446010 "Backwards Whoosh" (CC0 1.0); 428336 "Canvas Dropcloth Snap 2" (CC0 1.0); 802472 "Whoosh - Magic disappear" (CC0 1.0) | Umbral Chain's free step (layered on the out) |
+| `shadowstep_in` | `abilities/shadowstep_in` | Abilities | 714257 "Puff of Smoke" (CC0 1.0); 504626 "BODY FALL - V HVY - DIRT" (CC0 1.0) | a puff + weight |
+| `shadowstep_denied` | `abilities/denied` | Abilities | 133449 "Cigarette Sizzle 02" (CC0 1.0) |  |
+| `rewind_denied` | `abilities/denied` | Abilities | 133449 "Cigarette Sizzle 02" (CC0 1.0) |  |
+| `nightfall_denied` | `abilities/denied` | Abilities | 133449 "Cigarette Sizzle 02" (CC0 1.0) |  |
+| `rewind` | `abilities/rewind` | Abilities | 74385 "To Hell With Vinyl" (CC0 1.0); 280222 "Fast reverse vortex" (CC0 1.0); synthesised; 23127 "reverse cymbal" (CC0 1.0) | deep swirl (Tracer-like): tape stop, vortex, sub |
+| `rewind_end` | `abilities/rewind_end` | Abilities | 23127 "reverse cymbal" (CC0 1.0); 188033 "Ticking Clock" (CC0 1.0); synthesised | 0.3 s after the rewind: the tick |
+| `dilation_in` | `abilities/dilation_in` | Abilities | 366092 "Quick Zoom / Slow Down" (CC0 1.0) |  |
+| `dilation_heartbeat` | `abilities/dilation_heartbeat` (loop) | Abilities | 22416 "Four Heartbeats HQ_BeatSmith" (CC0 1.0) | while time is slowed (DilationHeartbeat) |
+| `dilation_out` | `abilities/dilation_out` | Abilities | 123438 "Slowdown_Short_Up" (CC BY 4.0) | CC BY |
+| `ambush` | `abilities/ambush` | Abilities | 512389 "Bass Impact - Ki_01" (CC0 1.0); 234044 "Creepy Whispering" (CC0 1.0) | the tripled shot |
+| `shade` | `abilities/shade` | Abilities | 234044 "Creepy Whispering" (CC0 1.0) |  |
+| `nightfall` | `abilities/nightfall` | Abilities | synthesised; 657541 "Crystal Magic - Dark Spell Rise" (CC0 1.0); 189779 "Big Boom" (CC0 1.0) | layered: inrush, dark rise, sub boom |
+| `borrowed_time` | `abilities/borrowed_time` | Abilities | 211203 "assymetric_tick" (CC0 1.0) | a tick on each kill |
+| `lava_hop` | `abilities/lava_hop` | Abilities | 234782 "Steam/hiss" (CC0 1.0) |  |
+| `lava_walk` | `abilities/lava_walk` | Abilities | 155660 "cig_extinguish" (CC0 1.0) | Ashwalker's steps on lava |
+| `combustion` | `abilities/combustion` | Abilities | 431174 "Fireball Explosion" (CC0 1.0) |  |
+| `skill_pick` | `ui/skill_pick` | Feedback | 199940 "07-confirmation" (CC0 1.0) | the confirm |
+| `skill_open` | `ui/skill_open` | Feedback | 462879 "Long Ethereal Woosh" (CC0 1.0); 657541 "Crystal Magic - Dark Spell Rise" (CC0 1.0) |  |
+| `skill_hover` | `ui/skill_hover` | Feedback | synthesised |  |
+| `death` | `ui/death` | Feedback | 181889 "Whosh - Reversed/Reverbed breath" (CC0 1.0); 430978 "Low impact" (CC0 1.0) | the AGAIN banner |
+| `room_cleared` | `ui/room_cleared` | Feedback | 76405 "Old Church Bell" (CC0 1.0) | one bell toll |
+| `fire-imp/hover_loop` | `fire-imp/hover_loop` (loop) | Bots | 71417 "wingflap_fast" (CC0 1.0); 650574 "fire crackling loop" (CC0 1.0) | wings + crackle |
+| `fire-imp/telegraph` | `fire-imp/telegraph` | Bots | 172631 "Power Up Charge [Remix of LegoLunatic's Charged laser 151243]" (CC0 1.0); 534702 "Lighting a Fire" (CC0 1.0) |  |
+| `fire-imp/attack` | `fire-imp/attack` | Bots | 267887 "Short-Fireball-Woosh" (CC0 1.0) |  |
+| `fire-imp/bolt_hit` | `fire-imp/bolt_hit` | Bots | 539972 "Fire Burst Flash" (CC0 1.0) |  |
+| `fire-imp/alert` | `fire-imp/alert` | Bots | 202100 "Goblin Scream" (CC0 1.0) | voice (empty = voiceless) |
+| `fire-imp/hurt` | `fire-imp/hurt` | Bots | 442815 "Goblin Snarl" (CC0 1.0) | voice |
+| `fire-imp/wreck` | `fire-imp/wreck` | Bots | 249813 "Goblin Death" (CC0 1.0); 431174 "Fireball Explosion" (CC0 1.0); 650574 "fire crackling loop" (CC0 1.0) | shriek cut by a fireball |
+| `fire-imp/plate_shed` | `fire-imp/plate_shed` | Bots | 144159 "BreakingNeck" (CC0 1.0) |  |
+| `scythe-demon/alert` | `scythe-demon/alert` | Bots | 222523 "Deep Monster Growl" (CC0 1.0) | voice |
+| `scythe-demon/hurt` | `scythe-demon/hurt` | Bots | 444445 "Demon Growl for Halloween Spooky Creepy Scary Monster Ghoul Ghost Sounds" (CC0 1.0) | voice |
+| `scythe-demon/telegraph` | `scythe-demon/telegraph` | Bots | 581594 "Sword draw unsheathe" (CC0 1.0) |  |
+| `scythe-demon/attack` | `scythe-demon/attack` | Bots | 657653 "Black Portal - Dark Dimension Rift" (CC0 1.0); 107589 "unsheath_sword" (CC0 1.0); synthesised | the volley appears: rift + shing + whir |
+| `scythe-demon/footstep` | `scythe-demon/footstep` | Bots | 504626 "BODY FALL - V HVY - DIRT" (CC0 1.0); 262118 "Kirkstall Rock Crumble " (CC0 1.0) | one per leg plant |
+| `scythe-demon/plate_shed` | `scythe-demon/plate_shed` | Bots | 616492 "clank" (CC0 1.0); 530486 "Metal Impact" (CC0 1.0) |  |
+| `scythe-demon/wreck` | `scythe-demon/wreck` | Bots | 276577 "Dragons Dying Breath" (CC0 1.0); 431174 "Fireball Explosion" (CC0 1.0) |  |
+| `scythe/warn` | `scythe/warn` | Bots | synthesised | synthesised, 0.9 s, ends exactly on the beam |
+| `scythe/beam` | `scythe/beam` | Bots | 369516 "Energy Blast" (CC0 1.0); 447941 "Blast + Flamethrower cooldown" (CC0 1.0) |  |
+| `lava-ooze/throb` | `lava-ooze/throb` | Bots | 456806 "Hot Bubbling Mud" (CC0 1.0) | one blorp per OozePulse beat |
+| `lava-ooze/alert` | `lava-ooze/alert` | Bots | 456806 "Hot Bubbling Mud" (CC0 1.0) |  |
+| `lava-ooze/telegraph` | `lava-ooze/telegraph` | Bots | 352904 "Bubbling Mud with Steam" (CC0 1.0) |  |
+| `lava-ooze/attack` | `lava-ooze/attack` | Bots | 414296 "goreSplat" (CC0 1.0); 445109 "Mud Splat" (CC0 1.0) |  |
+| `lava-ooze/hurt` | `lava-ooze/hurt` | Bots | 445109 "Mud Splat" (CC0 1.0) |  |
+| `lava-ooze/wreck` | `lava-ooze/wreck` | Bots | 167074 "Slime Death (1)" (CC BY 4.0); 155660 "cig_extinguish" (CC0 1.0) | CC BY |
+| `lava-ooze/plate_shed` | `lava-ooze/plate_shed` | Bots | 321478 "Concrete Hit 2" (CC0 1.0) |  |
+| `lava-ooze/pool_loop` | `lava-ooze/pool_loop` (loop) | Bots | 382313 "Sizzle / Acid Burn" (CC0 1.0) | while a pool burns |
+| `lava-ooze/pool_cool` | `lava-ooze/pool_cool` | Bots | 365071 "Steam" (CC0 1.0) |  |
+| `spawn/warning` | `spawn/warning` | Bots | 186374 "Bonfire Being Lit" (CC0 1.0); 657653 "Black Portal - Dark Dimension Rift" (CC0 1.0) | NOT WIRED: for the enemy-readability lane |
+| `world/lava_bubble` | `world/lava_bubble_1` | World | 145036 "lava" (CC0 1.0) | variants _1.._3 picked at random |
+| `world/lava_touch` | `world/lava_touch` | World | 234782 "Steam/hiss" (CC0 1.0); 155660 "cig_extinguish" (CC0 1.0) | repeats while burning |
+| `world/sink` | `world/sink` | World | 315931 "viscous liquid fall in" (CC0 1.0); 430978 "Low impact" (CC0 1.0); 234782 "Steam/hiss" (CC0 1.0) |  |
+| `world/platform_shake` | `world/platform_shake` | World | 347149 "Stone,Block,Drag,Wood,Grind" (CC0 1.0); 222521 "Cracking Earthquake (cracking soil, cracking stone)" (CC0 1.0) |  |
+| `world/platform_fall` | `world/platform_fall` | World | 321478 "Concrete Hit 2" (CC0 1.0); 567249 "Bricks/Stones/Rocks/Gravel Falling" (CC0 1.0) |  |
+| `world/fire_loop` | `world/fire_loop` (loop) | World | 186924 "Fire_Loop" (CC0 1.0) | the nearest braziers |
+| `world/shaft_start` | `world/shaft_start` | World | 697432 "Heavy Whoosh, Swoosh, Low, sfx, effect" (CC0 1.0) |  |
+| `world/shaft_wind` | `world/shaft_wind` (loop) | World | synthesised | rises through the fall |
+| `world/shaft_land` | `world/shaft_land` | World | 504626 "BODY FALL - V HVY - DIRT" (CC0 1.0); 189779 "Big Boom" (CC0 1.0) |  |
+| `world/sigil` | `world/sigil` | World | 18654 "gong" (CC0 1.0); 186374 "Bonfire Being Lit" (CC0 1.0) |  |
+| `world/lantern_pickup` | `world/lantern_pickup` | World | 171939 "Put Down Glass Object" (CC0 1.0); 234044 "Creepy Whispering" (CC0 1.0) |  |
+| `world/lantern_carry` | `world/lantern_carry` (loop) | World | 808032 "Ambient F Sharp Minor Ethereal Choir Pad 1" (CC0 1.0) |  |
+| `world/lantern_place` | `world/lantern_place` | World | 61521 "Final angelic sound" (CC0 1.0) |  |
+| `world/anchor_hit` | `world/anchor_hit` | World | 530486 "Metal Impact" (CC0 1.0); 370877 "Chains" (CC0 1.0) |  |
+| `world/anchor_deflect` | `world/anchor_deflect` | World | 570853 "magicShield_block" (CC0 1.0) |  |
+| `world/anchor_break` | `world/anchor_break` | World | 703247 "Big falling debris (crash)" (CC0 1.0); 387240 "chain" (CC0 1.0) |  |
+| `world/brand_charge` | `world/brand_charge` (loop) | World | 407052 "Power Charge" (CC0 1.0) | pitch follows the meter |
+| `world/brand_done` | `world/brand_done` | World | 854670 "Sacred Rune Lock 02 - Arcane Seal Activation" (CC BY 4.0) | CC BY |
+| `world/well_grind` | `world/well_grind` (loop) | World | 457529 "Opening the sarcophagus" (CC0 1.0) | while a well is being sealed |
+| `world/well_sealed` | `world/well_sealed` | World | 558254 "Heavy Stone Push" (CC0 1.0); 365071 "Steam" (CC0 1.0) |  |
+| `world/gate_open` | `world/gate_open` | World | 352829 "Tomb Door Open, Stone Scrape" (CC0 1.0) |  |
+| `bed/0` | `beds/ember_gate` (loop) | Ambience | 397092 "Soft Tonal Wind_02" (CC0 1.0); 474852 "Lava Loop 4" (CC0 1.0) | The Ember Gate: ash wind over the lava |
+| `bed/1` | `beds/molten_works` (loop) | Ambience | 393398 "Industrial ambience" (CC0 1.0); 108265 "ChainsRattling" (CC0 1.0); 474852 "Lava Loop 4" (CC0 1.0) | The Molten Works: forge drone, chains, lava |
+| `bed/2` | `beds/black_glass` (loop) | Ambience | 155142 "terror ambience" (CC0 1.0); 474852 "Lava Loop 4" (CC0 1.0) | The Black Glass: a cold drone |
+
+## How the sounds go in (for whoever wires them) (the research notes; see "Installed" above for what was done)
 
 - **Where the files go.** Every Hell sound plays through Skyline's sound system (`Scripts/Audio/SkylineSounds.cs`) from
   `Resources/SkylineAudio/<name>`.

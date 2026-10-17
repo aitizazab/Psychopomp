@@ -30,6 +30,7 @@ namespace JamKit.SkylineRepo
             public bool busy, fading;
             public int gateId = -1;
             public SkylineVoiceEq eq;
+            public AudioLowPassFilter lp;
         }
 
         sealed class Pool
@@ -83,6 +84,32 @@ namespace JamKit.SkylineRepo
         static readonly Dictionary<string, int> _soundCounts = new Dictionary<string, int>();
         static float[] _loopAudible = new float[16], _loopGains = new float[16];
 
+        static float _worldPitch = 1f, _worldCutoff = HellSoundRules.MuffleOpenHz;
+
+        /// <summary>Time Dilation's hold on the world (HellSoundBinder, from HellAbilityAudio.PitchChanged): the dilated categories
+        /// (<see cref="SkylineMix.Dilated"/>: the bots, the world, the beds) play at <paramref name="pitch"/> through a low-pass at
+        /// <paramref name="cutoffHz"/>; the player's guns, abilities and feedback are untouched.</summary>
+        public static void SetWorldTime(float pitch, float cutoffHz)
+        {
+            _worldPitch = Mathf.Clamp(pitch, 0.1f, 3f);
+            _worldCutoff = Mathf.Clamp(cutoffHz, 10f, 22000f);
+        }
+
+        /// <summary>The world's pitch and low-pass now (1 and fully open outside Time Dilation).</summary>
+        public static float WorldPitch => _worldPitch;
+        public static float WorldCutoffHz => _worldCutoff;
+
+        static void ApplyWorldTime(Voice v)
+        {
+            bool dilated = SkylineMix.Dilated(v.cat);
+            float pitch = dilated ? _worldPitch : 1f;
+            if (!Mathf.Approximately(v.src.pitch, pitch)) v.src.pitch = pitch;
+            if (v.lp == null) return;
+            bool on = dilated && _worldCutoff < 21000f;
+            if (v.lp.enabled != on) v.lp.enabled = on;
+            if (on) v.lp.cutoffFrequency = _worldCutoff;
+        }
+
         /// <summary>Counts since the scene started, for the pass's log (<see cref="Report"/>).</summary>
         public static int Started, Stolen, Capped, OneHitDropped, GateDropped, BarksPlayed, BarksDropped;
 
@@ -98,7 +125,10 @@ namespace JamKit.SkylineRepo
             if (string.IsNullOrEmpty(sound)) return null;
             if (_clips.TryGetValue(sound, out var c) && c != null) return c;
             if (_missing.Contains(sound)) return null;   // a known miss: no Resources.Load per request
-            c = Resources.Load<AudioClip>(Folder + sound);
+            // a Hell cue plays the file its row in HellSoundTable names (the swap table); an empty file is silent on purpose
+            string file = sound.StartsWith("hell/", StringComparison.Ordinal) ? HellSoundTable.FileFor(sound) : sound;
+            if (string.IsNullOrEmpty(file)) { _missing.Add(sound); return null; }
+            c = Resources.Load<AudioClip>(Folder + file);
             if (c == null)
             {
                 if (_missing.Add(sound)) Debug.Log("SKYLINE_SOUND missing " + sound);
@@ -244,9 +274,10 @@ namespace JamKit.SkylineRepo
             src.volume = gain * SkylineMix.DuckGain(cat, _duck, _shotDuck);
             if (pool.world) src.transform.position = position;
             if (slot.eq != null) slot.eq.SetCut(SkylineMix.HarshCutDb(sound));
-            src.Play();
             slot.sound = sound;
             slot.cat = cat;
+            ApplyWorldTime(slot);
+            src.Play();
             slot.gain = gain;
             slot.fade = 1f;
             slot.fading = false;
@@ -399,6 +430,7 @@ namespace JamKit.SkylineRepo
                     if (v.fade <= 0f) { v.src.Stop(); v.busy = false; v.fading = false; continue; }
                 }
                 v.src.volume = v.gain * SkylineMix.DuckGain(v.cat, _duck, _shotDuck) * v.fade;
+                ApplyWorldTime(v);
             }
         }
 
@@ -459,6 +491,8 @@ namespace JamKit.SkylineRepo
             SkylineMix.ConfigureGate(_gate);
             _shotUntil = -1f;
             _shotDuck = 0f;
+            _worldPitch = 1f;
+            _worldCutoff = HellSoundRules.MuffleOpenHz;
             _tap = null;
             _clock = 0f;
             _duck = 0f;
@@ -485,7 +519,10 @@ namespace JamKit.SkylineRepo
                 s.rolloffMode = AudioRolloffMode.Linear;
                 s.minDistance = WorldMinDistance;
                 s.maxDistance = WorldMaxDistance;
-                _world.voices[i] = new Voice { src = s, eq = go.AddComponent<SkylineVoiceEq>() };
+                var lp = go.AddComponent<AudioLowPassFilter>();   // Time Dilation's muffle (ApplyWorldTime); off until dilated
+                lp.cutoffFrequency = HellSoundRules.MuffleOpenHz;
+                lp.enabled = false;
+                _world.voices[i] = new Voice { src = s, eq = go.AddComponent<SkylineVoiceEq>(), lp = lp };
             }
             _host.AddComponent<SkylineMixer>();
         }
