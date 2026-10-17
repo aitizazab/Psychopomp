@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using JamKit.Skyline;
 using UnityEngine;
 using NVec3 = System.Numerics.Vector3;
@@ -83,23 +82,13 @@ namespace JamKit.SkylineRepo
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void HookRunEvents()
         {
-            var ev = typeof(HellRunEvents).GetEvent("FinalBossRequested", BindingFlags.Public | BindingFlags.Static);
-            if (ev == null) return;
-            try
-            {
-                Delegate d = null;
-                if (ev.EventHandlerType == typeof(Action)) d = (Action)OnFinalBossRequested;
-                else if (ev.EventHandlerType == typeof(Action<Action>)) d = (Action<Action>)OnFinalBossRequestedWith;
-                if (d == null) { Debug.LogWarning("HELL_VESPER HellRunEvents.FinalBossRequested has an unknown signature: wire RequestFinalBoss by hand"); return; }
-                ev.RemoveEventHandler(null, d);
-                ev.AddEventHandler(null, d);
-                Debug.Log("HELL_VESPER listening to HellRunEvents.FinalBossRequested");
-            }
-            catch (Exception e) { Debug.LogWarning("HELL_VESPER could not subscribe to FinalBossRequested: " + e.Message); }
+            HellRunEvents.FinalBossRequested -= OnFinalBossRequested;
+            HellRunEvents.FinalBossRequested += OnFinalBossRequested;
+            Debug.Log("HELL_VESPER listening to HellRunEvents.FinalBossRequested");
         }
 
-        static void OnFinalBossRequested() => RequestFinalBoss(null);
-        static void OnFinalBossRequestedWith(Action onDefeated) => RequestFinalBoss(onDefeated);
+        // the run's boss stage: her defeat hands back to the run director (then the ending)
+        static void OnFinalBossRequested() => RequestFinalBoss(HellRunEvents.BossDefeated);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
