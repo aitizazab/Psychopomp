@@ -102,7 +102,6 @@ namespace JamKit.SkylineRepo
         void Update()
         {
             if (_run == null) _run = FindFirstObjectByType<HellRunDirector>();
-            if (!_glass.Built && SkylineHud.Instance != null && SkylineHud.Instance.Safe != null) _glass.Build(SkylineHud.Instance.Safe);
             var stage = HellRunEvents.Stage;
             EnsureHour(stage);
             var hour = HellHour.Current;
@@ -128,8 +127,9 @@ namespace JamKit.SkylineRepo
                 Debug.Log("HELL_HOUR stats: " + hour.Difficulty + ", " + HellHour.Clock(hour.Left) + (hour.Overtime ? " owed" : " left")
                     + ", ending " + (HellRunStats.Current != null ? HellRunStats.Current.EndingId : "?"));
             }
-            _glass.SetVisible(inRun && !hour.Stopped);
-            if (inRun) _glass.Set(hour.LeftShare, _counted, hour.Overtime);
+            // one hourglass: the UI lane's HUD draws it (HellHud), restyled to the Hell HUD
+            if (inRun && !hour.Stopped) HellHud.SetHourglass(hour.LeftShare, (float)hour.Left, hour.Overtime || hour.LeftShare < 0.1f);
+            else HellHud.HideHourglass();
         }
 
         void EnsureHour(HellFlowStage stage)
