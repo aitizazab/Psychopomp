@@ -1,0 +1,15 @@
+{
+  "name": "enemy-reveal",
+  "//": "An enemy card: a slow arc round the nearest enemy, from a normal lens to a tight one, the background soft. An enemy target is its centre (the player's is the feet).",
+  "follow": "nearest-enemy",
+  "space": "target",
+  "lookAtTarget": true,
+  "lookOffset": [0, 0, 0],
+  "followLag": 0.15,
+  "keys": [
+    { "t": 0, "position": [-2.5, 0.3, 4.0], "lens": 50, "ease": "out" },
+    { "t": 3, "position": [1.5, 0.1, 3.2], "lens": 85, "roll": -3 }
+  ],
+  "shake": { "amplitude": 0.25, "frequency": 0.8, "seed": 3 },
+  "dof": { "on": true, "focusTarget": true, "aperture": 2.0 }
+}

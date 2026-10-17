@@ -3,6 +3,7 @@
     "rootNamespace": "JamKit.SkylineRepo.EditorTools.Recording",
     "references": [
         "JamKit.SkylineRepo",
+        "JamKit.Skyline",
         "JamKit.SkylineRepo.Editor",
         "Unity.Recorder",
         "Unity.Recorder.Base",

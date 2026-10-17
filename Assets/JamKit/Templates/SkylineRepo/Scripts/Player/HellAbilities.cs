@@ -176,8 +176,19 @@ namespace JamKit.SkylineRepo
             TickDilation(udt);
         }
 
+        /// <summary>A replay's buttons (docs/HELL-CAPTURE.md): when set, Shadow Step, Rewind and the skill button read from it
+        /// instead of the devices (step held, rewind pressed, skill pressed).</summary>
+        public static Func<HellScriptedButtons> ScriptedButtons;
+
         static void ReadButtons(out bool stepHeld, out bool rewindPressed)
         {
+            if (ScriptedButtons != null)
+            {
+                var b = ScriptedButtons();
+                stepHeld = b.stepHeld;
+                rewindPressed = b.rewindPressed;
+                return;
+            }
             bool mouseOk = Application.isBatchMode || Cursor.lockState == CursorLockMode.Locked;
             const BindDevice KM = BindDevice.KeyboardMouse, Pad = BindDevice.Pad;
             stepHeld = SkylineBindings.Held(KM, BindAction.ShadowStep, mouseOk) || SkylineBindings.Held(Pad, BindAction.ShadowStep, mouseOk);
@@ -188,6 +199,7 @@ namespace JamKit.SkylineRepo
         public static bool SkillPressed()
         {
             if (SkylineDeviceInput.Paused || HellSkillPick.Open) return false;
+            if (ScriptedButtons != null) return ScriptedButtons().skillPressed;
             bool mouseOk = Application.isBatchMode || Cursor.lockState == CursorLockMode.Locked;
             return SkylineBindings.Pressed(BindDevice.KeyboardMouse, BindAction.Skill, mouseOk) || SkylineBindings.Pressed(BindDevice.Pad, BindAction.Skill, mouseOk);
         }

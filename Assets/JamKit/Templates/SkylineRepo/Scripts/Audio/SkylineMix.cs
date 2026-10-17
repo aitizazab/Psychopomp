@@ -211,9 +211,11 @@ namespace JamKit.SkylineRepo
         public static float UserGain(SkylineSoundCategory c)
         {
             var o = SkylineSettings.Options;
-            if (c == SkylineSoundCategory.Voices) return o.voices;
-            if (c == SkylineSoundCategory.Music) return o.music;
-            return o.effects;
+            // the clean-picture switch (HellCleanPicture): voices off for the trailer's bed, or only the voices for their stem
+            float clean = HellCleanPicture.Gain(c);
+            if (c == SkylineSoundCategory.Voices) return o.voices * clean;
+            if (c == SkylineSoundCategory.Music) return o.music * clean;
+            return o.effects * clean;
         }
 
         /// <summary>The bus gain times the sound's trim (linear).</summary>

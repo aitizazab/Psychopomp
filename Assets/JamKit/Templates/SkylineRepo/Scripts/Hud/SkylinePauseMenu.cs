@@ -20,7 +20,8 @@ namespace JamKit.SkylineRepo
     /// rest are SkylineMix's user gains).</item>
     /// <item><b>Controls:</b> the actions with their keyboard-and-mouse and pad bindings; pick one and press a button to rebind
     /// it (Escape or Start cancels); a control another action already uses swaps the two; "Reset to defaults".</item>
-    /// <item><b>Look:</b> mouse sensitivity, pad sensitivity, invert Y, aim assist.</item>
+    /// <item><b>Look:</b> mouse sensitivity, pad sensitivity, invert Y, aim assist, and the HUD layout (Full, or Clean: nothing
+    /// on screen, for recording; <see cref="HellCleanPicture"/>). Audio also has "Voice lines" (on, off, only).</item>
     /// <item><b>Subtitles:</b> Off / Dialogue / Dialogue + bot barks, and the size Small / Medium / Large
     /// (<see cref="SkylineSettings.SubtitleMode"/>, <see cref="SkylineSettings.SubtitleSize"/>; they act at once).</item>
     /// <item><b>Quit to desktop</b> (asks twice).</item>
@@ -375,6 +376,8 @@ namespace JamKit.SkylineRepo
 
         static readonly string[] SubtitleModeNames = { "Off", "Dialogue", "Dialogue + bot barks" };
         static readonly string[] SubtitleSizeNames = { "Small", "Medium", "Large" };
+        static readonly string[] HudLayoutNames = { "Full", "Clean (nothing on screen)" };
+        static readonly string[] VoiceModeNames = { "On", "Off", "Only the voices" };
 
         void ShowPage(Page page)
         {
@@ -407,6 +410,8 @@ namespace JamKit.SkylineRepo
                     AddSlider("Music", 0f, 1f, 0.05f, () => o.music, v => o.music = v);
                     AddSlider("Effects", 0f, 1f, 0.05f, () => o.effects, v => o.effects = v);
                     AddSlider("Voices", 0f, 1f, 0.05f, () => o.voices, v => o.voices = v);
+                    // the clean-picture switch's sound half (HellCleanPicture; this session only)
+                    AddChoice("Voice lines", VoiceModeNames, () => (int)HellCleanPicture.Voices, v => HellCleanPicture.Voices = (HellVoiceMode)v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
                 case Page.Controls:
@@ -429,6 +434,8 @@ namespace JamKit.SkylineRepo
                         v => Mathf.RoundToInt(v) + " deg");
                     AddToggle("Invert Y", () => o.invertY, v => o.invertY = v);
                     AddToggle("Aim assist (pad)", () => o.aimAssist, v => o.aimAssist = v);
+                    // the clean picture for recording (HellCleanPicture, docs/HELL-CAPTURE.md; this session only)
+                    AddChoice("HUD", HudLayoutNames, () => (int)HellCleanPicture.Hud, v => HellCleanPicture.Hud = (HellHudLayout)v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
                 case Page.Subtitles:
