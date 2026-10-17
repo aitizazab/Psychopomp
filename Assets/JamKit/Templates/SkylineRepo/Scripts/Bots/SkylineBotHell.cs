@@ -148,7 +148,7 @@ namespace JamKit.SkylineRepo
         {
             _striding = false;
             if (!IsAwake || !live || practice || Brain.State == BotState.Telegraph || !(Def.walkSpeed > 0f)) return;
-            Vector3 feet = target.Root.position;
+            Vector3 feet = HuntFeet();   // the last-seen spot while you're hidden (SkylineBot.HellShadow.cs)
             float dx = feet.x - _pos.x, dz = feet.z - _pos.z;
             if (dx * dx + dz * dz <= Def.walkKeepDistance * Def.walkKeepDistance) return;
             Vector3 before = _pos;
@@ -179,7 +179,7 @@ namespace JamKit.SkylineRepo
         void DemonVolley(bool sees)
         {
             _armTarget = 0f;
-            if (!TargetLive(target) || target.Root == null) return;
+            if (!TargetLive(target) || target.Root == null || targetHidden) return;   // lost you in the dark: the swing lands on nothing
             ScytheVolley.Plan(N(_pos), N(target.Root.position), Def, _rng, _volley);
             for (int i = 0; i < _volley.Count; i++) HellScythe.Spawn(_volley[i], Def, target, Def.id);
             Sound("attack");

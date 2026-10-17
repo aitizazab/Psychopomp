@@ -102,7 +102,9 @@ namespace JamKit.SkylineRepo
 
         float Scale()
         {
-            if (!_armed) return 1f;
+            // the first shot after a step, or the first shot from hiding (docs/HELL-SHADOW.md)
+            bool fromShadow = Abilities.Targeting != null && Abilities.Targeting.Stealth.TakeShotFromShadow();
+            if (!_armed && !fromShadow) return 1f;
             _armed = false;
             Debug.Log("HELL_SKILL ambush shot x" + Multiplier);
             return Multiplier;

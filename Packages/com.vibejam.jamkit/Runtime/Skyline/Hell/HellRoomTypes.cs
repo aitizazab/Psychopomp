@@ -68,11 +68,26 @@ namespace JamKit.Skyline
         public float reach = 2.5f;
     }
 
-    /// <summary>A fire light (lava glow, a brazier): the darkness rule's light sources (HellDarkness.RegisterLight).</summary>
+    /// <summary>A fire light (lava glow, a brazier): the darkness rule's light sources (HellDarkness.RegisterLight). Its steady
+    /// <see cref="radius"/> never reaches a dark zone; a lava light near one may also <b>flare</b> (a lava spurt,
+    /// docs/HELL-SHADOW.md): for <see cref="flareSeconds"/> every <see cref="flarePeriod"/> s it lights out to
+    /// <see cref="flareRadius"/>, into the dark beside it (fire kills shadow, live). 0 flare radius: it never flares.</summary>
     public struct HellLight
     {
         public Vector3 position;
         public float radius;
+        public float flareRadius, flarePeriod, flareSeconds, flarePhase;
+
+        public bool Flares => flareRadius > radius && flarePeriod > 0f && flareSeconds > 0f;
+
+        /// <summary>Is the flare up at game time <paramref name="t"/> (s)? The cycle starts at <see cref="flarePhase"/> (0..1).</summary>
+        public bool FlareUp(double t)
+        {
+            if (!Flares) return false;
+            double c = t / flarePeriod + flarePhase;
+            double f = c - Math.Floor(c);
+            return f * flarePeriod < flareSeconds;
+        }
     }
 
     /// <summary>Hold the Brand's ring (docs/HELL-ROOMS.md, "Hold the Brand"): a wide circle round a lava pool that charges
@@ -280,7 +295,7 @@ namespace JamKit.Skyline
             foreach (var s in r.stops) o.stops.Add(new HellStop { id = s.id, position = Point(s.position), reach = s.reach });
             foreach (var p in r.stopSpawns) o.stopSpawns.Add(Point(p));
             foreach (var d in r.darkZones) o.darkZones.Add(Box(d));
-            foreach (var l in r.lights) o.lights.Add(new HellLight { position = Point(l.position), radius = l.radius });
+            foreach (var l in r.lights) { var c = l; c.position = Point(l.position); o.lights.Add(c); }
             foreach (var p in r.safePath) o.safePath.Add(Point(p));
             foreach (var p in r.fastPath) o.fastPath.Add(Point(p));
             if (r.hold != null)

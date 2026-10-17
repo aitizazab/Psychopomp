@@ -114,7 +114,7 @@ namespace JamKit.SkylineRepo
             var eye = _player.EyePosition;
             var from = _figure.position + Vector3.up * (Job.def.id == HellJobCatalog.Poacher ? 2.3f : 0.4f);
             if ((eye - from).sqrMagnitude > Job.def.alertRadius * Job.def.alertRadius) return false;
-            if (Job.def.darkHides && HellDarkness.IsDark(_player.transform.position + Vector3.up * 1.0f)) return false;
+            if (Job.def.darkHides && HellTargeting.PlayerHiddenFrom(from, _player.transform.position + Vector3.up * 1.0f)) return false;   // the game-wide rule (docs/HELL-SHADOW.md)
             var dir = eye - from;
             if (Physics.Raycast(from, dir.normalized, out var hit, dir.magnitude, ~0, QueryTriggerInteraction.Ignore))
                 if (!hit.collider.transform.IsChildOf(_player.transform) && !hit.collider.transform.IsChildOf(_figure)) return false;

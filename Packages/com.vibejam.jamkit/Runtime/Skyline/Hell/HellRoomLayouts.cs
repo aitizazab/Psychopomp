@@ -18,6 +18,8 @@ namespace JamKit.Skyline
         public const float BeamHeight = 1.3f;
         /// <summary>Lava lights: one every this many metres over a basin, this radius, kept this far from a dark zone, dropped below the minimum.</summary>
         public const float LightSpacing = 12f, LightRadius = 9f, LightClearance = 1f, MinLightRadius = 3f;
+        /// <summary>A lava flare's time up (s): a moment (docs/HELL-SHADOW.md).</summary>
+        public const float FlareSeconds = 1.2f;
         /// <summary>The exit corridor's length before its drop hole, the hole's length, and how far the drop falls.</summary>
         public const float CorridorLength = 8f, HoleLength = 4f, DropDepth = 12f;
 
@@ -674,9 +676,13 @@ namespace JamKit.Skyline
             public void Dark(float x0, float y0, float z0, float x1, float y1, float z1) =>
                 r.darkZones.Add(new CoverBox { min = V(x0, y0, z0), max = V(x1, y1, z1) });
 
-            /// <summary>Finishes the room: the fire lights over its lava (every <see cref="LightSpacing"/> m, none reaching a dark zone).</summary>
+            /// <summary>Finishes the room: the fire lights over its lava (every <see cref="LightSpacing"/> m, none reaching a dark zone),
+            /// and the lava flares (docs/HELL-SHADOW.md): a light held back by a dark zone off the fast line spurts out to its full
+            /// radius for <see cref="FlareSeconds"/> every 6-8 s, lighting that dark for a moment.</summary>
             public HellRoomDef Done()
             {
+                var onFast = new bool[r.darkZones.Count];
+                for (int z = 0; z < onFast.Length; z++) onFast[z] = HellRoomLint.OnFastLine(r, r.darkZones[z]);
                 foreach (var h in r.hazards)
                 {
                     if (h.kind != HellHazardKind.Lava) continue;
@@ -688,10 +694,59 @@ namespace JamKit.Skyline
                             var p = V(h.box.min.X + sx * (i + 0.5f) / nx, LavaSurface + 0.8f, h.box.min.Z + sz * (j + 0.5f) / nz);
                             float radius = LightRadius;
                             foreach (var d in r.darkZones) radius = Math.Min(radius, HellRoomLint.DistanceToBox(p, d) - LightClearance);
-                            if (radius >= MinLightRadius) r.lights.Add(new HellLight { position = p, radius = radius });
+                            if (radius >= MinLightRadius) r.lights.Add(Flare(new HellLight { position = p, radius = radius }, onFast));
                         }
                 }
+                KeepAHidingPlace();
                 return r;
+            }
+
+            /// <summary>The lint wants one dark zone no flare reaches: if every one is reached, the zone the fewest flares reach is
+            /// kept clear (those flares are pulled back from it, or dropped).</summary>
+            void KeepAHidingPlace()
+            {
+                if (r.darkZones.Count == 0) return;
+                int best = -1, fewest = int.MaxValue;
+                for (int z = 0; z < r.darkZones.Count; z++)
+                {
+                    int n = 0;
+                    foreach (var l in r.lights)
+                        if (l.Flares && HellRoomLint.DistanceToBox(l.position, r.darkZones[z]) < l.flareRadius) n++;
+                    if (n < fewest) { fewest = n; best = z; }
+                }
+                if (fewest == 0) return;
+                var keep = r.darkZones[best];
+                for (int i = 0; i < r.lights.Count; i++)
+                {
+                    var l = r.lights[i];
+                    if (!l.Flares) continue;
+                    float d = HellRoomLint.DistanceToBox(l.position, keep);
+                    if (d >= l.flareRadius) continue;
+                    l.flareRadius = d - LightClearance;
+                    if (l.flareRadius < l.radius + 1f) l.flareRadius = l.flarePeriod = l.flareSeconds = l.flarePhase = 0f;
+                    r.lights[i] = l;
+                }
+            }
+
+            /// <summary>A lava flare for light <paramref name="l"/>: out to <see cref="LightRadius"/>, but never into a dark zone on
+            /// the fast line (a Shadow Step landing stays dependable); only if it then reaches some other dark zone.</summary>
+            HellLight Flare(HellLight l, bool[] onFast)
+            {
+                float flare = LightRadius;
+                for (int z = 0; z < r.darkZones.Count; z++)
+                    if (onFast[z]) flare = Math.Min(flare, HellRoomLint.DistanceToBox(l.position, r.darkZones[z]) - LightClearance);
+                bool reaches = false;
+                for (int z = 0; z < r.darkZones.Count; z++)
+                    if (!onFast[z] && HellRoomLint.DistanceToBox(l.position, r.darkZones[z]) < flare) reaches = true;
+                if (!reaches || flare < l.radius + 1f) return l;
+                // a seeded phase and period from the position, so neighbouring flares don't spurt together
+                float h = Math.Abs(l.position.X * 0.371f + l.position.Z * 0.613f);
+                h -= (float)Math.Floor(h);
+                l.flareRadius = flare;
+                l.flarePeriod = 6f + 2f * h;
+                l.flareSeconds = FlareSeconds;
+                l.flarePhase = h;
+                return l;
             }
 
             public void Stop(string id, Vector3 p, float reach) => r.stops.Add(new HellStop { id = id, position = p, reach = reach });

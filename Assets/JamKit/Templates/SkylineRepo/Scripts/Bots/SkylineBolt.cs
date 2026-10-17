@@ -226,6 +226,7 @@ namespace JamKit.SkylineRepo
             transform.position = from + step;
             if (_ember)
             {
+                HellShadowFire.BoltPassing(from, from + step);   // fire kills shadow, live (docs/HELL-SHADOW.md)
                 // the ember flickers
                 float d = Mathf.Max(0.05f, _radius * 2f), f = 1f + 0.18f * Mathf.Sin(_age * 90f) + 0.1f * Mathf.Sin(_age * 151f);
                 _core.localScale = new Vector3(d * 0.8f * f, d * 0.8f * f, d * 1.4f);

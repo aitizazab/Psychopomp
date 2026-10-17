@@ -126,6 +126,7 @@ namespace JamKit.SkylineRepo
                 _lightsDone = true;
                 foreach (var li in Def.lights) HellDarkness.RegisterLight(U(li.position), li.radius);
             }
+            HellShadowFire.SetRoomFlares(Def.lights);   // the lava flares (docs/HELL-SHADOW.md)
             if (!_registered)
             {
                 _registered = true;
@@ -148,6 +149,7 @@ namespace JamKit.SkylineRepo
         public void End()
         {
             Running = false;
+            HellShadowFire.SetRoomFlares(null);
             if (_registered)
             {
                 foreach (var bd in _dark) HellDarkness.UnregisterZone(bd);

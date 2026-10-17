@@ -97,7 +97,7 @@ namespace JamKit.SkylineRepo
 
         /// <summary>The world's pitch and low-pass now (1 and fully open outside Time Dilation).</summary>
         public static float WorldPitch => _worldPitch;
-        public static float WorldCutoffHz => _worldCutoff;
+        public static float WorldCutoffHz => Mathf.Min(_worldCutoff, SkylineMix.HushCutoffHz);   // Time Dilation's muffle or darkness's hush
 
         static void ApplyWorldTime(Voice v)
         {
@@ -105,9 +105,9 @@ namespace JamKit.SkylineRepo
             float pitch = dilated ? _worldPitch : 1f;
             if (!Mathf.Approximately(v.src.pitch, pitch)) v.src.pitch = pitch;
             if (v.lp == null) return;
-            bool on = dilated && _worldCutoff < 21000f;
+            bool on = dilated && WorldCutoffHz < 21000f;
             if (v.lp.enabled != on) v.lp.enabled = on;
-            if (on) v.lp.cutoffFrequency = _worldCutoff;
+            if (on) v.lp.cutoffFrequency = WorldCutoffHz;
         }
 
         /// <summary>Counts since the scene started, for the pass's log (<see cref="Report"/>).</summary>

@@ -28,10 +28,32 @@ namespace JamKit.SkylineRepo
 
         public static bool IsDark(Vector3 p)
         {
-            if (FallbackAllDarkWithoutZones && _field.ZoneCount == 0) return !_field.IsLit(N(p));
+            if (FallbackAllDarkWithoutZones && _field.ZoneCount == 0) return !_field.IsLit(N(p), Now);
             return _field.IsDark(N(p), Now);
         }
-        public static bool IsLit(Vector3 p) => _field.IsLit(N(p));
+        /// <summary>A steady fire light or passing fire (a bolt, a burning enemy, a blast, a lava flare) covers this point now.</summary>
+        public static bool IsLit(Vector3 p) => _field.IsLit(N(p), Now);
+        /// <summary>Inside an authored dark zone or a live dark sphere, lit or not (the stealth rule: docs/HELL-SHADOW.md). No
+        /// zones at all (the old arena) means no hiding: the all-dark fallback is for the Shadow Step only.</summary>
+        public static bool InDarkVolume(Vector3 p) => _field.InDarkVolume(N(p), Now);
+        /// <summary>Within <paramref name="margin"/> m of a dark zone or a live dark sphere.</summary>
+        public static bool NearDarkVolume(Vector3 p, float margin) => _field.NearDarkVolume(N(p), margin, Now);
+
+        /// <summary>Raised for each discrete passing fire light (an ember bolt's strike, a burning enemy's tick, a Combustion
+        /// blast, an ooze pool, a lava flare): where, how far, for how long. Not raised per bolt-path stamp. For the look (a light
+        /// pulse in the dark zone): the lighting lane may listen.</summary>
+        public static event System.Action<Vector3, float, float> Flashed;
+
+        /// <summary>Fire passing through (docs/HELL-SHADOW.md): lights the dark within <paramref name="radius"/> of
+        /// <paramref name="at"/> for <paramref name="seconds"/> of game time. <paramref name="announce"/>: raise <see cref="Flashed"/>.</summary>
+        public static void Flash(Vector3 at, float radius, float seconds, bool announce = true)
+        {
+            _field.AddFlash(N(at), radius, Now + seconds);
+            if (announce) Flashed?.Invoke(at, radius, seconds);
+        }
+
+        /// <summary>Passing fire lights alive now.</summary>
+        public static int FlashCount => _field.FlashCount(Now);
         /// <summary>Inside a dynamic dark sphere (Nightfall): enemies there lose you.</summary>
         public static bool InDarkSphere(Vector3 p) => _field.InSphere(N(p), Now);
         /// <summary>The line a..b crosses a dynamic dark sphere: an enemy looking through it can't see you.</summary>
@@ -93,6 +115,7 @@ namespace JamKit.SkylineRepo
         {
             Clear();
             SphereAdded = null;
+            Flashed = null;
         }
     }
 }

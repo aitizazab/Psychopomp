@@ -42,6 +42,7 @@ namespace JamKit.SkylineRepo
             HellFlame.Emit(at + n * 0.1f, n * 1.5f + Vector3.up, 0.22f, 0.35f, HellLook.Flame);
             SkylineSpark.Burst(at, n, 6, 4f);
             SkylineSounds.PlayAt(JamKit.Skyline.HellSoundCues.BoltHit, at);   // the sound pass (docs/HELL-SOUND-PASS.md)
+            HellShadowFire.Impact(at);   // a bolt at your hiding spot floods it (docs/HELL-SHADOW.md)
         }
     }
 
