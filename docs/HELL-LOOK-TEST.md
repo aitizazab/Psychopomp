@@ -9,7 +9,10 @@ Real frames of the game for choosing the art direction (docs/HELL-ART-PASS.md se
 | `-hellLook` | `A` Inked Inferno, `B` Molten Grit, `C` Black and Ember | none: the scene's own grey-box materials |
 | `-hellOutline` | `soulfire-pulse`, `lime`, `soulfire`, `whitehot`, `pulse` (lime), `kit`, `off` | `soulfire-pulse` (the creator's pick, 2026-10-17) |
 | `-hellStuds` | `bone`, `stone`, `blue` | `bone` (blue clashed with the cyan-white outline) |
-| `-hellLookCapture <dir>` | the stills, then quit | |
+| `-hellLookFloors` | `B,A,C` (one direction per floor; a floor left out takes `-hellLook`) | none |
+| `-hellLookCapture <dir>` | the stills (13 per direction), then quit | |
+
+Round 2 (2026-10-18): the lighting engine was fixed and every direction rebuilt on it: see docs/HELL-LIGHTING.md.
 
 With no switches the Hell scene still gets the soulfire pulse outline (an outlines-only ink pass, nothing else restyled) and
 bone-white studs; `-hellOutline off` turns that off.

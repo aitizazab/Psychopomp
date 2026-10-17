@@ -51,6 +51,7 @@ namespace JamKit.SkylineRepo.EditorTools
             SkylineInkConvert.EnsureResourceMaterials();
             NormalMaps();
             LitTemplates();
+            HellShaderMaterials();
             ImpPrefab();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -99,6 +100,27 @@ namespace JamKit.SkylineRepo.EditorTools
             e.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             e.SetFloat("_Smoothness", 0.5f);
             EditorUtility.SetDirty(e);
+        }
+
+        /// <summary>The Resources materials that carry the light pass's shaders into the build (docs/HELL-LIGHTING.md): HL_Surface
+        /// (Hell/Surface, the rooms), HL_Sky (Hell/Sky), HL_Haze (Hell/Haze). The run-time switch clones them.</summary>
+        static void HellShaderMaterials()
+        {
+            foreach (var (file, shaderName) in new[] { ("HL_Surface", "Hell/Surface"), ("HL_Sky", "Hell/Sky"), ("HL_Haze", "Hell/Haze"), ("HL_Halo", "Hell/Halo") })
+            {
+                var sh = Shader.Find(shaderName);
+                if (sh == null) { Debug.LogError("HELL_LOOK_BUILD shader " + shaderName + " not found (a compile error?)"); continue; }
+                var m = LoadOrMake(ResRoot + file + ".mat", sh);
+                if (m.shader != sh) m.shader = sh;
+                if (file == "HL_Surface")
+                {
+                    m.SetTexture("_TopMap", AssetDatabase.LoadAssetAtPath<Texture2D>(ResRoot + "Textures/ash_diff.jpg"));
+                    m.SetTexture("_TopNormal", AssetDatabase.LoadAssetAtPath<Texture2D>(ResRoot + "Textures/ash_nor.jpg"));
+                    m.SetTexture("_SideMap", AssetDatabase.LoadAssetAtPath<Texture2D>(ResRoot + "Textures/cliff_diff.jpg"));
+                    m.SetTexture("_SideNormal", AssetDatabase.LoadAssetAtPath<Texture2D>(ResRoot + "Textures/cliff_nor.jpg"));
+                }
+                EditorUtility.SetDirty(m);
+            }
         }
 
         static Material LoadOrMake(string path, Shader shader)
@@ -166,7 +188,7 @@ namespace JamKit.SkylineRepo.EditorTools
                 go.transform.localPosition = mf.transform.localPosition;
                 go.transform.localRotation = mf.transform.localRotation;
                 go.transform.localScale = mf.transform.localScale;
-                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                go.AddComponent<MeshFilter>().sharedMesh = WithUvs(mesh, ModelMatFolder + "fire-imp-" + mf.name + "-uv.asset");
                 go.AddComponent<MeshRenderer>().sharedMaterials = mats;
                 Debug.Log("HELL_LOOK_BUILD imp part " + mf.name + ": " + mesh.subMeshCount + " submeshes, materials " + string.Join(", ", srcMats.Select(m => m != null ? m.name : "null")));
             }
@@ -197,6 +219,30 @@ namespace JamKit.SkylineRepo.EditorTools
             PrefabUtility.SaveAsPrefabAsset(root, ResRoot + "fire-imp.prefab");
             Object.DestroyImmediate(root);
             Debug.Log("HELL_LOOK_BUILD imp prefab " + ResRoot + "fire-imp.prefab from " + meshes.Count + " meshes (" + string.Join(", ", meshes.Select(m => m.name)) + ")");
+        }
+
+        /// <summary>The OBJ has no UVs (the Quaternius demon is flat-coloured), so the hide and ember-crack textures need some: a
+        /// spherical projection round the mesh's centre, saved as a mesh asset beside the model (Unity writes its .meta).</summary>
+        static Mesh WithUvs(Mesh src, string path)
+        {
+            var copy = Object.Instantiate(src);
+            copy.name = src.name + " uv";
+            var v = copy.vertices;
+            var b = copy.bounds;
+            var uv = new Vector2[v.Length];
+            for (int i = 0; i < v.Length; i++)
+            {
+                var d = v[i] - b.center;
+                float u = Mathf.Atan2(d.x, d.z) / (2f * Mathf.PI) + 0.5f;
+                float h = (v[i].y - b.min.y) / Mathf.Max(b.size.y, 1e-4f);
+                uv[i] = new Vector2(u * 3f, h * 1.6f);
+            }
+            copy.uv = uv;
+            copy.RecalculateTangents();
+            var old = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (old != null) { EditorUtility.CopySerialized(copy, old); Object.DestroyImmediate(copy); EditorUtility.SetDirty(old); return old; }
+            AssetDatabase.CreateAsset(copy, path);
+            return copy;
         }
 
         static void Empty(string name, Transform parent, Vector3 at)

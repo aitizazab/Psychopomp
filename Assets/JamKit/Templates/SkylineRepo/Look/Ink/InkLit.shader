@@ -147,6 +147,8 @@ Shader "Skyline/InkLit"
             // Optional stylization, set by SkylineInkFeature as a global each camera (0 = off; never a keyword, so a build keeps it):
             // x: halftone dots in the deepest shade (0..1), y: posterize the light bands to two (0..1).
             float4 _SkInkLitStyle;
+            // Hell's light rig (HellLightRig): x = pool strength, y > 0.5 = intensity-aware pools. 0 everywhere else (the kit's look).
+            float4 _SkHellLight;
 
             /// One additional light as a hard-edged pool: a = how much of the light reaches the surface (distance falloff,
             /// shadow, facing), then two crisp steps. A strong light paints its colour across the room instead of a soft glow.
@@ -156,6 +158,15 @@ Shader "Skyline/InkLit"
                 if (!IsMatchingLightLayer(light.layerMask, meshRenderingLayers)) return half3(0, 0, 0);
             #endif
                 half a = light.distanceAttenuation * light.shadowAttenuation * saturate(dot(normalWS, light.direction));
+                // Hell (HellLightRig sets _SkHellLight.y = 1): the pool's reach follows the light's INTENSITY, not only its distance
+                // (with the kit's bands a 9 m lava light lit a 2-5 m spot whatever its intensity). docs/HELL-LIGHTING.md.
+                if (_SkHellLight.y > 0.5)
+                {
+                    half pk = max(light.color.r, max(light.color.g, light.color.b));
+                    half e = a * pk;
+                    half b3 = smoothstep(0.04h, 0.06h, e) * 0.35h + smoothstep(0.2h, 0.24h, e) * 0.45h + smoothstep(0.7h, 0.8h, e) * 0.6h;
+                    return (light.color / max(pk, 1e-4h)) * b3 * (half)_SkHellLight.x;
+                }
                 half band = smoothstep(0.03h, 0.06h, a) * 0.55h + smoothstep(0.25h, 0.3h, a) * 0.85h;
                 if (_SkInkLitStyle.y > 0.001) band = lerp(band, smoothstep(0.08h, 0.11h, a) * 0.8h, (half)_SkInkLitStyle.y);   // posterize: one crisp step
                 return light.color * band;

@@ -50,7 +50,7 @@ namespace JamKit.SkylineRepo.EditorTools
             wallrun = Lit("SK_Hell_WallRun_F" + floor, HellWall[floor] * 0.9f),
             obsidian = Lit("SK_Hell_Obsidian", new Color(0.03f, 0.03f, 0.045f)),
             pall = Glass("SK_Glass_ShadowPall", new Color(0.01f, 0.0f, 0.03f, 0.55f)),
-            sigil = Emissive("SK_Emissive_Sigil", new Color(0.35f, 0.12f, 0.45f)),
+            sigil = Emissive("SK_Emissive_Sigil", new Color(0.85f, 0.3f, 1.25f)),
             lantern = Emissive("SK_Emissive_Lantern", new Color(0.6f, 2.4f, 2.6f)),
             altar = Lit("SK_Hell_Altar", new Color(0.55f, 0.5f, 0.6f)),
             anchor = Emissive("SK_Emissive_Anchor", new Color(2.8f, 0.25f, 0.2f)),

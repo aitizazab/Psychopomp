@@ -24,16 +24,37 @@ namespace JamKit.Skyline
     /// </summary>
     public struct HellLookOptions
     {
-        public const string LookSwitch = "-hellLook", OutlineSwitch = "-hellOutline", StudsSwitch = "-hellStuds", CaptureSwitch = "-hellLookCapture";
+        public const string LookSwitch = "-hellLook", OutlineSwitch = "-hellOutline", StudsSwitch = "-hellStuds", CaptureSwitch = "-hellLookCapture",
+            FloorsSwitch = "-hellLookFloors";
 
         public HellLookDirection look;
+        /// <summary>The direction per floor (<c>-hellLookFloors B,A,C</c>: floor 1 B, floor 2 A, floor 3 C); null when not given (every
+        /// floor takes <see cref="look"/>). A floor left out or unreadable takes <see cref="look"/>.</summary>
+        public HellLookDirection[] floors;
         public HellOutlineVariant outline;
         public HellStudColour studs;
         /// <summary>True when -hellOutline was given (otherwise the outline follows the look's default).</summary>
         public bool outlineGiven, studsGiven;
         public string captureDir;
 
-        public bool Any => look != HellLookDirection.None || outlineGiven || studsGiven || captureDir != null;
+        public bool Any => look != HellLookDirection.None || floors != null || outlineGiven || studsGiven || captureDir != null;
+
+        /// <summary>The direction on floor <paramref name="floor"/> (0..2).</summary>
+        public HellLookDirection ForFloor(int floor) =>
+            floors != null && floor >= 0 && floor < floors.Length && floors[floor] != HellLookDirection.None ? floors[floor] : look;
+
+        /// <summary>"B,A,C" (or "BAC", "b a c") into one direction per floor; null when nothing readable.</summary>
+        public static HellLookDirection[] ParseFloors(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var parts = s.IndexOfAny(new[] { ',', ' ', ';', '/' }) >= 0
+                ? s.Split(new[] { ',', ' ', ';', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                : Array.ConvertAll(s.Trim().ToCharArray(), c => c.ToString());
+            var r = new HellLookDirection[HellRoomVariants.FloorCount];
+            bool any = false;
+            for (int i = 0; i < r.Length && i < parts.Length; i++) { r[i] = ParseLook(parts[i]); any |= r[i] != HellLookDirection.None; }
+            return any ? r : null;
+        }
 
         public static HellLookOptions Parse(string[] args)
         {
@@ -41,6 +62,10 @@ namespace JamKit.Skyline
             if (args == null) return o;
             string look = Value(args, LookSwitch), outline = Value(args, OutlineSwitch), studs = Value(args, StudsSwitch);
             o.look = ParseLook(look);
+            o.floors = ParseFloors(Value(args, FloorsSwitch));
+            // floors given without -hellLook: the first floor's direction is the run's main one (the imp's model, the capture folder)
+            if (o.look == HellLookDirection.None && o.floors != null)
+                foreach (var f in o.floors) if (f != HellLookDirection.None) { o.look = f; break; }
             if (outline != null) { o.outline = ParseOutline(outline); o.outlineGiven = true; }
             else o.outline = DefaultOutline(o.look);
             if (studs != null) { o.studs = ParseStuds(studs); o.studsGiven = true; }

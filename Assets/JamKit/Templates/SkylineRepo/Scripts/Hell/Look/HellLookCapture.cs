@@ -32,7 +32,7 @@ namespace JamKit.SkylineRepo
         IEnumerator Start()
         {
             var sw = GetComponent<HellLookSwitch>();
-            string letter = sw != null && sw.look != HellLookDirection.None ? sw.look.ToString() : "none";
+            string letter = sw == null || sw.look == HellLookDirection.None ? "none" : sw.Mixed ? "floors-" + sw.DirectionOn(0) + sw.DirectionOn(1) + sw.DirectionOn(2) : sw.look.ToString();
             Debug.Log("HELL_LOOK_CAPTURE start look " + letter + " -> " + outDir);
             // let the run settle (the drop, shader warm-up)
             for (int i = 0; i < 10; i++) yield return null;
@@ -58,14 +58,28 @@ namespace JamKit.SkylineRepo
             string dir = Path.Combine(outDir, letter);
             Directory.CreateDirectory(dir);
             int done = 0;
+            HellBeyond.SkyCamera(_cam);
 
-            // the wide shots, one per floor
+            // the wide shots, one per floor (each floor's Six Sigils cavern from above its entry)
             for (int f = 0; f < HellRoomVariants.FloorCount; f++)
             {
                 var room = HellWorld.Room(f, HellRoomKind.SixSigils);
                 ShowRoom(f, HellRoomKind.SixSigils);
                 Frame(WideShot(room), f, sw);
                 yield return Shot(Path.Combine(dir, "floor" + (f + 1) + "-wide.png"));
+                done++;
+            }
+            // eye level, one room per floor (what the player sees), and the sky beyond each floor's walls
+            var eyeRooms = new[] { HellRoomKind.SoulLantern, HellRoomKind.BreakChains, HellRoomKind.Collapse };
+            for (int f = 0; f < HellRoomVariants.FloorCount; f++)
+            {
+                var room = HellWorld.Room(f, eyeRooms[f]);
+                ShowRoom(f, eyeRooms[f]);
+                Frame(EyeShot(room), f, sw);
+                yield return Shot(Path.Combine(dir, "floor" + (f + 1) + "-eye.png"));
+                done++;
+                Frame(SkyShot(room), f, sw);
+                yield return Shot(Path.Combine(dir, "floor" + (f + 1) + "-sky.png"));
                 done++;
             }
 
@@ -76,9 +90,15 @@ namespace JamKit.SkylineRepo
             HideOtherBots();
             SpawnImps(enemyShot);
             for (int i = 0; i < 4; i++) yield return null;   // a few frames of hover so they settle
+            if (sw != null) sw.DressNewBots();
             Time.timeScale = 0f;
             Frame(enemyShot, 0, sw);
             yield return Shot(Path.Combine(dir, "enemies-at-range.png"));
+            done++;
+
+            // a wall meeting the floor, close (textures, trims, the light on them)
+            Frame(WallShot(enemyRoom), 0, sw);
+            yield return Shot(Path.Combine(dir, "wall-floor-close.png"));
             done++;
 
             // a dark zone
@@ -91,39 +111,16 @@ namespace JamKit.SkylineRepo
             }
             else Debug.LogWarning("HELL_LOOK_CAPTURE no dark zone in the floor 1 Six Sigils");
 
-            // the outline variants (under look A)
-            if (sw != null && sw.look == HellLookDirection.A)
-            {
-                string od = Path.Combine(outDir, "outlines");
-                Directory.CreateDirectory(od);
-                var keep = sw.outline;
-                var variants = new[] { HellOutlineVariant.SoulfirePulse, HellOutlineVariant.Lime, HellOutlineVariant.Soulfire, HellOutlineVariant.WhiteHot, HellOutlineVariant.Pulse };
-                // the pulse still: idle, alert and about-to-fire imps (brightness differs; in play it pulses, faster as it winds up)
-                for (int i = 0; i < _imps.Count; i++) if (_imps[i] != null) sw.forcedWindup[_imps[i]] = i / (float)Mathf.Max(1, _imps.Count - 1);
-                Frame(enemyShot, 0, sw);
-                foreach (var v in variants)
-                {
-                    sw.SetOutline(v);
-                    Time.timeScale = HellLookOptions.Pulses(v) ? 1f : 0f;   // the pulse's phase needs a moving clock for one frame
-                    yield return null;
-                    Time.timeScale = 0f;
-                    string vname = v == HellOutlineVariant.SoulfirePulse ? "soulfire-pulse" : v.ToString().ToLowerInvariant();
-                    yield return Shot(Path.Combine(od, vname + ".png"));
-                    done++;
-                }
-                // the studs beside the picked outline: blue (the clash), bone-white (the default) and dim stone
-                var keepStuds = sw.studs;
-                sw.SetOutline(HellOutlineVariant.SoulfirePulse);
-                foreach (var st in new[] { HellStudColour.Blue, HellStudColour.Bone, HellStudColour.Stone })
-                {
-                    sw.SetStuds(st);
-                    yield return null;
-                    yield return Shot(Path.Combine(od, "studs-" + st.ToString().ToLowerInvariant() + ".png"));
-                    done++;
-                }
-                sw.SetStuds(keepStuds);
-                sw.SetOutline(keep);
-            }
+            // the three enemies close: an imp, a scythe demon, an ooze
+            foreach (var b in _imps) if (b != null) b.gameObject.SetActive(false);
+            Time.timeScale = 1f;
+            var close = SpawnLineup(enemyShot);
+            for (int i = 0; i < 4; i++) yield return null;
+            if (sw != null) sw.DressNewBots();
+            Time.timeScale = 0f;
+            Frame(enemyShot, 0, sw, close);
+            yield return Shot(Path.Combine(dir, "enemies-close.png"));
+            done++;
 
             Debug.Log("HELL_LOOK_CAPTURE done " + done + " stills -> " + outDir);
             Time.timeScale = 1f;
@@ -174,6 +171,33 @@ namespace JamKit.SkylineRepo
             return new ShotDef { position = p, lookAt = p + fwd * 30f + Vector3.down * 1.5f };
         }
 
+        /// <summary>Eye height (1.7 m over the entry floor) a few metres in, looking down the room.</summary>
+        static ShotDef EyeShot(HellRoomDef room)
+        {
+            var fwd = Forward(room);
+            var p = U(room.entry) + fwd * 5f + Vector3.up * 1.7f;
+            return new ShotDef { position = p, lookAt = p + fwd * 30f + Vector3.down * 3f };
+        }
+
+        /// <summary>Up past the walls at the world beyond: from the entry, looking down the room and up.</summary>
+        static ShotDef SkyShot(HellRoomDef room)
+        {
+            var fwd = Forward(room);
+            var p = U(room.entry) + fwd * 4f + Vector3.up * 2.5f;
+            var right = new Vector3(fwd.z, 0f, -fwd.x);
+            return new ShotDef { position = p, lookAt = p + (fwd + right * 0.35f).normalized * 30f + Vector3.up * 12f };
+        }
+
+        /// <summary>A wall where it meets the floor, close: at eye height, turned 62 degrees off the room's axis, looking down a little.</summary>
+        static ShotDef WallShot(HellRoomDef room)
+        {
+            var fwd = Forward(room);
+            var p = U(room.entry) + fwd * 6f + Vector3.up * 1.7f;
+            var dir = Quaternion.Euler(0f, 62f, 0f) * fwd;
+            if (Physics.Raycast(p, dir, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.distance > 9f) p += dir * (hit.distance - 7f);
+            return new ShotDef { position = p, lookAt = p + dir * 10f + Vector3.down * 2.2f };
+        }
+
         static ShotDef? DarkShot(HellRoomDef room)
         {
             if (room.darkZones == null || room.darkZones.Count == 0) return null;
@@ -186,9 +210,9 @@ namespace JamKit.SkylineRepo
             return new ShotDef { position = p, lookAt = c };
         }
 
-        void Frame(ShotDef s, int floor, HellLookSwitch sw)
+        void Frame(ShotDef s, int floor, HellLookSwitch sw, List<SkylineBot> keep = null)
         {
-            HideOtherBots();   // the run's own spawns stay out of the stills
+            HideOtherBots(keep);   // the run's own spawns stay out of the stills
             _cam.transform.position = s.position;
             _cam.transform.rotation = Quaternion.LookRotation(s.lookAt - s.position, Vector3.up);
             if (sw != null)
@@ -197,6 +221,10 @@ namespace JamKit.SkylineRepo
                 sw.AtmosphereFor(floor);
             }
             _cam.backgroundColor = RenderSettings.fogColor;
+            HellBeyond.SkyCamera(_cam);
+            HellLightRig.Focus = _cam;
+            var rig = Object.FindAnyObjectByType<HellLightRig>();
+            if (rig != null) { rig.ShadowBudget(); rig.SendMessage("LateUpdate", SendMessageOptions.DontRequireReceiver); }
         }
 
         /// <summary>The run director keeps every room but the current one inactive (HellRunDirector.Start): a shot's room is
@@ -209,10 +237,34 @@ namespace JamKit.SkylineRepo
             Debug.Log("HELL_LOOK_CAPTURE room floor " + (floor + 1) + " " + kind + (n > 0 ? " switched on" : " already on"));
         }
 
-        void HideOtherBots()
+        void HideOtherBots(List<SkylineBot> keep = null)
         {
             foreach (var b in SkylineBot.Live.ToArray())
-                if (b != null && !_imps.Contains(b)) b.gameObject.SetActive(false);
+                if (b != null && !_imps.Contains(b) && (keep == null || !keep.Contains(b))) b.gameObject.SetActive(false);
+        }
+
+        /// <summary>An imp 5 m out at eye height, a scythe demon 9 m out to the left and an ooze 7 m out to the right, on the ground.</summary>
+        List<SkylineBot> SpawnLineup(ShotDef shot)
+        {
+            var player = Object.FindAnyObjectByType<SkylinePlayer>();
+            var fwd = shot.lookAt - shot.position;
+            fwd.y = 0f;
+            fwd.Normalize();
+            var right = new Vector3(fwd.z, 0f, -fwd.x);
+            var list = new List<SkylineBot>();
+            var spots = new[] { (SkylineEnemies.DroneId, 5.5f, 0.6f, false), (SkylineEnemies.SpotlightId, 9f, -2.8f, true), (SkylineEnemies.FloorCareId, 7f, 3f, true) };
+            ulong seed = 4242;
+            foreach (var (id, d, side, ground) in spots)
+            {
+                var at = shot.position + fwd * d + right * side;
+                if (ground && Physics.Raycast(at + Vector3.up * 3f, Vector3.down, out var hit, 12f, ~0, QueryTriggerInteraction.Ignore)) at = hit.point;
+                else if (!ground) at += Vector3.down * 0.6f;
+                float yaw = Quaternion.LookRotation(-fwd).eulerAngles.y;
+                var bot = SkylineBot.Spawn(id, at, yaw, seed++, player, player != null ? player.Writ : null, null);
+                if (bot != null) list.Add(bot);
+            }
+            Debug.Log("HELL_LOOK_CAPTURE lineup " + list.Count);
+            return list;
         }
 
         void SpawnImps(ShotDef shot)

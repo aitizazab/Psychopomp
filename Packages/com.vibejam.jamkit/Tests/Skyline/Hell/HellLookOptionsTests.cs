@@ -76,5 +76,25 @@ namespace JamKit.Tests.Skyline
                 Assert.That(HellLookOptions.FloorAt(r.entry.Z), Is.EqualTo(f));
             }
         }
+    
+        [Test]
+        public void ADirectionPerFloor()
+        {
+            var o = HellLookOptions.Parse(new[] { "x.exe", "-hellLookFloors", "B,A,C" });
+            Assert.That(o.ForFloor(0), Is.EqualTo(HellLookDirection.B));
+            Assert.That(o.ForFloor(1), Is.EqualTo(HellLookDirection.A));
+            Assert.That(o.ForFloor(2), Is.EqualTo(HellLookDirection.C));
+            Assert.That(o.look, Is.EqualTo(HellLookDirection.B), "the first floor's direction leads when -hellLook is absent");
+            Assert.That(o.Any, Is.True);
+
+            var mixed = HellLookOptions.Parse(new[] { "x.exe", "-hellLook", "A", "-hellLookFloors", "c" });
+            Assert.That(mixed.ForFloor(0), Is.EqualTo(HellLookDirection.C));
+            Assert.That(mixed.ForFloor(1), Is.EqualTo(HellLookDirection.A), "a floor left out takes -hellLook");
+            Assert.That(mixed.ForFloor(2), Is.EqualTo(HellLookDirection.A));
+
+            Assert.That(HellLookOptions.ParseFloors("BAC"), Is.EqualTo(new[] { HellLookDirection.B, HellLookDirection.A, HellLookDirection.C }));
+            Assert.That(HellLookOptions.ParseFloors("zz"), Is.Null);
+            Assert.That(HellLookOptions.Parse(new[] { "x.exe", "-hellLook", "B" }).ForFloor(2), Is.EqualTo(HellLookDirection.B));
+        }
     }
 }

@@ -94,7 +94,8 @@ namespace JamKit.SkylineRepo
             _altar = Find(transform, "Altar");
             foreach (var s in Def.spawns) _maxWave = Mathf.Max(_maxWave, s.wave);
             _lit = MakeUnlit(new Color(2.4f, 0.9f, 3.2f));
-            _unlit = MakeUnlit(new Color(0.35f, 0.12f, 0.45f));
+            // a pending sigil glows a readable violet (it was 0.35, 0.12, 0.45: a near-black disc under fog and tonemapping)
+            _unlit = MakeUnlit(new Color(0.85f, 0.3f, 1.25f));
             _sealed = MakeUnlit(new Color(0.08f, 0.07f, 0.09f));
             var ring = Find(transform, "Brand Circle");
             if (ring != null)

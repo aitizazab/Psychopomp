@@ -4,3 +4,7 @@ rust_diff.jpg, rust_nor.jpg: Poly Haven 'rusty_metal_02' https://polyhaven.com/a
 tiles_diff.jpg, tiles_nor.jpg: Poly Haven 'volcanic_rock_tiles' https://polyhaven.com/a/volcanic_rock_tiles (CC0 1.0)
 lava_diff.jpg: ambientCG Lava004 https://ambientcg.com/view?id=Lava004 (CC0 1.0)
 lava_emis.jpg: ambientCG Lava004 https://ambientcg.com/view?id=Lava004 (CC0 1.0)
+cliff_diff.jpg, cliff_nor.jpg: Poly Haven 'cliff_side' https://polyhaven.com/a/cliff_side (CC0 1.0)
+brick_diff.jpg, brick_nor.jpg: Poly Haven 'dark_brick_wall' https://polyhaven.com/a/dark_brick_wall (CC0 1.0)
+plate_diff.jpg, plate_nor.jpg: Poly Haven 'metal_plate' https://polyhaven.com/a/metal_plate (CC0 1.0)
+obsid_diff.jpg, obsid_nor.jpg: Poly Haven 'dark_rock_02' https://polyhaven.com/a/dark_rock_02 (CC0 1.0)
