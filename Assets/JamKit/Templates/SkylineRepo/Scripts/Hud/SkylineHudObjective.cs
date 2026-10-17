@@ -169,6 +169,15 @@ namespace JamKit.SkylineRepo
         /// <summary>Test hook: use this camera instead of the player's.</summary>
         public Camera CameraOverride;
 
+        /// <summary>0..1: how fast the circle is filling, as a share of its fastest (Hell's brand charges faster the faster you
+        /// move: <c>BrandHold.RateShare</c>). Above 0 a halo pulses round the ring, quicker the higher it is: the charge rate's
+        /// cue. 0 (the kit's tow circles) draws the ring as before.</summary>
+        public float RingRate;
+
+        /// <summary>The rate halo's pulses a second at a rate of 0, the extra at 1, and its width outside the track.</summary>
+        public const float RingGlowSlowHz = 0.6f, RingGlowFastHz = 3.4f, RingGlowWidth = 6f;
+        float _ringGlowPhase;
+
         public VisualElement Element => _root;
         public VisualElement Strip => _strip;
         public VisualElement ClockElement => _clockEl;
@@ -424,6 +433,7 @@ namespace JamKit.SkylineRepo
             _ring.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             if (!visible) { _ringEntry = on ? entry : -1; return; }
             _ring.style.opacity = _ringAlpha;
+            _ringGlowPhase = (_ringGlowPhase + dt * (RingGlowSlowHz + RingGlowFastHz * Mathf.Clamp01(RingRate))) % 1f;
             _ring.MarkDirtyRepaint();
         }
 
@@ -486,6 +496,16 @@ namespace JamKit.SkylineRepo
             p.lineWidth = RingTrack;
             p.strokeColor = new Color(SkylineHudStyle.Ink.r, SkylineHudStyle.Ink.g, SkylineHudStyle.Ink.b, 0.78f);
             p.Stroke();
+            // the rate halo (Hell's brand): pulses outside the track, quicker the faster the circle fills
+            if (RingRate > 0.001f)
+            {
+                float pulse = 0.5f + 0.5f * Mathf.Sin(_ringGlowPhase * Mathf.PI * 2f);
+                p.BeginPath();
+                p.Arc(c, RingRadius + RingTrack * 0.5f + RingGlowWidth * 0.5f + 1f, new Angle(0f), new Angle(360f));
+                p.lineWidth = RingGlowWidth;
+                p.strokeColor = new Color(Violet.r, Violet.g, Violet.b, (0.25f + 0.55f * pulse) * Mathf.Clamp01(0.35f + RingRate));
+                p.Stroke();
+            }
             // the meter: violet, clockwise from twelve o'clock
             float sweep = RingSweep(_ringProgress);
             if (sweep > 0.5f)

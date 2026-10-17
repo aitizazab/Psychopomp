@@ -34,8 +34,14 @@ namespace JamKit.Skyline
                 case HellRoomKind.SixSigils: return new SigilChain(pts, t.radius);
                 case HellRoomKind.SoulLantern: return new LanternCarry(pts[0], pts[1], t.radius);
                 case HellRoomKind.BreakChains: return new ChainAnchors(pts, t.anchorHealth, t.wardRadius);
-                case HellRoomKind.HoldBrand: return new BrandHold(pts[0], t.seconds);
-                case HellRoomKind.Collapse: return new CollapseEscape(pts[0], r.stops[0].reach);
+                case HellRoomKind.HoldBrand:
+                    return r.hold != null ? new BrandHold(pts[0], t.seconds, r.hold.radius, r.hold.halfHeight) : new BrandHold(pts[0], t.seconds);
+                case HellRoomKind.Collapse:
+                {
+                    int waves = 0;
+                    foreach (var sp in r.spawns) waves = Math.Max(waves, sp.wave);
+                    return new CollapseEscape(pts[0], r.stops[0].reach, t.seconds, waves);
+                }
                 case HellRoomKind.OozeWells: return new OozeWells(pts, t.radius, t.seconds, t.spawnEvery, t.spawnCap);
                 default: throw new ArgumentOutOfRangeException();
             }
@@ -169,29 +175,71 @@ namespace JamKit.Skyline
     }
 
     /// <summary>
-    /// Hold the Brand: the kit's tow circle (<see cref="Repossession"/> with one job on one socket, so the existing objective
-    /// HUD shows its ring and marker; 10 s inside charges it, stepping out pauses, it never drains). From the first moment of
-    /// charge, a wave is due at once and every <see cref="WaveEvery"/> seconds until it is charged.
+    /// Hold the Brand's numbers, all in one place (docs/HELL-ROOMS.md, "Tuning"). Charge from speed, not from standing (the
+    /// creator, 2026-10-17): inside the ring the brand charges at <see cref="Rate"/>, which grows with your horizontal speed
+    /// from <see cref="SlowSpeed"/> (standing, crouching behind cover: <see cref="SlowSeconds"/> for a full charge) to
+    /// <see cref="FullSpeed"/> and above (sprint 9.5, slide, wall-run 8.64: <see cref="FastRate"/> times as fast). Waves come
+    /// every <see cref="WaveEvery"/> seconds from the first touch whatever you do, so a slow charge costs more fights.
+    /// </summary>
+    public static class HellBrandTuning
+    {
+        /// <summary>The ring: 20 m across, and how far above or below its floor the feet may be (a wall-run's height).</summary>
+        public const float RingRadius = 10f, RingHalfHeight = 4.5f;
+        /// <summary>Seconds for a full charge at a standstill; the fast rate's multiple.</summary>
+        public const float SlowSeconds = 30f, FastRate = 3f;
+        /// <summary>The speed (m/s) at and below which the rate is the slow one, and at and above which it is the fast one.</summary>
+        public const float SlowSpeed = 3f, FullSpeed = 8.5f;
+        /// <summary>Seconds between waves once the charge has started.</summary>
+        public const float WaveEvery = 5f;
+
+        /// <summary>Seconds for a full charge at full speed (10).</summary>
+        public static float FastSeconds => SlowSeconds / FastRate;
+
+        /// <summary>0 at <see cref="SlowSpeed"/> or less, 1 at <see cref="FullSpeed"/> or more: the share of the speed bonus
+        /// (the glow's speed-up follows it).</summary>
+        public static float SpeedShare(float speed)
+        {
+            if (!(speed > SlowSpeed)) return 0f;
+            return Math.Min(1f, (speed - SlowSpeed) / (FullSpeed - SlowSpeed));
+        }
+
+        /// <summary>The rate's multiple of the slow rate at this speed (1..<see cref="FastRate"/>).</summary>
+        public static float Multiplier(float speed) => 1f + (FastRate - 1f) * SpeedShare(speed);
+
+        /// <summary>Charge (0..1) per second inside the ring at this horizontal speed.</summary>
+        public static float Rate(float speed) => Multiplier(speed) / SlowSeconds;
+    }
+
+    /// <summary>
+    /// Hold the Brand: a wide ring round a lava pool (<see cref="HellHoldRing"/>) that charges while your feet are inside it, at
+    /// a rate that grows with your speed (<see cref="HellBrandTuning"/>): stand behind a stone and it takes 30 s, run laps
+    /// round the pool (sprint, slide, wall-run) and it takes 10. Stepping out pauses it; it never drains. From the first moment
+    /// of charge a wave is due at once and every <see cref="WaveEvery"/> seconds until it is charged. The kit's
+    /// <see cref="Repossession"/> (one job on one socket) is kept only as the HUD's view: its meter mirrors the charge and its
+    /// active circle mirrors "inside the ring", so the HUD's tow ring shows the charge.
     /// </summary>
     public sealed class BrandHold : HellObjective
     {
         public struct State
         {
-            public float seconds, sinceStart;
+            public float charge, sinceStart, share;
             public int waves;
+            public bool started, inRing;
         }
 
         public readonly Repossession Circle;
-        public readonly float WaveEvery;
+        public readonly float WaveEvery, Radius, HalfHeight;
         readonly Vector3 _at;
         State _s;
 
         public static readonly AssetDef Brand = new AssetDef { kind = AssetKind.ArcadeCabinet, id = "brand", jobSheetName = "The Brand", description = "Hold it until it burns." };
 
-        public BrandHold(Vector3 at, float waveEvery)
+        public BrandHold(Vector3 at, float waveEvery, float radius = HellBrandTuning.RingRadius, float halfHeight = HellBrandTuning.RingHalfHeight)
         {
             _at = at;
             WaveEvery = waveEvery;
+            Radius = radius;
+            HalfHeight = halfHeight;
             var sockets = new[]
             {
                 new SocketDef { id = "brand", group = SocketGroup.Pit, position = at },
@@ -203,23 +251,43 @@ namespace JamKit.Skyline
 
         JobEntry Entry => Circle.Sheet[0];
         public override HellRoomKind Kind => HellRoomKind.HoldBrand;
-        public bool Started => _s.seconds > 0f;
+        public bool Started => _s.started;
         public int WavesReleased => _s.waves;
-        public bool InCircle(Vector3 feet) => Circle.CircleAt(feet) == 0;
-        public override bool Done => Entry.meter.Done;
-        public override float Progress => Entry.meter.Progress;
-        public override string Line => Done ? "THE BRAND IS SET - GET OUT" : "HOLD THE BRAND   " + (int)Math.Round(Progress * 100f) + "%";
+        /// <summary>Inside the ring on the last tick.</summary>
+        public bool Inside => _s.inRing;
+        /// <summary>0..1: the speed bonus on the last tick (0 outside the ring): the glow's speed-up.</summary>
+        public float RateShare => _s.share;
+        /// <summary>The rate's multiple on the last tick (1..3; 0 outside the ring).</summary>
+        public float RateMultiplier => _s.inRing ? 1f + (HellBrandTuning.FastRate - 1f) * _s.share : 0f;
+
+        public bool InCircle(Vector3 feet)
+        {
+            if (float.IsNaN(feet.X) || float.IsNaN(feet.Y) || float.IsNaN(feet.Z)) return false;
+            return Flat(feet, _at) <= Radius && Math.Abs(feet.Y - _at.Y) <= HalfHeight;
+        }
+
+        public override bool Done => _s.charge >= 1f;
+        public override float Progress => Math.Min(1f, _s.charge);
+        public override string Line => Done ? "THE BRAND IS SET - GET OUT"
+            : "HOLD THE BRAND   " + (int)Math.Floor(Progress * 100f) + "%" + (_s.inRing ? "   x" + RateMultiplier.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "");
         public override Vector3? Target => Done ? (Vector3?)null : _at;
 
-        /// <summary>Charges while the feet are in the circle; returns how many waves are due this step (numbered from 1:
-        /// <see cref="WavesReleased"/> after the call is the last one's number).</summary>
-        public int Tick(float dt, Vector3 feet)
+        /// <summary>Charges while the feet are in the ring, at the rate for <paramref name="speed"/> (horizontal, m/s); returns
+        /// how many waves are due this step (numbered from 1: <see cref="WavesReleased"/> after the call is the last one's number).</summary>
+        public int Tick(float dt, Vector3 feet, float speed)
         {
-            if (Done || !(dt > 0f)) return 0;
-            bool wasStarted = Started;
-            Circle.Tick(dt, feet);          // the kit's circle: it also keeps ActiveCircle for the HUD's ring
-            _s.seconds = Entry.meter.Progress * FloorRules.TowSeconds;
-            if (!Started) return 0;
+            if (Done || !(dt > 0f) || float.IsInfinity(dt)) return 0;
+            bool wasStarted = _s.started;
+            _s.inRing = InCircle(feet);
+            _s.share = _s.inRing ? HellBrandTuning.SpeedShare(speed) : 0f;
+            if (_s.inRing)
+            {
+                _s.charge += HellBrandTuning.Rate(speed) * dt;
+                if (_s.charge >= 1f - 1e-5f) _s.charge = 1f;
+                _s.started = true;
+            }
+            SyncCircle();
+            if (!_s.started) return 0;
             if (wasStarted) _s.sinceStart += dt;
             if (Done) return 0;
             int due = 1 + (int)Math.Floor(_s.sinceStart / WaveEvery);
@@ -228,44 +296,83 @@ namespace JamKit.Skyline
             return n;
         }
 
+        /// <summary>The HUD's view: the kit circle's meter shows the charge, its active circle "inside the ring".</summary>
+        void SyncCircle()
+        {
+            if (Done)
+            {
+                if (!Entry.meter.Done) Circle.Tick(FloorRules.TowSeconds + 1f, _at);
+                return;
+            }
+            Circle.Reset();
+            Entry.meter.RestoreSeconds(_s.charge * FloorRules.TowSeconds);
+            Circle.Tick(0f, _s.inRing ? _at : _at + new Vector3(1000f, 0f, 0f));
+        }
+
         public override object Snapshot() => _s;
 
         public override void Restore(object snapshot)
         {
             _s = (State)snapshot;
             Circle.Reset();
-            if (_s.seconds > 0f) Entry.meter.Tick(_s.seconds, true);
+            SyncCircle();
         }
 
         public override void Reset() { _s = default(State); Circle.Reset(); }
     }
 
-    /// <summary>The Collapse: reach the exit (the floor's fall is the room's timeline, not this).</summary>
+    /// <summary>The Collapse: reach the exit (the floor's fall is the room's timeline, not this). Imps come at the walls on
+    /// the clock: wave <c>n</c> (1..<see cref="WaveCount"/>) every <see cref="WaveEvery"/> seconds.</summary>
     public sealed class CollapseEscape : HellObjective
     {
+        public struct State
+        {
+            public bool done;
+            public float clock;
+            public int waves;
+        }
+
         readonly Vector3 _exit;
         readonly float _r;
-        bool _done;
+        public readonly float WaveEvery;
+        public readonly int WaveCount;
+        State _s;
         float _distance = -1f;
 
-        public CollapseEscape(Vector3 exit, float reach) { _exit = exit; _r = reach; }
+        public CollapseEscape(Vector3 exit, float reach, float waveEvery = 0f, int waveCount = 0)
+        {
+            _exit = exit; _r = reach; WaveEvery = waveEvery; WaveCount = waveCount;
+        }
+
         public override HellRoomKind Kind => HellRoomKind.Collapse;
-        public override bool Done => _done;
-        public override float Progress => _done ? 1f : 0f;
-        public override string Line => _done ? "OUT!" : "RUN - THE FLOOR IS FALLING" + (_distance >= 0f ? "   " + (int)_distance + " m" : "");
-        public override Vector3? Target => _done ? (Vector3?)null : _exit;
+        public override bool Done => _s.done;
+        public override float Progress => _s.done ? 1f : 0f;
+        public int WavesReleased => _s.waves;
+        public override string Line => _s.done ? "OUT!" : "RUN - THE FLOOR IS FALLING" + (_distance >= 0f ? "   " + (int)_distance + " m" : "");
+        public override Vector3? Target => _s.done ? (Vector3?)null : _exit;
 
         public bool Tick(Vector3 feet)
         {
             _distance = Vector3.Distance(feet, _exit);
-            if (_done || !Near(feet, _exit, _r)) return false;
-            _done = true;
+            if (_s.done || !Near(feet, _exit, _r)) return false;
+            _s.done = true;
             return true;
         }
 
-        public override object Snapshot() => _done;
-        public override void Restore(object s) { _done = (bool)s; }
-        public override void Reset() { _done = false; _distance = -1f; }
+        /// <summary>Advances the wave clock; returns how many waves are due this step (numbered from 1).</summary>
+        public int TickWaves(float dt)
+        {
+            if (_s.done || !(dt > 0f) || WaveEvery <= 0f) return 0;
+            _s.clock += dt;
+            int due = Math.Min(WaveCount, (int)Math.Floor(_s.clock / WaveEvery));
+            int n = Math.Max(0, due - _s.waves);
+            _s.waves += n;
+            return n;
+        }
+
+        public override object Snapshot() => _s;
+        public override void Restore(object s) { _s = (State)s; }
+        public override void Reset() { _s = default(State); _distance = -1f; }
     }
 
     /// <summary>
