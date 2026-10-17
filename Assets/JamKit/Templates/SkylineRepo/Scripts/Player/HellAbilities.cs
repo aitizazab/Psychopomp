@@ -193,6 +193,7 @@ namespace JamKit.SkylineRepo
             const BindDevice KM = BindDevice.KeyboardMouse, Pad = BindDevice.Pad;
             stepHeld = SkylineBindings.Held(KM, BindAction.ShadowStep, mouseOk) || SkylineBindings.Held(Pad, BindAction.ShadowStep, mouseOk);
             rewindPressed = SkylineBindings.Pressed(KM, BindAction.Rewind, mouseOk) || SkylineBindings.Pressed(Pad, BindAction.Rewind, mouseOk);
+            if (HellAbilityWheel.IsOpen) stepHeld = rewindPressed = false;   // the wheel has the look; no stepping blind
         }
 
         /// <summary>The floor skill button (G / D-pad down) this frame, for active skills (Nightfall).</summary>

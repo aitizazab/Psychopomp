@@ -19,11 +19,9 @@ namespace JamKit.SkylineRepo
         public void Build(VisualElement safe, float phase2Share, float phase3Share)
         {
             if (safe == null || _root != null) return;
-            string face = SkylineHudStyle.AmmoFontDefault;
+            string face = JamKit.Skyline.HellFaces.Heading;   // the boss's name and banners: important subtext (docs/HELL-UI.md)
             _root = SkylineHudStyle.Layer(safe, "vesper-bar");
-            _root.style.left = 0;
-            _root.style.right = 0;
-            _root.style.top = TopPx;
+            HellHudStyle.Place(_root, JamKit.Skyline.HellHudPlaces.VesperBar);
             _root.style.alignItems = Align.Center;
             _name = new KeylinedLabel(30f, 2.5f, face);
             _name.SetColor(new Color(0.85f, 0.7f, 1f));
@@ -42,7 +40,7 @@ namespace JamKit.SkylineRepo
             _fill.style.top = 0;
             _fill.style.bottom = 0;
             _fill.style.width = Length.Percent(100);
-            _fill.style.backgroundColor = new Color(1f, 0.45f, 0.18f);
+            _fill.style.backgroundColor = HellHudStyle.Soulfire;   // cyan is the enemies' colour, ember is yours
             bar.Add(_fill);
             foreach (float share in new[] { phase2Share, phase3Share })
             {
@@ -56,15 +54,14 @@ namespace JamKit.SkylineRepo
                 bar.Add(notch);
             }
             _root.Add(bar);
-            _hint = new KeylinedLabel(26f, 2f, face);
+            _hint = new KeylinedLabel(26f, 2f, SkylineHudStyle.AmmoFontDefault);   // a hint card: Luckiest Guy, as the tutorial's
             _hint.SetColor(new Color(0.55f, 0.95f, 1f));
             _hint.style.marginTop = 8f;
             _root.Add(_hint);
 
             _bannerBox = SkylineHudStyle.Layer(safe, "vesper-banner");
-            _bannerBox.style.left = 0;
-            _bannerBox.style.right = 0;
-            _bannerBox.style.top = Length.Percent(32);
+            HellHudStyle.Place(_bannerBox, JamKit.Skyline.HellHudPlaces.Banner);
+            _bannerBox.style.justifyContent = Justify.Center;
             _bannerBox.style.alignItems = Align.Center;
             _banner = new KeylinedLabel(64f, 4f, face);
             _banner.SetColor(new Color(0.75f, 0.45f, 1f));

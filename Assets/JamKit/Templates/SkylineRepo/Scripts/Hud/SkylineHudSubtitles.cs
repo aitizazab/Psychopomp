@@ -20,7 +20,13 @@ namespace JamKit.SkylineRepo
         public const string BoxName = "hud-say", LineName = "hud-say-line";
         /// <summary>The block's gap above the bottom edge of the safe area, the slide of a fading line, and how wide the text may
         /// run (a fraction of the safe width).</summary>
-        public const float BottomPx = 120f, SlidePx = 12f, WidthFraction = 0.70f;
+        public const float SlidePx = 12f;
+        /// <summary>The block's gap above the safe area's bottom: Skyline 120; Hell the layout's (HellHudPlaces.Subtitles, above
+        /// the beat letterbox at 16:10 too).</summary>
+        public static float BottomPx => HellHudStyle.Active ? JamKit.Skyline.HellHudPlaces.Subtitles.y : 120f;
+        /// <summary>Skyline: 70% of the width. Hell: the layout's narrower block (HellHudPlaces.Subtitles), clear of the health
+        /// vessel and the ability tiles in the bottom corners (docs/HELL-UI.md).</summary>
+        public static float WidthFraction => HellHudStyle.Active ? JamKit.Skyline.HellHudPlaces.Subtitles.wShare : 0.70f;
         /// <summary>At most this many rows of text at once (a line that wraps to two rows fills the block alone).</summary>
         public const int MaxRows = 2;
         public const float FadeInSeconds = 0.18f, FadeOutSeconds = 0.32f, DefaultSeconds = 4f;

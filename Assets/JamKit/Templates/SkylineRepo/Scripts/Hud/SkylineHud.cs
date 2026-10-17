@@ -146,7 +146,7 @@ namespace JamKit.SkylineRepo
             _vignette.style.unityBackgroundImageTintColor = HurtColor;
             _vignette.style.opacity = 0f;
             _breakFlash = Fill(_root);
-            _breakFlash.style.backgroundColor = new Color(0.75f, 0.92f, 1f, 1f);
+            _breakFlash.style.backgroundColor = HellHudStyle.Active ? HellHudStyle.Bone : new Color(0.75f, 0.92f, 1f, 1f);   // Hell: the Ward breaking, bone
             _breakFlash.style.opacity = 0f;
             Flashes.Build(_root);   // the plating-gained edge flash (H5)
 

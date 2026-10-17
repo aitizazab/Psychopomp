@@ -22,9 +22,28 @@ namespace JamKit.SkylineRepo
         HellJobSite _site;
         HellRoom _siteRoom;
         bool _hudBuilt;
-        VisualElement _cardBox, _markerBox;
-        KeylinedLabel _cardHead, _cardLine, _cardTask, _tracker, _marker;
-        float _cardUntil, _resultUntil;
+        VisualElement _cardBox, _markerBox, _trackBox, _trackBar;
+        KeylinedLabel _cardHead, _cardLine, _cardTask, _tracker, _trackCount, _marker;
+        float _cardUntil, _resultUntil, _barShown = -1f;
+        // the HUD's texts are cached by value, so a frame never builds a string (docs/HELL-UI.md)
+        string _trackName;
+        int _trackDone = -1, _trackOffered = -1, _markerMetres = -1;
+        static readonly string[,] CountText = new string[16, 16];
+        static readonly string[] MarkerText = new string[1000];
+        const string FavoursWord = "FAVOURS";
+
+        static string Count(int done, int offered)
+        {
+            done = Mathf.Clamp(done, 0, 15);
+            offered = Mathf.Clamp(offered, 0, 15);
+            return CountText[done, offered] ?? (CountText[done, offered] = done + " / " + offered);
+        }
+
+        static string Marker(int metres)
+        {
+            metres = Mathf.Clamp(metres, 0, 999);
+            return MarkerText[metres] ?? (MarkerText[metres] = "JOB  " + metres + " m");
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoAttach()
@@ -156,19 +175,54 @@ namespace JamKit.SkylineRepo
             if (!_hudBuilt && SkylineHud.Instance != null && SkylineHud.Instance.Safe != null) BuildHud(SkylineHud.Instance.Safe);
             if (!_hudBuilt) return;
             float now = Time.unscaledTime;
-            _cardBox.style.display = now < _cardUntil || now < _resultUntil ? DisplayStyle.Flex : DisplayStyle.None;
+            var cardDisp = now < _cardUntil || now < _resultUntil ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_cardBox.style.display != cardDisp) _cardBox.style.display = cardDisp;
             if (_site != null && _siteRoom != null && !_siteRoom.Running) Settle(true);   // down the shaft or the run ended
 
+            // the tracker: the job's name (or FAVOURS between jobs), a drawn progress bar, the favours done
             var job = _site != null ? _site.Job : null;
-            if (job != null && !job.Settled)
+            bool live = job != null && !job.Settled;
+            string name = live ? job.def.name : HellJobs.OfferedCount > 0 ? FavoursWord : "";
+            if (!ReferenceEquals(name, _trackName))
             {
-                string bar = "";
-                float p = job.Progress01;
-                if (p > 0f) bar = "   " + new string('|', Mathf.RoundToInt(p * 12f)) + new string('.', 12 - Mathf.RoundToInt(p * 12f));
-                _tracker.SetText("FAVOUR:  " + job.def.name + bar + "      " + HellJobs.DoneCount + "/" + HellJobs.OfferedCount + " DONE");
+                _trackName = name;
+                _tracker.SetText(name);
             }
-            else _tracker.SetText(HellJobs.OfferedCount > 0 ? "FAVOURS  " + HellJobs.DoneCount + "/" + HellJobs.OfferedCount : "");
+            if (HellJobs.DoneCount != _trackDone || HellJobs.OfferedCount != _trackOffered)
+            {
+                _trackDone = HellJobs.DoneCount;
+                _trackOffered = HellJobs.OfferedCount;
+                _trackCount.SetText(_trackOffered > 0 ? Count(_trackDone, _trackOffered) : "");
+            }
+            float bar = live ? Mathf.Clamp01(job.Progress01) : -1f;
+            if (bar != _barShown)
+            {
+                _barShown = bar;
+                _trackBar.style.display = bar >= 0f ? DisplayStyle.Flex : DisplayStyle.None;
+                _trackBar.MarkDirtyRepaint();
+            }
             UpdateMarker(job);
+        }
+
+        void DrawTrackBar(MeshGenerationContext ctx)
+        {
+            if (_barShown < 0f) return;
+            var p = ctx.painter2D;
+            float w = _trackBar.layout.width, h = 10f;
+            if (float.IsNaN(w) || w <= 0f) w = 300f;
+            SkylineHudStyle.Parallelogram(p, 1f, 1f, w - 8f, h, 5f);
+            p.fillColor = HellHudStyle.Plate;
+            p.Fill();
+            if (_barShown > 0f)
+            {
+                SkylineHudStyle.Parallelogram(p, 1f, 1f, (w - 8f) * _barShown, h, 5f);
+                p.fillColor = HellHudStyle.Shadow;
+                p.Fill();
+            }
+            SkylineHudStyle.Parallelogram(p, 1f, 1f, w - 8f, h, 5f);
+            p.strokeColor = HellHudStyle.Ink;
+            p.lineWidth = 2f;
+            p.Stroke();
         }
 
         void UpdateMarker(HellJob job)
@@ -191,51 +245,70 @@ namespace JamKit.SkylineRepo
                     float y = Mathf.Clamp(1f - v.y, 0.08f, 0.92f) * safe.height;
                     _markerBox.style.left = x - 60f;
                     _markerBox.style.top = y - 20f;
-                    _marker.SetText("JOB  " + Mathf.RoundToInt(Vector3.Distance(feet, door)) + " m");
+                    int metres = Mathf.RoundToInt(Vector3.Distance(feet, door));
+                    if (metres != _markerMetres)
+                    {
+                        _markerMetres = metres;
+                        _marker.SetText(Marker(metres));
+                    }
                 }
             }
-            _markerBox.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            var disp = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_markerBox.style.display != disp) _markerBox.style.display = disp;
         }
 
+        /// <summary>The job HUD (docs/HELL-UI.md): the tracker top left (<see cref="HellHudPlaces.JobTracker"/>), the card under
+        /// it (<see cref="HellHudPlaces.JobCard"/>), the door marker in the world. Card titles in Metal Mania, her line in the
+        /// project face (read at a glance), counts and the marker in Luckiest Guy. Violet: objectives and favours.</summary>
         void BuildHud(VisualElement safe)
         {
             _hudBuilt = true;
-            string face = SkylineHudStyle.AmmoFontDefault;
             _cardBox = SkylineHudStyle.Layer(safe, "hell-job-card");
-            _cardBox.style.left = 40f;
-            _cardBox.style.top = 170f;
-            _cardBox.style.width = 620f;
+            HellHudStyle.Place(_cardBox, HellHudPlaces.JobCard);
+            _cardBox.style.height = StyleKeyword.Auto;   // the card grows with her line; the layout box is its usual size
             _cardBox.style.paddingLeft = _cardBox.style.paddingRight = 18f;
             _cardBox.style.paddingTop = _cardBox.style.paddingBottom = 12f;
-            _cardBox.style.backgroundColor = new Color(0.04f, 0.01f, 0.06f, 0.82f);
+            _cardBox.style.backgroundColor = HellHudStyle.Plate;
             _cardBox.style.borderLeftWidth = 6f;
-            _cardBox.style.borderLeftColor = new Color(0.7f, 0.3f, 1f);
-            _cardHead = new KeylinedLabel(22f, 2f, face);
-            _cardHead.SetColor(new Color(0.78f, 0.55f, 1f));
-            _cardLine = new KeylinedLabel(26f, 2f, null);
+            _cardBox.style.borderLeftColor = HellHudStyle.Shadow;
+            _cardBox.style.borderBottomWidth = 2f;
+            _cardBox.style.borderBottomColor = HellHudStyle.EmberEdge;
+            _cardHead = HellHudStyle.Label(24f, HellFaces.Heading, new Color(0.78f, 0.6f, 1f), 2f, 1f);
+            _cardLine = new KeylinedLabel(25f, 2f, null);
             _cardLine.SetWrap(true, TextAnchor.UpperLeft);
             _cardLine.SetItalic(true);
-            _cardTask = new KeylinedLabel(22f, 2f, face);
+            _cardLine.style.marginTop = 4f;
+            _cardTask = HellHudStyle.Label(24f, HellFaces.Heading, HellHudStyle.EmberHot, 2f);
             _cardTask.SetWrap(true, TextAnchor.UpperLeft);
-            _cardTask.SetColor(new Color(1f, 0.82f, 0.55f));
             _cardTask.style.marginTop = 8f;
             _cardBox.Add(_cardHead);
             _cardBox.Add(_cardLine);
             _cardBox.Add(_cardTask);
             _cardBox.style.display = DisplayStyle.None;
 
-            var trackBox = SkylineHudStyle.Layer(safe, "hell-job-tracker");
-            trackBox.style.left = 40f;
-            trackBox.style.top = 130f;
-            _tracker = new KeylinedLabel(24f, 2f, face);
-            _tracker.SetColor(new Color(0.85f, 0.65f, 1f));
-            trackBox.Add(_tracker);
+            _trackBox = SkylineHudStyle.Layer(safe, "hell-job-tracker");
+            HellHudStyle.Place(_trackBox, HellHudPlaces.JobTracker);
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.FlexEnd;
+            _trackBox.Add(row);
+            _tracker = HellHudStyle.Label(28f, HellFaces.Heading, new Color(0.85f, 0.7f, 1f), 2.5f, 1f);
+            row.Add(_tracker);
+            _trackCount = HellHudStyle.Label(24f, HellFaces.Numbers, HellHudStyle.Ash, 2f);
+            _trackCount.style.marginLeft = 14f;
+            row.Add(_trackCount);
+            _trackBar = new VisualElement { pickingMode = PickingMode.Ignore };
+            _trackBar.style.width = 300f;
+            _trackBar.style.height = 14f;
+            _trackBar.style.marginTop = 6f;
+            _trackBar.generateVisualContent += DrawTrackBar;
+            _trackBar.style.display = DisplayStyle.None;
+            _trackBox.Add(_trackBar);
 
             _markerBox = SkylineHudStyle.Layer(safe, "hell-job-marker");
             _markerBox.style.width = 120f;
             _markerBox.style.alignItems = Align.Center;
-            _marker = new KeylinedLabel(24f, 2.5f, face);
-            _marker.SetColor(new Color(0.85f, 0.5f, 1f));
+            _marker = HellHudStyle.Label(24f, HellFaces.Numbers, new Color(0.85f, 0.6f, 1f), 2.5f);
             _markerBox.Add(_marker);
             _markerBox.style.display = DisplayStyle.None;
         }
@@ -248,6 +321,16 @@ namespace JamKit.SkylineRepo
             _cardLine.SetText("“" + line + "”", "“" + line + "”");
             _cardTask.SetText(task);
             _cardUntil = Time.unscaledTime + seconds;
+        }
+
+        /// <summary>For the UI stills (<see cref="HellUiShots"/>): catalogue job <paramref name="index"/>'s briefing card, as
+        /// when it is offered. Touches no job state.</summary>
+        public void ShowBriefingForShot(int index)
+        {
+            var all = HellJobCatalog.All;
+            if (all == null || all.Length == 0) return;
+            var def = all[Mathf.Clamp(index, 0, all.Length - 1)];
+            ShowCard("BAJA", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
         }
 
         void ShowResult(string head, string line, string reward)

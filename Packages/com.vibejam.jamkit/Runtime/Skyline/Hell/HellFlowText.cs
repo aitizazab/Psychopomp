@@ -49,8 +49,9 @@ namespace JamKit.Skyline
     /// </summary>
     public static class HellFlowText
     {
-        /// <summary>The working name (the creator picks the title later).</summary>
-        public const string Title = "HELL DESCENT";
+        /// <summary>The working title (the creator's, 2026-10-18; was "HELL DESCENT"): the one place it is written. The title
+        /// screen sets it in Cinzel Decorative Black (HellFaces.Title).</summary>
+        public const string Title = "OVERDUE";
         public const bool TitlePlaceholder = true;
 
         public const string GodOfDeath = "BAJA";
@@ -110,6 +111,9 @@ namespace JamKit.Skyline
             new HellCreditLine("FONTS", true),
             new HellCreditLine("Anton, Bangers by Vernon Adams (SIL OFL 1.1)"),
             new HellCreditLine("Luckiest Guy by Astigmatic (Apache 2.0)"),
+            new HellCreditLine("Cinzel Decorative by Natanael Gama (SIL OFL 1.1)"),
+            new HellCreditLine("Metal Mania by Open Window (SIL OFL 1.1)"),
+            new HellCreditLine("Barlow Condensed by Jeremy Tribby (SIL OFL 1.1)"),
             new HellCreditLine(""),
             new HellCreditLine("SOUND AND MUSIC", true),
             new HellCreditLine("[from the sound pass: to fill]", placeholder: true),

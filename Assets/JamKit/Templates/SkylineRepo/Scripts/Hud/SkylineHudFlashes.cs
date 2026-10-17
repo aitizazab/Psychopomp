@@ -143,7 +143,7 @@ namespace JamKit.SkylineRepo
             if (!(w > 1f) || !(h > 1f)) return;
             float t = Mathf.Min(w, h) * Thickness, c = t * Chamfer;
             var p = ctx.painter2D;
-            p.fillColor = SkylineHudStyle.Plating;
+            p.fillColor = HellHudStyle.Active ? HellHudStyle.Bone : SkylineHudStyle.Plating;   // Hell: the Ward is bone (cyan is the enemies')
             p.BeginPath();
             p.MoveTo(new Vector2(0f, 0f));
             p.LineTo(new Vector2(w, 0f));

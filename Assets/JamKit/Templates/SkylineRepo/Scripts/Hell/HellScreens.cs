@@ -39,7 +39,9 @@ namespace JamKit.SkylineRepo
         static readonly Color EmberHot = new Color(1f, 0.78f, 0.42f, 1f);
         static readonly Color Ash = new Color(0.97f, 0.93f, 0.86f, 1f);
         static readonly Color Dim = new Color(0.97f, 0.93f, 0.86f, 0.45f);
-        const string Display = "Anton", Numbers = "LuckiestGuy";
+        // the faces by role (docs/HELL-UI.md): the title Cinzel Decorative, headings and menu items Metal Mania, small print
+        // and hints Barlow Condensed, numbers Luckiest Guy; story prose keeps the project face (it is read, not glanced at)
+        const string Display = HellFaces.Heading, Numbers = HellFaces.Numbers, TitleFace = HellFaces.Title, Fine = HellFaces.Fine;
         const int EmberCount = 46;
         const float Fade = 0.45f, CreditsSpeed = 70f;
 
@@ -138,6 +140,7 @@ namespace JamKit.SkylineRepo
             _hint.style.fontSize = 20f;
             _hint.style.color = Dim;
             _hint.style.letterSpacing = 3f;
+            SkylineHudStyle.ApplyFace(_hint.style, Fine);
             _root.Add(_hint);
             _root.style.display = DisplayStyle.None;
         }
@@ -145,10 +148,10 @@ namespace JamKit.SkylineRepo
         void BuildTitle()
         {
             _title = Column(_root);
-            var name = new KeylinedLabel(168f, 7f, Display);
+            var name = new KeylinedLabel(150f, 7f, TitleFace);
             name.SetText(HellFlowText.Title);
             name.SetColor(Ember);
-            foreach (var c in name.Children()) c.style.letterSpacing = 22f;
+            foreach (var c in name.Children()) c.style.letterSpacing = 12f;
             _title.Add(name);
             var rule = new VisualElement { pickingMode = PickingMode.Ignore };
             rule.style.width = 520f;
@@ -272,7 +275,8 @@ namespace JamKit.SkylineRepo
             _credits.Add(_creditsColumn);
             foreach (var line in HellFlowText.Credits)
             {
-                var l = new KeylinedLabel(line.heading ? 44f : 32f, line.heading ? 3f : 2.5f, line.heading ? Display : null);
+                bool isTitle = line.heading && line.text == HellFlowText.Title;
+                var l = new KeylinedLabel(isTitle ? 64f : line.heading ? 44f : 32f, line.heading ? 3f : 2.5f, isTitle ? TitleFace : line.heading ? Display : Fine);
                 l.SetText(line.text.Length == 0 ? " " : line.text);
                 l.SetColor(line.heading ? Ember : Ash);
                 l.style.marginTop = line.heading ? 26f : 4f;
@@ -387,7 +391,7 @@ namespace JamKit.SkylineRepo
             n.SetText(format(0f));
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -403,7 +407,7 @@ namespace JamKit.SkylineRepo
             n.SetText(word);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -417,7 +421,7 @@ namespace JamKit.SkylineRepo
             n.SetText("0 / " + offered);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;

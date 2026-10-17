@@ -17,6 +17,8 @@ namespace JamKit.Skyline
         AimHeld = 1 << 8,
         ReloadPressed = 1 << 9, SwapPressed = 1 << 10, InspectPressed = 1 << 11,
         StepHeld = 1 << 12, RewindPressed = 1 << 13, SkillPressed = 1 << 14,
+        /// <summary>The ability wheel held open (it slows time, so a replay must open it too).</summary>
+        WheelHeld = 1 << 15,
     }
 
     /// <summary>One fixed step of the creator's play: the stick, the buttons, where the view pointed after the frame's look,

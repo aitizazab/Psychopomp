@@ -126,7 +126,7 @@ namespace JamKit.SkylineRepo
         void Update()
         {
             Cooldown.Tick(Time.deltaTime);
-            if (!HellAbilities.SkillPressed()) return;
+            if (!HellAbilities.SkillPressed() || !HellAbilityWheel.Binding.Fires(HellSkills.Nightfall)) return;   // the wheel binds the Skill button
             if (!Cooldown.TryUse()) { HellAbilityAudio.Play("nightfall_denied", transform.position); return; }
             var p = Abilities.Player;
             Vector3 eye = p.EyePosition, aim = p.AimDirection;

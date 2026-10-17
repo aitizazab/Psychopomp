@@ -214,6 +214,7 @@ namespace JamKit.SkylineRepo
 
             _title = Text(panel, TitleSize, Color.white);
             _title.style.letterSpacing = 6f;
+            if (HellHudStyle.Active) { SkylineHudStyle.ApplyFace(_title.style, JamKit.Skyline.HellFaces.Heading); panel.style.borderTopColor = HellHudStyle.Ember; }   // Hell: Metal Mania heading, Barlow rows (docs/HELL-UI.md)
             _title.style.marginBottom = 14f;
             _list = new VisualElement();
             panel.Add(_list);
@@ -235,6 +236,7 @@ namespace JamKit.SkylineRepo
             l.style.marginLeft = l.style.marginRight = l.style.marginTop = l.style.marginBottom = 0;
             l.style.paddingLeft = l.style.paddingRight = l.style.paddingTop = l.style.paddingBottom = 0;
             l.style.textShadow = new TextShadow { offset = new Vector2(0f, 2f), blurRadius = 3f, color = Shadow };
+            if (HellHudStyle.Active) SkylineHudStyle.ApplyFace(l.style, JamKit.Skyline.HellFaces.Fine);   // settings are non-game text
             parent.Add(l);
             return l;
         }
@@ -325,7 +327,9 @@ namespace JamKit.SkylineRepo
         static void PreviewSubtitle()
         {
             var hud = SkylineHud.Instance;
-            if (hud != null) hud.Say(Speaker.Dot, "Clamped! Hold still-ish.", 3f);
+            if (hud == null) return;
+            if (HellHudStyle.Active) hud.Subtitles.Say(JamKit.Skyline.HellFlowText.GodOfDeath, "A sample subtitle, at this size.", false, 3f);
+            else hud.Say(Speaker.Dot, "Clamped! Hold still-ish.", 3f);
         }
 
         void Cycle(Item it, int dir)
@@ -368,6 +372,7 @@ namespace JamKit.SkylineRepo
                 case BindAction.Pause: return "Pause menu";
                 case BindAction.ShadowStep: return "Shadow Step";
                 case BindAction.Skill: return "Floor skill";
+                case BindAction.Wheel: return "Ability wheel (hold)";
                 default: return a.ToString();
             }
         }
@@ -378,6 +383,7 @@ namespace JamKit.SkylineRepo
         static readonly string[] SubtitleSizeNames = { "Small", "Medium", "Large" };
         static readonly string[] HudLayoutNames = { "Full", "Clean (nothing on screen)" };
         static readonly string[] VoiceModeNames = { "On", "Off", "Only the voices" };
+        static readonly string[] TutorialNames = { "On", "Off" };
 
         void ShowPage(Page page)
         {
@@ -445,6 +451,12 @@ namespace JamKit.SkylineRepo
                     _title.text = "SUBTITLES";
                     AddChoice("Subtitles", SubtitleModeNames, () => (int)o.subtitleMode, v => { o.subtitleMode = (SubtitleMode)v; PreviewSubtitle(); });
                     AddChoice("Size", SubtitleSizeNames, () => (int)o.subtitleSize, v => { o.subtitleSize = (SubtitleSize)v; PreviewSubtitle(); });
+                    if (HellHudStyle.Active)
+                    {
+                        // the tutorial hints (docs/HELL-BEATS.md): on or off, and once-only prompts shown again
+                        AddChoice("Tutorial hints", TutorialNames, () => HellTutorial.Enabled ? 0 : 1, v => HellTutorial.SetEnabled(v == 0));
+                        AddButton(() => "Show the tutorial hints again", () => { HellTutorial.ReplayAll(); _note.text = "The tutorial hints will show again."; });
+                    }
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
             }

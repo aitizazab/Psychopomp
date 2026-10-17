@@ -162,7 +162,7 @@ namespace JamKit.SkylineRepo
             s.justifyContent = Justify.Center;
             root.Add(_layer);
 
-            var title = Text(floor > 0 ? "FLOOR " + floor + " CLEARED" : "CHOOSE A POWER", 54f, SkylineHudStyle.Paper, true);
+            var title = Text(floor > 0 ? "FLOOR " + floor + " CLEARED" : "CHOOSE A POWER", 54f, SkylineHudStyle.Paper, HellFaces.Heading);
             title.style.marginBottom = 36f;
             _layer.Add(title);
 
@@ -174,7 +174,7 @@ namespace JamKit.SkylineRepo
 
         VisualElement Card(HellSkillDef d, int index)
         {
-            var hue = HellSkills.FlavourColour(d.flavour);
+            var hue = HellHudStyle.Flavour(d.flavour);   // Time is sand on the HUD: cyan is the enemies'
             var c = new VisualElement { pickingMode = PickingMode.Position };
             var s = c.style;
             s.width = 330f;
@@ -182,26 +182,27 @@ namespace JamKit.SkylineRepo
             s.marginLeft = s.marginRight = 18f;
             s.paddingLeft = s.paddingRight = 22f;
             s.paddingTop = 18f;
-            s.backgroundColor = new Color(0.08f, 0.07f, 0.11f, 0.97f);
+            s.backgroundColor = new Color(0.07f, 0.035f, 0.045f, 0.97f);   // obsidian, ember rims (docs/HELL-UI.md)
+            s.borderBottomColor = s.borderLeftColor = s.borderRightColor = HellHudStyle.EmberEdge;
             s.borderTopWidth = 10f;
             s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 4f;
             s.borderTopColor = hue;
             s.alignItems = Align.Center;
             s.rotate = new Rotate(index == 0 ? -1.5f : index == 2 ? 1.5f : 0f);   // a hand-placed look, not a grid
 
-            var key = Text((index + 1).ToString(), 22f, new Color(1f, 1f, 1f, 0.5f), false);
+            var key = Text((index + 1).ToString(), 22f, new Color(1f, 1f, 1f, 0.5f), HellFaces.Numbers);
             key.style.alignSelf = Align.FlexStart;
             c.Add(key);
-            var icon = Text(d.icon, 78f, hue, true);
+            var icon = Text(d.icon, 78f, hue, HellFaces.Numbers);
             icon.style.marginTop = 6f;
             icon.style.marginBottom = 10f;
             c.Add(icon);
-            var name = Text(d.name.ToUpperInvariant(), 34f, SkylineHudStyle.Paper, true);
+            var name = Text(d.name.ToUpperInvariant(), 34f, SkylineHudStyle.Paper, HellFaces.Heading);
             c.Add(name);
-            var flav = Text(d.flavour.ToString().ToUpperInvariant(), 18f, hue, false);
+            var flav = Text(d.flavour.ToString().ToUpperInvariant(), 18f, hue, HellFaces.Fine);
             flav.style.marginBottom = 16f;
             c.Add(flav);
-            var desc = Text(d.description, 21f, new Color(0.9f, 0.88f, 0.84f), false);
+            var desc = Text(d.description, 21f, new Color(0.9f, 0.88f, 0.84f), HellFaces.Fine);
             desc.style.whiteSpace = WhiteSpace.Normal;
             desc.style.unityTextAlign = TextAnchor.UpperCenter;
             c.Add(desc);
@@ -212,14 +213,15 @@ namespace JamKit.SkylineRepo
             return c;
         }
 
-        static Label Text(string text, float size, Color col, bool display)
+        /// <param name="face">A face by role (<see cref="HellFaces"/>), or null for the project face.</param>
+        static Label Text(string text, float size, Color col, string face)
         {
             var l = new Label(text) { pickingMode = PickingMode.Ignore };
             l.style.fontSize = size;
             l.style.color = col;
             l.style.unityTextAlign = TextAnchor.MiddleCenter;
             SkylineHudStyle.ZeroBox(l.style);
-            if (display) SkylineHudStyle.ApplyFace(l.style, SkylineHudStyle.AmmoFontName);
+            if (face != null) SkylineHudStyle.ApplyFace(l.style, face);
             return l;
         }
 

@@ -72,6 +72,9 @@ namespace JamKit.Skyline
             new HellSoundCue("hell/skill_pick", "hell/ui/skill_pick", Ui, false, "the confirm"),
             new HellSoundCue("hell/skill_open", "hell/ui/skill_open", Ui, false, ""),
             new HellSoundCue("hell/skill_hover", "hell/ui/skill_hover", Ui, false, ""),
+            new HellSoundCue("hell/wheel_open", "hell/ui/skill_open", Ui, false, "the ability wheel opens (shares the pick's; docs/HELL-UI.md)"),
+            new HellSoundCue("hell/wheel_close", "hell/ui/skill_hover", Ui, false, "the ability wheel closes"),
+            new HellSoundCue("hell/wheel_bind", "hell/ui/skill_pick", Ui, false, "an active skill bound to the Skill button"),
             new HellSoundCue("hell/death", "hell/ui/death", Ui, false, "the AGAIN banner"),
             new HellSoundCue("hell/room_cleared", "hell/ui/room_cleared", Ui, false, "one bell toll"),
 

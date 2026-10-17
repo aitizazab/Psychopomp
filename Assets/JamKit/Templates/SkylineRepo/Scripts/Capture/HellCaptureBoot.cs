@@ -8,7 +8,7 @@ namespace JamKit.SkylineRepo
     /// <summary>The Hell abilities' buttons for one frame, from a replay (<see cref="HellAbilities.ScriptedButtons"/>).</summary>
     public struct HellScriptedButtons
     {
-        public bool stepHeld, rewindPressed, skillPressed;
+        public bool stepHeld, rewindPressed, skillPressed, wheelHeld;
     }
 
     /// <summary>What the editor hands play mode (domain reloads wipe statics): a capture take, a preview of a replay, or a

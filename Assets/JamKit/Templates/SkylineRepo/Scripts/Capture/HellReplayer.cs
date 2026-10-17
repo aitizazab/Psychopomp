@@ -113,6 +113,7 @@ namespace JamKit.SkylineRepo
                 stepHeld = _cur.Has(HellReplayButtons.StepHeld),
                 rewindPressed = _cur.Has(HellReplayButtons.RewindPressed),
                 skillPressed = _cur.Has(HellReplayButtons.SkillPressed),
+                wheelHeld = _cur.Has(HellReplayButtons.WheelHeld),
             };
         }
 
