@@ -105,3 +105,6 @@ Unity makes the metas.
 **Scripts:** `FableAnimationTests/audio/hell-music/scripts/` (`inrun2.py` + `export_inrun.py`, `baja.py`, `vesper.py`,
 `finale.py`, shared `piece.py` and `hell_lib.py` with loop-safe reverb, delay, drive, compression and a phone filter).
 Page: `FableAnimationTests/art/review/2026-10-18/hell-music.html` (round 2, layered builds, all at -18 LUFS).
+
+
+The in-game music director (how cues play, moods, speeds, modifiers): `docs/HELL-MUSIC-DIRECTOR.md`.
