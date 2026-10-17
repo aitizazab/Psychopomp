@@ -105,6 +105,9 @@ namespace JamKit.Skyline
         public float seconds;
         public FrameSummary frames;
         public int over;   // frames slower than the target
+        /// <summary>The slowest frame of the room's first moments (it switching on and its enemies spawning), kept apart
+        /// from the measured frames: in play that happens behind the drop into the room.</summary>
+        public float enterWorstMs;
     }
 
     /// <summary>The frame-time check's result, as perf.json: per room and over all of them, the average, the 1% low (the mean of
@@ -180,7 +183,7 @@ namespace JamKit.Skyline
             {
                 var r = rooms[i];
                 if (i > 0) sb.Append(',');
-                sb.Append("{\"id\":").Append(Q(r.id)).Append(",\"seconds\":").Append(F(r.seconds)).Append(",\"framesOverTarget\":").Append(r.over).Append(',');
+                sb.Append("{\"id\":").Append(Q(r.id)).Append(",\"seconds\":").Append(F(r.seconds)).Append(",\"framesOverTarget\":").Append(r.over).Append(",\"enterWorstMs\":").Append(F(r.enterWorstMs)).Append(',');
                 Summary(sb, r.frames, t);
                 sb.Append('}');
             }
