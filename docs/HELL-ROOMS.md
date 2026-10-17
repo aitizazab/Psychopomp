@@ -185,9 +185,11 @@ plays with floor 1's handedness. Its difference is in the numbers and the enemy 
   - a room's drop hole leads to the next room, and after the 4th room to the floor's shaft;
   - at the shaft's bottom it calls `HellRunEvents.RaiseFloorCleared(floor)` and waits for `ContinueAfterPick()`; with no
     listener it continues at once;
-  - after floor 3's shaft the run ends (Enter reloads the scene);
+  - after floor 3's shaft the run ends and the flow moves on to the boss hook, the ending, the credits and the stats
+    (`docs/HELL-FLOW.md`: since the `hell-flow` branch the game opens on a title screen and the director drives `HellFlow`);
   - `-hellSeed N` fixes the deck.
-- **`HellRunEvents`** (the contract; it belongs to this branch):
+- **`HellRunEvents`** (the contract; extended by `hell-flow` with the boss, ending, stats and Rewind-boundary hooks,
+  see `docs/HELL-FLOW.md`):
   - `FloorCleared(int)` takes a 0-based floor and is raised for floors 0 and 1 only;
   - `ContinueAfterPick()`, `WaitingForPick`;
   - `RoomEntered`, `RoomRestarted`, `RunStarted`, `RunFinished`.
@@ -318,6 +320,6 @@ Rewind can bring one back). See `docs/HELL-INTEGRATION.md`.
 - The ooze is the floor-care bot; walk graphs are built per room on `Begin`.
 
 **Rewind and the run:**
-- A Rewind across a room boundary is not handled: the previous room stays active but is ended.
-- There is no title screen. The run starts on load and ends with a banner.
+- ~~A Rewind across a room boundary is not handled~~ and ~~there is no title screen~~: done on `hell-flow`
+  (`docs/HELL-FLOW.md`: the Rewind's history clears at every room boundary; title to title flow).
 - `HellHudLine` text is a draft.

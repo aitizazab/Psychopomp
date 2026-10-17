@@ -106,11 +106,18 @@ namespace JamKit.SkylineRepo
             }
         }
 
-        public object Snapshot() => _contact != null ? _contact.S : default(LavaContact.State);
+        readonly HellSnapPool<HellSnapBox<LavaContact.State>> _snaps = new HellSnapPool<HellSnapBox<LavaContact.State>>();
+
+        public object Snapshot()
+        {
+            var b = _snaps.Next();
+            b.value = _contact != null ? _contact.S : default(LavaContact.State);
+            return b;
+        }
 
         public void Restore(object snapshot)
         {
-            if (_contact != null) _contact.S = (LavaContact.State)snapshot;
+            if (_contact != null) _contact.S = HellSnapBox<LavaContact.State>.From(snapshot);
         }
     }
 }

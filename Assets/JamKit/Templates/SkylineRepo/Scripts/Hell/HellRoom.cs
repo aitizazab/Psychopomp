@@ -11,8 +11,8 @@ namespace JamKit.SkylineRepo
     /// the clock starts, wave 0 spawns, the darkness registers, the bots' flight area and walk graph are set. Each fixed step
     /// it feeds the objective the player's feet, spawns the objective's enemies (the brand's waves, the wells' oozes), keeps
     /// the last safe spot, handles a sink in lava (respawn at the safe spot; in The Collapse the room restarts) and opens the
-    /// exit gate when the objective is done. <see cref="Restart"/> after a death. Rewindable: the clock, the objective and the
-    /// gate (the hazards and the bots are rewindables of their own).
+    /// exit gate when the objective is done. <see cref="Restart"/> after a death. Rewindable: the clock, the objective, the
+    /// spawn counter and the gate (the hazards and the bots are rewindables of their own).
     /// </summary>
     public sealed class HellRoom : MonoBehaviour, IHellRewindable
     {
@@ -55,12 +55,17 @@ namespace JamKit.SkylineRepo
         /// <summary>The brand ring's pulse: this many pulses a second at a standstill, plus this many more at full speed.</summary>
         public const float BrandPulseSlowHz = 0.6f, BrandPulseFastHz = 3.4f;
 
-        struct Snap
+        // pooled (no garbage per step; docs/HELL-INTEGRATION.md): the room's clock, the objective, and the spawn counter (the
+        // bots' seeds), so a Rewind past a spawn spawns the same bot again
+        sealed class Snap
         {
             public float clock;
             public object objective;
             public bool running;
+            public int spawned;
         }
+
+        readonly HellSnapPool<Snap> _snaps = new HellSnapPool<Snap>();
 
         void Awake()
         {
@@ -453,13 +458,22 @@ namespace JamKit.SkylineRepo
 
         // ------------------------------------------------------------------ rewind
 
-        public object Snapshot() => new Snap { clock = Clock, objective = Objective.Snapshot(), running = Running };
+        public object Snapshot()
+        {
+            var s = _snaps.Next();
+            s.clock = Clock;
+            s.objective = Objective.Snapshot();
+            s.running = Running;
+            s.spawned = _spawned;
+            return s;
+        }
 
         public void Restore(object snapshot)
         {
             var s = (Snap)snapshot;
             Clock = s.clock;
             Running = s.running;
+            _spawned = s.spawned;
             Objective.Restore(s.objective);
             _doneOpened = Objective.Done;
             if (Objective is LanternCarry l) CarryLantern(l.Carrying);
