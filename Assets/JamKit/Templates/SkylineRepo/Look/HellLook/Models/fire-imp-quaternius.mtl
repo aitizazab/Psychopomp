@@ -1,0 +1,11 @@
+newmtl Demon_Main
+Kd 0.1333 0.0078 0.0118
+
+newmtl Black
+Kd 0.0118 0.0157 0.0118
+
+newmtl Eye_White
+Kd 0.2196 0.2314 0.2824
+
+newmtl Eye_Black
+Kd 0.0118 0.0118 0.0118
