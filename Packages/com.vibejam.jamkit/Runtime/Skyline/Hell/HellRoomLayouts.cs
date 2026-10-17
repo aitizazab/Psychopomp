@@ -253,7 +253,7 @@ namespace JamKit.Skyline
             k.Wall(-10.6f, 14, -10f, 32, -2.5f, 6f, true, "wallrun");
             k.Wall(10f, 30, 10.6f, 48, -2.5f, 9f, true, "wallrun");
             Pillar(k, -6, 20, -3, 23, 1f);
-            Pillar(k, -1, 28, 2, 31, 1f);
+            Pillar(k, -4.5f, 29f, 0.5f, 35f, 1f);     // where the west wall's wall jump lands (simulated)
             Pillar(k, 3, 38, 6, 41, 1f);
             k.Stop("anchor-1", V(-19.5f, 4.5f, 23), 12f);
             k.Stop("anchor-2", V(19.5f, 7.5f, 38), 12f);
@@ -398,14 +398,14 @@ namespace JamKit.Skyline
             k.Floor(-W, 8, -20, 56);
             k.Floor(20, 8, W, 56);
             k.Floor(-W, 56, W, L);
-            k.Floor(-20, 22, -13, 28);              // pier W1
-            k.Floor(13, 22, 20, 28);                // pier W3
-            k.Floor(-3, 49, 3, 56);                 // pier W2
+            k.Floor(-20, 22, -13, 31.5f);           // pier W1 (out to the row of stones)
+            k.Floor(13, 22, 20, 31.5f);             // pier W3
+            k.Floor(-4, 47.5f, 4, 56);              // pier W2 (out to the well)
             k.Lava(-20, 8, 20, 22);
             k.Lava(-13, 22, 13, 28);
-            k.Lava(-20, 28, 20, 49);
-            k.Lava(-20, 49, -3, 56);
-            k.Lava(3, 49, 20, 56);
+            k.Lava(-20, 28, 20, 47.5f);
+            k.Lava(-20, 47.5f, -4, 56);
+            k.Lava(4, 47.5f, 20, 56);
             k.Well(-12.5f, 23.5f, -9.5f, 26.5f);
             k.Well(-1.5f, 44.5f, 1.5f, 47.5f);
             k.Well(9.5f, 23.5f, 12.5f, 26.5f);
@@ -416,10 +416,11 @@ namespace JamKit.Skyline
             k.Stop("well-3", V(11, 0, 25), 3.5f);
             k.r.stopSpawns.AddRange(new[] { V(-17, 0, 25), V(0, 0, 53), V(17, 0, 25) });
             k.r.ordered = false;
-            // stepping stones: entry to W1, W1 to W3 (north of the wells), W3 to W2
-            StonesAlong(k, V(-3, 0, 8), V(-13, 0, 22), 3);
-            foreach (var x in new[] { -9f, -4.5f, 0f, 4.5f, 9f }) k.Collapse(x - 1.5f, 28f, x + 1.5f, 31f, 0f);
-            StonesAlong(k, V(13, 0, 28), V(3, 0, 49), 3);
+            // stepping stones: entry to W1, W1 to W3 (north of the wells), W3 to W2; 4.5 m stones a sprint hop (6 m) apart
+            // (simulated: HellFastLines.Wells)
+            StonesAlong(k, V(-3, 0, 8), V(-13, 0, 22), 2, 2.25f);
+            foreach (var x in new[] { -9f, -3f, 3f, 9f }) k.Collapse(x - 2.25f, 27.25f, x + 2.25f, 31.75f, 0f);
+            StonesAlong(k, V(13, 0, 28), V(3, 0, 49), 3, 2.25f);
             k.r.safePath.AddRange(new[]
             {
                 k.r.entry, V(0, 0, 4), V(-23, 0, 6), V(-23, 0, 25), V(-14, 0, 25), V(-23, 0, 25), V(-23, 0, 58), V(0, 0, 58),
@@ -448,13 +449,13 @@ namespace JamKit.Skyline
             k.Dark(x0, top, z0, x1, top + 3f, z1);
         }
 
-        /// <summary><paramref name="n"/> 3 x 3 m collapsing stones evenly between a and b (exclusive).</summary>
-        static void StonesAlong(Kit k, Vector3 a, Vector3 b, int n)
+        /// <summary><paramref name="n"/> collapsing stones (<paramref name="half"/> x 2 metres square) evenly between a and b (exclusive).</summary>
+        static void StonesAlong(Kit k, Vector3 a, Vector3 b, int n, float half = 1.5f)
         {
             for (int i = 1; i <= n; i++)
             {
                 var c = Vector3.Lerp(a, b, i / (float)(n + 1));
-                k.Collapse(c.X - 1.5f, c.Z - 1.5f, c.X + 1.5f, c.Z + 1.5f, 0f);
+                k.Collapse(c.X - half, c.Z - half, c.X + half, c.Z + half, 0f);
             }
         }
 
