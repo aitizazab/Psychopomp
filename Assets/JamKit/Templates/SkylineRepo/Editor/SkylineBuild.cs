@@ -54,5 +54,36 @@ namespace JamKit.SkylineRepo.EditorTools
             Debug.Log("SKYLINE_BUILD " + (ok ? "OK" : "FAILED"));
             EditorApplication.Exit(ok ? 0 : 1);
         }
+
+        /// <summary>The event game's Windows player: the Hell descent alone (docs/HELL-ROOMS.md; its scene rebuilt from data first, so
+        /// it is never stale). <c>-executeMethod JamKit.SkylineRepo.EditorTools.SkylineBuild.BuildHellFromCommandLine [-skylineOut &lt;dir&gt;]</c>
+        /// writes &lt;dir&gt;/build/HellDescent.exe (default dir out/hell) and logs <c>HELL_PLAYER_BUILD OK|FAILED &lt;exe&gt;</c>.</summary>
+        public static void BuildHellFromCommandLine()
+        {
+            string outDir = SkylinePassBatch.Arg("-skylineOut") ?? Path.Combine("out", "hell");
+            string exe = Path.GetFullPath(Path.Combine(outDir, "build", "HellDescent.exe"));
+            bool ok = false;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(exe));
+                if (File.Exists(exe)) File.Delete(exe);
+                SkylineArenaBuilder.BuildHell(SkylineArenaBuilder.HellScenePath);
+                AssetDatabase.Refresh();
+                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
+                    scenes = new[] { SkylineArenaBuilder.HellScenePath },
+                    locationPathName = exe,
+                    target = BuildTarget.StandaloneWindows64,
+                    options = BuildOptions.None,
+                });
+                ok = report.summary.result == BuildResult.Succeeded && File.Exists(exe);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("HELL_PLAYER_BUILD failed: " + e);
+            }
+            Debug.Log("HELL_PLAYER_BUILD " + (ok ? "OK " : "FAILED ") + exe);
+            EditorApplication.Exit(ok ? 0 : 1);
+        }
     }
 }
