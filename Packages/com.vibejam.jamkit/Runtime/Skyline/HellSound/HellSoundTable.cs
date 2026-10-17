@@ -25,10 +25,13 @@ namespace JamKit.Skyline
         public readonly string Cue, File, Note;
         public readonly HellSoundBus Bus;
         public readonly bool Loop;
+        /// <summary>The cue's own gain (dB) on top of its bus: the mix by importance (docs/HELL-SOUND-PASS.md, "The mix by
+        /// importance"). Set from the measured file level so each cue lands at its tier's heard level.</summary>
+        public readonly float GainDb;
 
-        public HellSoundCue(string cue, string file, HellSoundBus bus, bool loop, string note)
+        public HellSoundCue(string cue, string file, HellSoundBus bus, bool loop, string note, float gainDb = 0f)
         {
-            Cue = cue; File = file; Bus = bus; Loop = loop; Note = note;
+            Cue = cue; File = file; Bus = bus; Loop = loop; Note = note; GainDb = gainDb;
         }
     }
 
@@ -50,105 +53,105 @@ namespace JamKit.Skyline
         public static readonly HellSoundCue[] Rows =
         {
             // ---- abilities (HellAbilityAudio.Play ids, and the binder's)
-            new HellSoundCue("hell/shadowstep_aim", "hell/abilities/shadowstep_aim", Ab, true, "while E is held (the landing preview)"),
-            new HellSoundCue("hell/shadowstep_out", "hell/abilities/shadowstep_out", Ab, false, "ghostly: backwards whoosh + cloth snap"),
-            new HellSoundCue("hell/shadowstep_out_free", "hell/abilities/shadowstep_out_free", Ab, false, "Umbral Chain's free step (layered on the out)"),
-            new HellSoundCue("hell/shadowstep_in", "hell/abilities/shadowstep_in", Ab, false, "a puff + weight"),
-            new HellSoundCue("hell/shadowstep_denied", "hell/abilities/denied", Ab, false, ""),
-            new HellSoundCue("hell/rewind_denied", "hell/abilities/denied", Ab, false, ""),
-            new HellSoundCue("hell/nightfall_denied", "hell/abilities/denied", Ab, false, ""),
-            new HellSoundCue("hell/rewind", "hell/abilities/rewind", Ab, false, "deep swirl (Tracer-like): tape stop, vortex, sub"),
+            new HellSoundCue("hell/shadowstep_aim", "hell/abilities/shadowstep_aim", Ab, true, "while E is held (the landing preview)", 0.5f),
+            new HellSoundCue("hell/shadowstep_out", "hell/abilities/shadowstep_out", Ab, false, "ghostly: backwards whoosh + cloth snap", -1.0f),
+            new HellSoundCue("hell/shadowstep_out_free", "hell/abilities/shadowstep_out_free", Ab, false, "Umbral Chain's free step (layered on the out)", -0.5f),
+            new HellSoundCue("hell/shadowstep_in", "hell/abilities/shadowstep_in", Ab, false, "a puff + weight", -2.0f),
+            new HellSoundCue("hell/shadowstep_denied", "hell/abilities/denied", Ab, false, "", -1.0f),
+            new HellSoundCue("hell/rewind_denied", "hell/abilities/denied", Ab, false, "", -1.0f),
+            new HellSoundCue("hell/nightfall_denied", "hell/abilities/denied", Ab, false, "", -1.0f),
+            new HellSoundCue("hell/rewind", "hell/abilities/rewind", Ab, false, "deep swirl (Tracer-like): tape stop, vortex, sub", -3.5f),
             new HellSoundCue("hell/rewind_end", "hell/abilities/rewind_end", Ab, false, "0.3 s after the rewind: the tick"),
-            new HellSoundCue("hell/dilation_in", "hell/abilities/dilation_in", Ab, false, ""),
-            new HellSoundCue("hell/dilation_heartbeat", "hell/abilities/dilation_heartbeat", Ab, true, "while time is slowed (DilationHeartbeat)"),
-            new HellSoundCue("hell/dilation_out", "hell/abilities/dilation_out", Ab, false, "CC BY"),
-            new HellSoundCue("hell/ambush", "hell/abilities/ambush", Ab, false, "the tripled shot"),
+            new HellSoundCue("hell/dilation_in", "hell/abilities/dilation_in", Ab, false, "", -1.5f),
+            new HellSoundCue("hell/dilation_heartbeat", "hell/abilities/dilation_heartbeat", Ab, true, "while time is slowed (DilationHeartbeat)", -8.0f),
+            new HellSoundCue("hell/dilation_out", "hell/abilities/dilation_out", Ab, false, "CC BY", -2.5f),
+            new HellSoundCue("hell/ambush", "hell/abilities/ambush", Ab, false, "the tripled shot", -7.0f),
             new HellSoundCue("hell/shade", "hell/abilities/shade", Ab, false, ""),
-            new HellSoundCue("hell/nightfall", "hell/abilities/nightfall", Ab, false, "layered: inrush, dark rise, sub boom"),
-            new HellSoundCue("hell/borrowed_time", "hell/abilities/borrowed_time", Ab, false, "a tick on each kill"),
-            new HellSoundCue("hell/lava_hop", "hell/abilities/lava_hop", Ab, false, ""),
-            new HellSoundCue("hell/lava_walk", "hell/abilities/lava_walk", Ab, false, "Ashwalker's steps on lava"),
-            new HellSoundCue("hell/combustion", "hell/abilities/combustion", Ab, false, ""),
+            new HellSoundCue("hell/nightfall", "hell/abilities/nightfall", Ab, false, "layered: inrush, dark rise, sub boom", -4.0f),
+            new HellSoundCue("hell/borrowed_time", "hell/abilities/borrowed_time", Ab, false, "a tick on each kill", -0.5f),
+            new HellSoundCue("hell/lava_hop", "hell/abilities/lava_hop", Ab, false, "", -0.5f),
+            new HellSoundCue("hell/lava_walk", "hell/abilities/lava_walk", Ab, false, "Ashwalker's steps on lava", -4.5f),
+            new HellSoundCue("hell/combustion", "hell/abilities/combustion", Ab, false, "", -5.0f),
             new HellSoundCue("hell/skill_pick", "hell/ui/skill_pick", Ui, false, "the confirm"),
-            new HellSoundCue("hell/skill_open", "hell/ui/skill_open", Ui, false, ""),
-            new HellSoundCue("hell/skill_hover", "hell/ui/skill_hover", Ui, false, ""),
-            new HellSoundCue("hell/wheel_open", "hell/ui/skill_open", Ui, false, "the ability wheel opens (shares the pick's; docs/HELL-UI.md)"),
-            new HellSoundCue("hell/wheel_close", "hell/ui/skill_hover", Ui, false, "the ability wheel closes"),
+            new HellSoundCue("hell/skill_open", "hell/ui/skill_open", Ui, false, "", -3.0f),
+            new HellSoundCue("hell/skill_hover", "hell/ui/skill_hover", Ui, false, "", 1.5f),
+            new HellSoundCue("hell/wheel_open", "hell/ui/skill_open", Ui, false, "the ability wheel opens (shares the pick's; docs/HELL-UI.md)", -3.0f),
+            new HellSoundCue("hell/wheel_close", "hell/ui/skill_hover", Ui, false, "the ability wheel closes", 1.5f),
             new HellSoundCue("hell/wheel_bind", "hell/ui/skill_pick", Ui, false, "an active skill bound to the Skill button"),
-            new HellSoundCue("hell/death", "hell/ui/death", Ui, false, "the AGAIN banner"),
-            new HellSoundCue("hell/room_cleared", "hell/ui/room_cleared", Ui, false, "one bell toll"),
+            new HellSoundCue("hell/death", "hell/ui/death", Ui, false, "the AGAIN banner", -5.0f),
+            new HellSoundCue("hell/room_cleared", "hell/ui/room_cleared", Ui, false, "one bell toll", -7.0f),
 
             // ---- the fire imp (SkylineBot.HellSound names, plus the binder's)
-            new HellSoundCue("hell/fire-imp/hover_loop", "hell/fire-imp/hover_loop", En, true, "wings + crackle"),
-            new HellSoundCue("hell/fire-imp/telegraph", "hell/fire-imp/telegraph", En, false, ""),
-            new HellSoundCue("hell/fire-imp/attack", "hell/fire-imp/attack", En, false, ""),
-            new HellSoundCue("hell/fire-imp/bolt_hit", "hell/fire-imp/bolt_hit", En, false, ""),
-            new HellSoundCue("hell/fire-imp/alert", "hell/fire-imp/alert", En, false, "voice (empty = voiceless)"),
-            new HellSoundCue("hell/fire-imp/hurt", "hell/fire-imp/hurt", En, false, "voice"),
-            new HellSoundCue("hell/fire-imp/wreck", "hell/fire-imp/wreck", En, false, "shriek cut by a fireball"),
-            new HellSoundCue("hell/fire-imp/plate_shed", "hell/fire-imp/plate_shed", En, false, ""),
+            new HellSoundCue("hell/fire-imp/hover_loop", "hell/fire-imp/hover_loop", En, true, "wings + crackle", -0.5f),
+            new HellSoundCue("hell/fire-imp/telegraph", "hell/fire-imp/telegraph", En, false, "", 6.0f),
+            new HellSoundCue("hell/fire-imp/attack", "hell/fire-imp/attack", En, false, "", 4.0f),
+            new HellSoundCue("hell/fire-imp/bolt_hit", "hell/fire-imp/bolt_hit", En, false, "", 2.0f),
+            new HellSoundCue("hell/fire-imp/alert", "hell/fire-imp/alert", En, false, "voice (empty = voiceless)", -1.5f),
+            new HellSoundCue("hell/fire-imp/hurt", "hell/fire-imp/hurt", En, false, "voice", 2.5f),
+            new HellSoundCue("hell/fire-imp/wreck", "hell/fire-imp/wreck", En, false, "shriek cut by a fireball", -1.5f),
+            new HellSoundCue("hell/fire-imp/plate_shed", "hell/fire-imp/plate_shed", En, false, "", 2.0f),
 
             // ---- the scythe demon and its scythes
-            new HellSoundCue("hell/scythe-demon/alert", "hell/scythe-demon/alert", En, false, "voice"),
-            new HellSoundCue("hell/scythe-demon/hurt", "hell/scythe-demon/hurt", En, false, "voice"),
-            new HellSoundCue("hell/scythe-demon/telegraph", "hell/scythe-demon/telegraph", En, false, ""),
-            new HellSoundCue("hell/scythe-demon/attack", "hell/scythe-demon/attack", En, false, "the volley appears: rift + shing + whir"),
-            new HellSoundCue("hell/scythe-demon/footstep", "hell/scythe-demon/footstep", En, false, "one per leg plant"),
-            new HellSoundCue("hell/scythe-demon/plate_shed", "hell/scythe-demon/plate_shed", En, false, ""),
-            new HellSoundCue("hell/scythe-demon/wreck", "hell/scythe-demon/wreck", En, false, ""),
-            new HellSoundCue("hell/scythe/warn", "hell/scythe/warn", En, false, "synthesised, 0.9 s, ends exactly on the beam"),
-            new HellSoundCue("hell/scythe/beam", "hell/scythe/beam", En, false, ""),
+            new HellSoundCue("hell/scythe-demon/alert", "hell/scythe-demon/alert", En, false, "voice", -3.0f),
+            new HellSoundCue("hell/scythe-demon/hurt", "hell/scythe-demon/hurt", En, false, "voice", 2.0f),
+            new HellSoundCue("hell/scythe-demon/telegraph", "hell/scythe-demon/telegraph", En, false, "", 2.0f),
+            new HellSoundCue("hell/scythe-demon/attack", "hell/scythe-demon/attack", En, false, "the volley appears: rift + shing + whir", 4.0f),
+            new HellSoundCue("hell/scythe-demon/footstep", "hell/scythe-demon/footstep", En, false, "one per leg plant", -1.0f),
+            new HellSoundCue("hell/scythe-demon/plate_shed", "hell/scythe-demon/plate_shed", En, false, "", 2.5f),
+            new HellSoundCue("hell/scythe-demon/wreck", "hell/scythe-demon/wreck", En, false, "", -1.0f),
+            new HellSoundCue("hell/scythe/warn", "hell/scythe/warn", En, false, "synthesised, 0.9 s, ends exactly on the beam", 1.0f),
+            new HellSoundCue("hell/scythe/beam", "hell/scythe/beam", En, false, "", 2.0f),
 
             // ---- the lava ooze and its pools
-            new HellSoundCue("hell/lava-ooze/throb", "hell/lava-ooze/throb", En, false, "one blorp per OozePulse beat"),
-            new HellSoundCue("hell/lava-ooze/alert", "hell/lava-ooze/alert", En, false, ""),
-            new HellSoundCue("hell/lava-ooze/telegraph", "hell/lava-ooze/telegraph", En, false, ""),
-            new HellSoundCue("hell/lava-ooze/attack", "hell/lava-ooze/attack", En, false, ""),
-            new HellSoundCue("hell/lava-ooze/hurt", "hell/lava-ooze/hurt", En, false, ""),
-            new HellSoundCue("hell/lava-ooze/wreck", "hell/lava-ooze/wreck", En, false, "CC BY"),
-            new HellSoundCue("hell/lava-ooze/plate_shed", "hell/lava-ooze/plate_shed", En, false, ""),
-            new HellSoundCue("hell/lava-ooze/pool_loop", "hell/lava-ooze/pool_loop", En, true, "while a pool burns"),
+            new HellSoundCue("hell/lava-ooze/throb", "hell/lava-ooze/throb", En, false, "one blorp per OozePulse beat", 1.0f),
+            new HellSoundCue("hell/lava-ooze/alert", "hell/lava-ooze/alert", En, false, "", -1.0f),
+            new HellSoundCue("hell/lava-ooze/telegraph", "hell/lava-ooze/telegraph", En, false, "", 4.5f),
+            new HellSoundCue("hell/lava-ooze/attack", "hell/lava-ooze/attack", En, false, "", 2.0f),
+            new HellSoundCue("hell/lava-ooze/hurt", "hell/lava-ooze/hurt", En, false, "", 3.0f),
+            new HellSoundCue("hell/lava-ooze/wreck", "hell/lava-ooze/wreck", En, false, "CC BY", -1.0f),
+            new HellSoundCue("hell/lava-ooze/plate_shed", "hell/lava-ooze/plate_shed", En, false, "", 3.0f),
+            new HellSoundCue("hell/lava-ooze/pool_loop", "hell/lava-ooze/pool_loop", En, true, "while a pool burns", -0.5f),
             new HellSoundCue("hell/lava-ooze/pool_cool", "hell/lava-ooze/pool_cool", En, false, ""),
-            new HellSoundCue("hell/spawn/warning", "hell/spawn/warning", En, false, "NOT WIRED: for the enemy-readability lane"),
+            new HellSoundCue("hell/spawn/warning", "hell/spawn/warning", En, false, "NOT WIRED: for the enemy-readability lane", 2.5f),
 
             // ---- the rooms
-            new HellSoundCue("hell/world/lava_bubble", "hell/world/lava_bubble_1", Wo, false, "variants _1.._3 picked at random"),
-            new HellSoundCue("hell/world/lava_touch", "hell/world/lava_touch", Wo, false, "repeats while burning"),
-            new HellSoundCue("hell/world/sink", "hell/world/sink", Wo, false, ""),
-            new HellSoundCue("hell/world/platform_shake", "hell/world/platform_shake", Wo, false, ""),
-            new HellSoundCue("hell/world/platform_fall", "hell/world/platform_fall", Wo, false, ""),
-            new HellSoundCue("hell/world/fire_loop", "hell/world/fire_loop", Wo, true, "the nearest braziers"),
-            new HellSoundCue("hell/world/shaft_start", "hell/world/shaft_start", Wo, false, ""),
-            new HellSoundCue("hell/world/shaft_wind", "hell/world/shaft_wind", Wo, true, "rises through the fall"),
-            new HellSoundCue("hell/world/shaft_land", "hell/world/shaft_land", Wo, false, ""),
-            new HellSoundCue("hell/world/sigil", "hell/world/sigil", Wo, false, ""),
-            new HellSoundCue("hell/world/lantern_pickup", "hell/world/lantern_pickup", Wo, false, ""),
-            new HellSoundCue("hell/world/lantern_carry", "hell/world/lantern_carry", Wo, true, ""),
-            new HellSoundCue("hell/world/lantern_place", "hell/world/lantern_place", Wo, false, ""),
-            new HellSoundCue("hell/world/anchor_hit", "hell/world/anchor_hit", Wo, false, ""),
-            new HellSoundCue("hell/world/anchor_deflect", "hell/world/anchor_deflect", Wo, false, ""),
-            new HellSoundCue("hell/world/anchor_break", "hell/world/anchor_break", Wo, false, ""),
-            new HellSoundCue("hell/world/brand_charge", "hell/world/brand_charge", Wo, true, "pitch follows the meter"),
-            new HellSoundCue("hell/world/brand_done", "hell/world/brand_done", Wo, false, "CC BY"),
-            new HellSoundCue("hell/world/well_grind", "hell/world/well_grind", Wo, true, "while a well is being sealed"),
-            new HellSoundCue("hell/world/well_sealed", "hell/world/well_sealed", Wo, false, ""),
-            new HellSoundCue("hell/world/gate_open", "hell/world/gate_open", Wo, false, ""),
+            new HellSoundCue("hell/world/lava_bubble", "hell/world/lava_bubble_1", Wo, false, "variants _1.._3 picked at random", -5.0f),
+            new HellSoundCue("hell/world/lava_touch", "hell/world/lava_touch", Wo, false, "repeats while burning", -4.5f),
+            new HellSoundCue("hell/world/sink", "hell/world/sink", Wo, false, "", -5.5f),
+            new HellSoundCue("hell/world/platform_shake", "hell/world/platform_shake", Wo, false, "", -3.5f),
+            new HellSoundCue("hell/world/platform_fall", "hell/world/platform_fall", Wo, false, "", -5.0f),
+            new HellSoundCue("hell/world/fire_loop", "hell/world/fire_loop", Wo, true, "the nearest braziers", -6.0f),
+            new HellSoundCue("hell/world/shaft_start", "hell/world/shaft_start", Wo, false, "", -6.0f),
+            new HellSoundCue("hell/world/shaft_wind", "hell/world/shaft_wind", Wo, true, "rises through the fall", -9.0f),
+            new HellSoundCue("hell/world/shaft_land", "hell/world/shaft_land", Wo, false, "", -5.5f),
+            new HellSoundCue("hell/world/sigil", "hell/world/sigil", Wo, false, "", -6.0f),
+            new HellSoundCue("hell/world/lantern_pickup", "hell/world/lantern_pickup", Wo, false, "", -4.5f),
+            new HellSoundCue("hell/world/lantern_carry", "hell/world/lantern_carry", Wo, true, "", -0.5f),
+            new HellSoundCue("hell/world/lantern_place", "hell/world/lantern_place", Wo, false, "", -7.0f),
+            new HellSoundCue("hell/world/anchor_hit", "hell/world/anchor_hit", Wo, false, "", -5.5f),
+            new HellSoundCue("hell/world/anchor_deflect", "hell/world/anchor_deflect", Wo, false, "", -6.0f),
+            new HellSoundCue("hell/world/anchor_break", "hell/world/anchor_break", Wo, false, "", -8.0f),
+            new HellSoundCue("hell/world/brand_charge", "hell/world/brand_charge", Wo, true, "pitch follows the meter", -6.5f),
+            new HellSoundCue("hell/world/brand_done", "hell/world/brand_done", Wo, false, "CC BY", -7.5f),
+            new HellSoundCue("hell/world/well_grind", "hell/world/well_grind", Wo, true, "while a well is being sealed", -5.5f),
+            new HellSoundCue("hell/world/well_sealed", "hell/world/well_sealed", Wo, false, "", -6.0f),
+            new HellSoundCue("hell/world/gate_open", "hell/world/gate_open", Wo, false, "", -4.5f),
 
             // ---- the ending (HellEndingDirector, docs/HELL-ENDING.md; reused files until the ear check)
-            new HellSoundCue("hell/ending/rumble", "hell/world/platform_shake", Wo, false, "Hell shaking while you decide: more often as it builds"),
-            new HellSoundCue("hell/ending/hold", "hell/world/sigil", Ab, false, "you start to offer your hand (the hold ring)"),
-            new HellSoundCue("hell/ending/spare", "hell/world/brand_done", Ab, false, "she takes your hand"),
-            new HellSoundCue("hell/ending/kill", "hell/world/anchor_break", Ab, false, "the shot that ends her: her body breaks into smoke"),
-            new HellSoundCue("hell/ending/soul", "hell/world/lantern_pickup", Wo, false, "a soul into your lantern (hers on a kill, your sister's on the way)"),
-            new HellSoundCue("hell/ending/step", "hell/abilities/shadowstep_in", Wo, false, "Vesper Shadow Steps beside you in the escape"),
-            new HellSoundCue("hell/ending/escape", "hell/world/shaft_start", Wo, false, "the floor gives way: the escape starts"),
-            new HellSoundCue("hell/ending/out", "hell/ui/room_cleared", Ui, false, "out of the Collapse: the endings begin"),
-            new HellSoundCue("hell/ending/card", "hell/ui/skill_open", Ui, false, "an ending card"),
+            new HellSoundCue("hell/ending/rumble", "hell/world/platform_shake", Wo, false, "Hell shaking while you decide: more often as it builds", -3.5f),
+            new HellSoundCue("hell/ending/hold", "hell/world/sigil", Ab, false, "you start to offer your hand (the hold ring)", -6.0f),
+            new HellSoundCue("hell/ending/spare", "hell/world/brand_done", Ab, false, "she takes your hand", -7.5f),
+            new HellSoundCue("hell/ending/kill", "hell/world/anchor_break", Ab, false, "the shot that ends her: her body breaks into smoke", -9.0f),
+            new HellSoundCue("hell/ending/soul", "hell/world/lantern_pickup", Wo, false, "a soul into your lantern (hers on a kill, your sister's on the way)", -4.5f),
+            new HellSoundCue("hell/ending/step", "hell/abilities/shadowstep_in", Wo, false, "Vesper Shadow Steps beside you in the escape", -5.0f),
+            new HellSoundCue("hell/ending/escape", "hell/world/shaft_start", Wo, false, "the floor gives way: the escape starts", -6.0f),
+            new HellSoundCue("hell/ending/out", "hell/ui/room_cleared", Ui, false, "out of the Collapse: the endings begin", -3.0f),
+            new HellSoundCue("hell/ending/card", "hell/ui/skill_open", Ui, false, "an ending card", 1.0f),
 
             // ---- the beds, one per floor (OneBedForAll swaps to a shared one)
-            new HellSoundCue("hell/bed/0", "hell/beds/ember_gate", Be, true, "The Ember Gate: ash wind over the lava"),
-            new HellSoundCue("hell/bed/1", "hell/beds/molten_works", Be, true, "The Molten Works: forge drone, chains, lava"),
-            new HellSoundCue("hell/bed/2", "hell/beds/black_glass", Be, true, "The Black Glass: a cold drone"),
+            new HellSoundCue("hell/bed/0", "hell/beds/ember_gate", Be, true, "The Ember Gate: ash wind over the lava", -7.5f),
+            new HellSoundCue("hell/bed/1", "hell/beds/molten_works", Be, true, "The Molten Works: forge drone, chains, lava", -11.0f),
+            new HellSoundCue("hell/bed/2", "hell/beds/black_glass", Be, true, "The Black Glass: a cold drone", -5.0f),
 
             // ---- music: none (the creator composes it with us). The hook: a row "hell/music/<floor>" with Bus Bed, played by the binder.
         };
@@ -195,6 +198,13 @@ namespace JamKit.Skyline
             if (r == null) return cue;
             if (OneBedForAll && r.Bus == HellSoundBus.Bed && cue.StartsWith("hell/bed/", StringComparison.Ordinal)) return Rows[RowIndex("hell/bed/0")].File;
             return r.File;
+        }
+
+        /// <summary>The cue's own gain (linear) on top of its bus: its row's <see cref="HellSoundCue.GainDb"/>, else 1.</summary>
+        public static float GainOf(string cue)
+        {
+            var r = Find(cue);
+            return r == null || r.GainDb == 0f ? 1f : (float)Math.Pow(10.0, r.GainDb / 20.0);
         }
 
         /// <summary>The bus of <paramref name="cue"/>: its row's, else by its name (an ability id is <c>hell/&lt;id&gt;</c>, one level deep).</summary>

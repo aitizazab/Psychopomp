@@ -153,7 +153,9 @@ Nothing in `Scripts/Hell/*` was touched. The other edits are the sound system's 
   stop. It is bent in code so it ends on the beam.
 - **Scythe appear** (the demon's `attack`): the dark-rift whoosh, the unsheath shing pitched down 5 semitones, and a synthesised
   12 Hz whir.
-- **Demon footstep:** the heavy body fall's impact pitched down 4 semitones, with a stone-crumble tail.
+- **Demon footstep** (made as the gap note says; the creator's pick): the heavy body fall's first 0.25 s from its hit (0.355 s
+  in; the old cut began 80 ms early, in the scuff, and ran 0.27 s), pitched down 4 semitones, with a small rock-crumble tail
+  (262118, -12 dB, 0.12 s after the hit).
 - **Imp death:** the goblin death cry cut at 0.4 s, straight into the fireball, with an ember crackle tail.
 - **Ooze throb:** one bubble, found automatically as the loudest event in the bubbling-mud recording, and retriggered on each beat
   in code.
@@ -166,7 +168,8 @@ Nothing in `Scripts/Hell/*` was touched. The other edits are the sound system's 
   plus the sub boom).
 - **Platform shake:** the stone drag twice over the earthquake's low-passed rumble, rising, 0.9 s.
 - **Lava bubbles:** the three loudest single pops from the lava recording.
-- **Anchor hit:** the metal-impact transient and the chain jangle.
+- **Anchor hit** (the creator's pick): the "Metal impact" (530486) alone, from its hit, its ring cut to 0.55 s. The chain
+  jangle is gone.
 - **Skill pick:**
   - **open:** the long ethereal woosh with the dark rise under it;
   - **hover:** a synthesised soft 1.3 kHz tick.
@@ -174,6 +177,131 @@ Nothing in `Scripts/Hell/*` was touched. The other edits are the sound system's 
   - Ember Gate: the tonal wind;
   - Molten Works: the industrial drone plus chains;
   - Black Glass: the terror drone.
+
+### The creator's picks (2026-10-18)
+
+| Sound | Was | Now (in `make-hell-sounds.py`) |
+|---|---|---|
+| Shade (the decoy) | "Creepy whispering" (234044) | **"Breath of Death"** (60571, CC BY 4.0, credited): 1.6-3.6 s of the recording. Its 1.4 s fade-up is cut (the decoy appears at once), a 0.12 s fade in, 0.8 s fade out. 2.0 s. |
+| Scythe demon footsteps | body fall from 0.28 s (80 ms of scuff before the hit), 0.27 s, -4 st, crumble | **Made as described**: the body fall's first 0.25 s from the hit, -4 st, small rock-crumble tail. 0.41 s. |
+| Scythe demon death | "Dragon's dying breath" (276577) 0.3-2.8 s + fireball | **The first part of "Dragon death"** (366096): 0.08-1.42 s, the roar from its rise to just before its second breath (onset at 1.44 s), 0.5 s fade; the fireball 8 dB under it. 1.34 s. |
+| Chain anchor hit | metal-impact transient + chain jangle | **"Metal impact"** (530486) alone: from the hit, ring cut at 0.55 s. |
+| Ooze well sealing / sealed | "Opening the sarcophagus" (457529) loop; push + steam | **"Heavy Stone Push"** (558254) for both. The sealing loop is the push's grinding body (0.10-0.78 s) twice, the second a semitone lower, crossfaded seamless (1.15 s). Sealed: the whole push to its stop (0.04-0.86 s, the lid lands) then the steam hiss 6 dB under. |
+
+Also in this pass: every file is now kept under -1 dBTP true peak as well as -1 dBFS sample peak (the imp's hover loop measured
++1.1 dBTP, the pool loop +0.5, the ooze's death 0.0 before the fix).
+
+### The mix by importance (2026-10-18)
+
+Every cue now has its own gain (`GainDb`, the last argument of its row in `HellSoundTable.cs`), applied on top of its bus in
+`SkylineMix.GainOf`. The gains put every cue at its tier's **heard level**: the file's loudest 400 ms (momentary max, LUFS; fair
+between a 0.3 s hit and a 3 s swell) plus its bus (Abilities and UI -2 dB, World -6, enemies -12, beds -8) plus its gain. Bright
+cues (over 85% of their energy above 2 kHz, the "harsh" column) sit 2 dB under their tier: they cut through at the same LUFS.
+A gain never pushes bus x gain over 1 (the voice volume is clamped there); `HellSoundTests.TheMixByImportanceKeepsItsOrder`
+checks it. To re-level after changing a file: measure it, then set its row's gain to (tier target - momentary max - bus).
+
+| Tier | Heard target (momentary max + bus + gain) | Cues |
+|---|---|---|
+| 1 warnings + the player's own | -24 LUFS (measured after: -26.1 to -23.8) | 33 cues |
+| 2 hits and deaths | -27 LUFS (measured after: -29.2 to -26.8) | 18 cues |
+| 3 objective feedback | -28 LUFS (measured after: -30.0 to -27.8) | 13 cues |
+| 4 enemy presence + world one-shots | -31 LUFS (measured after: -33.2 to -30.8) | 11 cues |
+| 5 loops | -35 LUFS (measured after: -35.2 to -34.8) | 9 cues |
+| 6 beds | -36 LUFS (measured after: -36.0 to -35.8) | 3 cues |
+
+Every cue, measured with the ears tool (`listen.py measure`: integrated LUFS, true peak, attack) and the momentary max, before and after its gain. "Heard" = momentary max + bus (+ gain). Flags: outliers more than 4 dB off their tier before the gain, and bright cues.
+
+| Cue | File | Bus | Tier | LUFS (ears) | True peak dBTP (ears) | Attack ms (ears) | Momentary max | Heard before | Gain dB | Heard now | Flag |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `shadowstep_out` | `abilities/shadowstep_out` | Abilities | 1 | -22.0 | -2.3 | 129 | -20.8 | -22.8 | -1.0 | -23.8 |  |
+| `shadowstep_out_free` | `abilities/shadowstep_out_free` | Abilities | 1 | -22.0 | -3.2 | 116 | -21.6 | -23.6 | -0.5 | -24.1 |  |
+| `shadowstep_in` | `abilities/shadowstep_in` | Abilities | 1 | -22.0 | -3.9 | 9 | -20.1 | -22.1 | -2.0 | -24.1 |  |
+| `shadowstep_denied` | `abilities/denied` | Abilities | 1 | -23.0 | -7.8 | 21 | -23.0 | -25.0 | -1.0 | -26.0 | bright, -2 dB |
+| `rewind_denied` | `abilities/denied` | Abilities | 1 | -23.0 | -7.8 | 21 | -23.0 | -25.0 | -1.0 | -26.0 | bright, -2 dB |
+| `nightfall_denied` | `abilities/denied` | Abilities | 1 | -23.0 | -7.8 | 21 | -23.0 | -25.0 | -1.0 | -26.0 | bright, -2 dB |
+| `rewind` | `abilities/rewind` | Abilities | 1 | -20.0 | -10.7 | 264 | -18.6 | -20.6 | -3.5 | -24.1 |  |
+| `rewind_end` | `abilities/rewind_end` | Abilities | 1 | -22.2 | -1.0 | 51 | -22.2 | -24.2 | +0.0 | -24.2 |  |
+| `dilation_in` | `abilities/dilation_in` | Abilities | 1 | -22.0 | -8.8 | 350 | -20.4 | -22.4 | -1.5 | -23.9 |  |
+| `dilation_out` | `abilities/dilation_out` | Abilities | 1 | -22.0 | -6.0 | 46 | -19.7 | -21.7 | -2.5 | -24.2 |  |
+| `ambush` | `abilities/ambush` | Abilities | 1 | -20.0 | -1.9 | 1 | -14.8 | -16.8 | -7.0 | -23.8 | was 7 dB over its tier |
+| `shade` | `abilities/shade` | Abilities | 1 | -24.0 | -10.8 | 723 | -22.2 | -24.2 | +0.0 | -24.2 |  |
+| `nightfall` | `abilities/nightfall` | Abilities | 1 | -20.0 | -5.1 | 303 | -18.2 | -20.2 | -4.0 | -24.2 |  |
+| `borrowed_time` | `abilities/borrowed_time` | Abilities | 1 | (under 0.4 s) | -6.3 | 4 | -23.6 | -25.6 | -0.5 | -26.1 | bright, -2 dB |
+| `lava_hop` | `abilities/lava_hop` | Abilities | 1 | -24.0 | -11.4 | 190 | -23.6 | -25.6 | -0.5 | -26.1 | bright, -2 dB |
+| `combustion` | `abilities/combustion` | Abilities | 1 | -20.3 | -1.0 | 34 | -17.2 | -19.2 | -5.0 | -24.2 | was 5 dB over its tier |
+| `skill_pick` | `ui/skill_pick` | Feedback | 1 | -24.0 | -16.4 | 2 | -21.8 | -23.8 | +0.0 | -23.8 |  |
+| `wheel_bind` | `ui/skill_pick` | Feedback | 1 | -24.0 | -16.4 | 2 | -21.8 | -23.8 | +0.0 | -23.8 |  |
+| `death` | `ui/death` | Feedback | 1 | -20.0 | -4.9 | 343 | -17.1 | -19.1 | -5.0 | -24.1 | was 5 dB over its tier |
+| `fire-imp/telegraph` | `fire-imp/telegraph` | Bots | 1 | -17.9 | -4.4 | 56 | -17.8 | -29.8 | +6.0 | -23.8 | was 6 dB under its tier |
+| `fire-imp/attack` | `fire-imp/attack` | Bots | 1 | -17.0 | -2.9 | 56 | -16.2 | -28.2 | +4.0 | -24.2 | was 4 dB under its tier |
+| `scythe-demon/telegraph` | `scythe-demon/telegraph` | Bots | 1 | -18.0 | -5.6 | 58 | -16.1 | -28.1 | +2.0 | -26.1 | bright, -2 dB; was 4 dB under its tier |
+| `scythe-demon/attack` | `scythe-demon/attack` | Bots | 1 | -18.1 | -1.0 | 41 | -15.8 | -27.8 | +4.0 | -23.8 |  |
+| `scythe/warn` | `scythe/warn` | Bots | 1 | -16.0 | -2.9 | 554 | -12.9 | -24.9 | +1.0 | -23.9 |  |
+| `scythe/beam` | `scythe/beam` | Bots | 1 | -16.0 | -2.7 | 65 | -14.0 | -26.0 | +2.0 | -24.0 |  |
+| `lava-ooze/telegraph` | `lava-ooze/telegraph` | Bots | 1 | -18.1 | -1.0 | 15 | -16.5 | -28.5 | +4.5 | -24.0 | was 5 dB under its tier |
+| `lava-ooze/attack` | `lava-ooze/attack` | Bots | 1 | -17.5 | -1.0 | 3 | -14.1 | -26.1 | +2.0 | -24.1 |  |
+| `spawn/warning` | `spawn/warning` | Bots | 1 | -17.2 | -1.0 | 145 | -14.6 | -26.6 | +2.5 | -24.1 |  |
+| `ending/hold` | `world/sigil` | Abilities | 1 | -19.0 | -5.7 | 231 | -15.8 | -17.8 | -6.0 | -23.8 | was 6 dB over its tier |
+| `ending/spare` | `world/brand_done` | Abilities | 1 | -19.4 | -1.0 | 175 | -14.5 | -16.5 | -7.5 | -24.0 | was 7 dB over its tier |
+| `ending/kill` | `world/anchor_break` | Abilities | 1 | -17.0 | -1.6 | 89 | -13.2 | -15.2 | -9.0 | -24.2 | was 9 dB over its tier |
+| `ending/out` | `ui/room_cleared` | Feedback | 1 | -22.0 | -8.1 | 97 | -18.9 | -20.9 | -3.0 | -23.9 |  |
+| `ending/card` | `ui/skill_open` | Feedback | 1 | -26.0 | -9.8 | 435 | -23.1 | -25.1 | +1.0 | -24.1 |  |
+| `fire-imp/bolt_hit` | `fire-imp/bolt_hit` | Bots | 2 | -19.7 | -1.0 | 3 | -17.0 | -29.0 | +2.0 | -27.0 |  |
+| `fire-imp/hurt` | `fire-imp/hurt` | Bots | 2 | (under 0.4 s) | -1.8 | 30 | -17.4 | -29.4 | +2.5 | -26.9 |  |
+| `fire-imp/wreck` | `fire-imp/wreck` | Bots | 2 | -16.2 | -1.0 | 317 | -13.5 | -25.5 | -1.5 | -27.0 |  |
+| `fire-imp/plate_shed` | `fire-imp/plate_shed` | Bots | 2 | -19.0 | -2.4 | 171 | -18.9 | -30.9 | +2.0 | -28.9 | bright, -2 dB |
+| `scythe-demon/hurt` | `scythe-demon/hurt` | Bots | 2 | -18.3 | -1.0 | 6 | -16.8 | -28.8 | +2.0 | -26.8 |  |
+| `scythe-demon/plate_shed` | `scythe-demon/plate_shed` | Bots | 2 | -17.5 | -1.0 | 1 | -17.5 | -29.5 | +2.5 | -27.0 |  |
+| `scythe-demon/wreck` | `scythe-demon/wreck` | Bots | 2 | -16.0 | -2.3 | 71 | -14.2 | -26.2 | -1.0 | -27.2 |  |
+| `lava-ooze/hurt` | `lava-ooze/hurt` | Bots | 2 | (under 0.4 s) | -1.0 | 3 | -18.1 | -30.1 | +3.0 | -27.1 |  |
+| `lava-ooze/wreck` | `lava-ooze/wreck` | Bots | 2 | -18.3 | -1.0 | 7 | -15.8 | -27.8 | -1.0 | -28.8 | bright, -2 dB |
+| `lava-ooze/plate_shed` | `lava-ooze/plate_shed` | Bots | 2 | -18.1 | -1.0 | 100 | -18.1 | -30.1 | +3.0 | -27.1 |  |
+| `world/lava_touch` | `world/lava_touch` | World | 2 | -19.0 | -2.1 | 66 | -18.3 | -24.3 | -4.5 | -28.8 | bright, -2 dB |
+| `world/sink` | `world/sink` | World | 2 | -18.0 | -1.0 | 459 | -15.4 | -21.4 | -5.5 | -26.9 | was 6 dB over its tier |
+| `world/platform_shake` | `world/platform_shake` | World | 2 | -19.0 | -3.3 | 487 | -17.6 | -23.6 | -3.5 | -27.1 |  |
+| `world/platform_fall` | `world/platform_fall` | World | 2 | -18.1 | -1.0 | 7 | -15.8 | -21.8 | -5.0 | -26.8 | was 5 dB over its tier |
+| `world/anchor_hit` | `world/anchor_hit` | World | 2 | -18.1 | -1.0 | 1 | -15.5 | -21.5 | -5.5 | -27.0 | was 6 dB over its tier |
+| `world/anchor_deflect` | `world/anchor_deflect` | World | 2 | -20.0 | -4.5 | 52 | -17.2 | -23.2 | -6.0 | -29.2 | bright, -2 dB |
+| `world/anchor_break` | `world/anchor_break` | World | 2 | -17.0 | -1.6 | 89 | -13.2 | -19.2 | -8.0 | -27.2 | was 8 dB over its tier |
+| `ending/rumble` | `world/platform_shake` | World | 2 | -19.0 | -3.3 | 487 | -17.6 | -23.6 | -3.5 | -27.1 |  |
+| `skill_open` | `ui/skill_open` | Feedback | 3 | -26.0 | -9.8 | 435 | -23.1 | -25.1 | -3.0 | -28.1 |  |
+| `wheel_open` | `ui/skill_open` | Feedback | 3 | -26.0 | -9.8 | 435 | -23.1 | -25.1 | -3.0 | -28.1 |  |
+| `room_cleared` | `ui/room_cleared` | Feedback | 3 | -22.0 | -8.1 | 97 | -18.9 | -20.9 | -7.0 | -27.9 | was 7 dB over its tier |
+| `world/shaft_start` | `world/shaft_start` | World | 3 | -20.0 | -7.2 | 1077 | -15.8 | -21.8 | -6.0 | -27.8 | was 6 dB over its tier |
+| `world/shaft_land` | `world/shaft_land` | World | 3 | -18.1 | -1.0 | 134 | -16.6 | -22.6 | -5.5 | -28.1 | was 5 dB over its tier |
+| `world/sigil` | `world/sigil` | World | 3 | -19.0 | -5.7 | 231 | -15.8 | -21.8 | -6.0 | -27.8 | was 6 dB over its tier |
+| `world/lantern_pickup` | `world/lantern_pickup` | World | 3 | -21.2 | -1.0 | 1 | -17.4 | -23.4 | -4.5 | -27.9 | was 5 dB over its tier |
+| `world/lantern_place` | `world/lantern_place` | World | 3 | -20.0 | -7.8 | 374 | -17.0 | -23.0 | -7.0 | -30.0 | bright, -2 dB; was 5 dB over its tier |
+| `world/brand_done` | `world/brand_done` | World | 3 | -19.4 | -1.0 | 175 | -14.5 | -20.5 | -7.5 | -28.0 | was 7 dB over its tier |
+| `world/well_sealed` | `world/well_sealed` | World | 3 | -19.0 | -2.9 | 386 | -16.1 | -22.1 | -6.0 | -28.1 | was 6 dB over its tier |
+| `world/gate_open` | `world/gate_open` | World | 3 | -19.0 | -4.7 | 76 | -17.7 | -23.7 | -4.5 | -28.2 | was 4 dB over its tier |
+| `ending/soul` | `world/lantern_pickup` | World | 3 | -21.2 | -1.0 | 1 | -17.4 | -23.4 | -4.5 | -27.9 | was 5 dB over its tier |
+| `ending/escape` | `world/shaft_start` | World | 3 | -20.0 | -7.2 | 1077 | -15.8 | -21.8 | -6.0 | -27.8 | was 6 dB over its tier |
+| `lava_walk` | `abilities/lava_walk` | Abilities | 4 | (under 0.4 s) | -8.4 | 47 | -26.7 | -28.7 | -4.5 | -33.2 | bright, -2 dB |
+| `skill_hover` | `ui/skill_hover` | Feedback | 4 | (under 0.4 s) | -9.6 | 1 | -30.4 | -32.4 | +1.5 | -30.9 |  |
+| `wheel_close` | `ui/skill_hover` | Feedback | 4 | (under 0.4 s) | -9.6 | 1 | -30.4 | -32.4 | +1.5 | -30.9 |  |
+| `fire-imp/alert` | `fire-imp/alert` | Bots | 4 | -18.0 | -2.6 | 57 | -17.4 | -29.4 | -1.5 | -30.9 |  |
+| `scythe-demon/alert` | `scythe-demon/alert` | Bots | 4 | -17.1 | -1.0 | 434 | -15.8 | -27.8 | -3.0 | -30.8 |  |
+| `scythe-demon/footstep` | `scythe-demon/footstep` | Bots | 4 | -17.9 | -1.0 | 94 | -17.9 | -29.9 | -1.0 | -30.9 |  |
+| `lava-ooze/throb` | `lava-ooze/throb` | Bots | 4 | (under 0.4 s) | -2.2 | 11 | -20.0 | -32.0 | +1.0 | -31.0 |  |
+| `lava-ooze/alert` | `lava-ooze/alert` | Bots | 4 | -19.1 | -1.0 | 23 | -17.9 | -29.9 | -1.0 | -30.9 |  |
+| `lava-ooze/pool_cool` | `lava-ooze/pool_cool` | Bots | 4 | -24.0 | -8.5 | 549 | -21.2 | -33.2 | +0.0 | -33.2 | bright, -2 dB |
+| `world/lava_bubble` | `world/lava_bubble_1` | World | 4 | (under 0.4 s) | -1.0 | 15 | -20.1 | -26.1 | -5.0 | -31.1 | was 5 dB over its tier |
+| `ending/step` | `abilities/shadowstep_in` | World | 4 | -22.0 | -3.9 | 9 | -20.1 | -26.1 | -5.0 | -31.1 | was 5 dB over its tier |
+| `shadowstep_aim` | `abilities/shadowstep_aim` | Abilities | 5 | -34.0 | -21.3 | 179 | -33.3 | -35.3 | +0.5 | -34.8 |  |
+| `dilation_heartbeat` | `abilities/dilation_heartbeat` | Abilities | 5 | -28.0 | -10.5 | 2 | -25.2 | -27.2 | -8.0 | -35.2 | was 8 dB over its tier |
+| `fire-imp/hover_loop` | `fire-imp/hover_loop` | Bots | 5 | -26.4 | -1.0 | 27 | -22.7 | -34.7 | -0.5 | -35.2 |  |
+| `lava-ooze/pool_loop` | `lava-ooze/pool_loop` | Bots | 5 | -25.5 | -1.0 | 291 | -22.5 | -34.5 | -0.5 | -35.0 |  |
+| `world/fire_loop` | `world/fire_loop` | World | 5 | -24.0 | -11.4 | 28 | -23.1 | -29.1 | -6.0 | -35.1 | was 6 dB over its tier |
+| `world/shaft_wind` | `world/shaft_wind` | World | 5 | -22.0 | -7.4 | 14 | -19.9 | -25.9 | -9.0 | -34.9 | was 9 dB over its tier |
+| `world/lantern_carry` | `world/lantern_carry` | World | 5 | -30.0 | -16.6 | 11 | -28.7 | -34.7 | -0.5 | -35.2 |  |
+| `world/brand_charge` | `world/brand_charge` | World | 5 | -24.0 | -4.5 | 1149 | -22.6 | -28.6 | -6.5 | -35.1 | was 6 dB over its tier |
+| `world/well_grind` | `world/well_grind` | World | 5 | -24.0 | -10.3 | 336 | -23.4 | -29.4 | -5.5 | -34.9 | was 6 dB over its tier |
+| `bed/0` | `beds/ember_gate` | Ambience | 6 | -24.0 | -1.0 | 158 | -20.4 | -28.4 | -7.5 | -35.9 | was 8 dB over its tier |
+| `bed/1` | `beds/molten_works` | Ambience | 6 | -24.0 | -5.8 | 3665 | -17.0 | -25.0 | -11.0 | -36.0 | was 11 dB over its tier |
+| `bed/2` | `beds/black_glass` | Ambience | 6 | -24.0 | -11.7 | 97 | -22.8 | -30.8 | -5.0 | -35.8 | was 5 dB over its tier |
+| (reference) `writ/shot` | | Guns | - | -27.8 | -8.5 | 2 | -27.8 | -29.8 | 0 | -29.8 | the player's gun |
+| (reference) `breacher/blast` | | Guns | - | -18.6 | -2.9 | 4 | -14.0 | -16.0 | 0 | -16.0 | the player's gun |
 
 ### Swap points for the creator's answers
 
@@ -187,7 +315,7 @@ Every swap is in `HellSoundTable.cs`. Change a row's file, or flip a switch unde
 | 4. Enemy voices | the imp and the demon have voices | Voiceless: set the `alert` and `hurt` rows' file to `""` |
 | 5. Spawn warnings | file + cue ready, not wired | the enemy-readability lane calls `hell/spawn/warning` |
 | 6. Room tones | a bed per floor | `OneBedForAll = true` (the Ember Gate's everywhere) |
-| 7. CC BY | kept (3 ship: `dilation_out` 123438, `lava-ooze/wreck` 167074, `brand_done` 854670; credited) | CC0 only: `dilation_out` -> rebuild from 683101; `lava-ooze/wreck` -> 315931 + 155660; `brand_done` -> 18654 gong |
+| 7. CC BY | kept (4 ship: `dilation_out` 123438, `lava-ooze/wreck` 167074, `brand_done` 854670, `shade` 60571 (the creator's pick); credited) | CC0 only: `dilation_out` -> rebuild from 683101; `lava-ooze/wreck` -> 315931 + 155660; `brand_done` -> 18654 gong |
 | 8. Music | silent | add `hell/music/<floor>` rows and a `Loop` in `HellSoundBinder.TickBeds` |
 
 ### Swap for the originals later
@@ -219,6 +347,9 @@ pieces cut from them.
 7. **The sink detection.** It plays on a lava sink and must stay silent on a Shadow Step, a Rewind, a death and a room change.
 8. **The imp's hover loop.** Three imps at once: it is gated by distance only (22 m).
 9. **The brazier crackle** near the lava (the fire lights are made from the lava).
+10. **The mix by importance** (2026-10-18): the enemies' telegraphs and attacks went up 1-6 dB to the abilities' level, the
+    world and objective one-shots came down 4-9 dB, the beds 5-11 dB (the Molten Works bed was the loudest outlier). If a tier
+    is wrong as a whole, move its target in the table above and shift that tier's gains by the same amount.
 
 ### Every cue
 
@@ -237,7 +368,7 @@ pieces cut from them.
 | `dilation_heartbeat` | `abilities/dilation_heartbeat` (loop) | Abilities | 22416 "Four Heartbeats HQ_BeatSmith" (CC0 1.0) | while time is slowed (DilationHeartbeat) |
 | `dilation_out` | `abilities/dilation_out` | Abilities | 123438 "Slowdown_Short_Up" (CC BY 4.0) | CC BY |
 | `ambush` | `abilities/ambush` | Abilities | 512389 "Bass Impact - Ki_01" (CC0 1.0); 234044 "Creepy Whispering" (CC0 1.0) | the tripled shot |
-| `shade` | `abilities/shade` | Abilities | 234044 "Creepy Whispering" (CC0 1.0) |  |
+| `shade` | `abilities/shade` | Abilities | 60571 "BreathOfDeath" by gabemiller74 (CC BY 4.0) | the creator's pick; CC BY, credited |
 | `nightfall` | `abilities/nightfall` | Abilities | synthesised; 657541 "Crystal Magic - Dark Spell Rise" (CC0 1.0); 189779 "Big Boom" (CC0 1.0) | layered: inrush, dark rise, sub boom |
 | `borrowed_time` | `abilities/borrowed_time` | Abilities | 211203 "assymetric_tick" (CC0 1.0) | a tick on each kill |
 | `lava_hop` | `abilities/lava_hop` | Abilities | 234782 "Steam/hiss" (CC0 1.0) |  |
@@ -262,7 +393,7 @@ pieces cut from them.
 | `scythe-demon/attack` | `scythe-demon/attack` | Bots | 657653 "Black Portal - Dark Dimension Rift" (CC0 1.0); 107589 "unsheath_sword" (CC0 1.0); synthesised | the volley appears: rift + shing + whir |
 | `scythe-demon/footstep` | `scythe-demon/footstep` | Bots | 504626 "BODY FALL - V HVY - DIRT" (CC0 1.0); 262118 "Kirkstall Rock Crumble " (CC0 1.0) | one per leg plant |
 | `scythe-demon/plate_shed` | `scythe-demon/plate_shed` | Bots | 616492 "clank" (CC0 1.0); 530486 "Metal Impact" (CC0 1.0) |  |
-| `scythe-demon/wreck` | `scythe-demon/wreck` | Bots | 276577 "Dragons Dying Breath" (CC0 1.0); 431174 "Fireball Explosion" (CC0 1.0) |  |
+| `scythe-demon/wreck` | `scythe-demon/wreck` | Bots | 366096 "Dragon Death" (CC0 1.0), its first part; 431174 "Fireball Explosion" (CC0 1.0) |  |
 | `scythe/warn` | `scythe/warn` | Bots | synthesised | synthesised, 0.9 s, ends exactly on the beam |
 | `scythe/beam` | `scythe/beam` | Bots | 369516 "Energy Blast" (CC0 1.0); 447941 "Blast + Flamethrower cooldown" (CC0 1.0) |  |
 | `lava-ooze/throb` | `lava-ooze/throb` | Bots | 456806 "Hot Bubbling Mud" (CC0 1.0) | one blorp per OozePulse beat |
@@ -288,12 +419,12 @@ pieces cut from them.
 | `world/lantern_pickup` | `world/lantern_pickup` | World | 171939 "Put Down Glass Object" (CC0 1.0); 234044 "Creepy Whispering" (CC0 1.0) |  |
 | `world/lantern_carry` | `world/lantern_carry` (loop) | World | 808032 "Ambient F Sharp Minor Ethereal Choir Pad 1" (CC0 1.0) |  |
 | `world/lantern_place` | `world/lantern_place` | World | 61521 "Final angelic sound" (CC0 1.0) |  |
-| `world/anchor_hit` | `world/anchor_hit` | World | 530486 "Metal Impact" (CC0 1.0); 370877 "Chains" (CC0 1.0) |  |
+| `world/anchor_hit` | `world/anchor_hit` | World | 530486 "Metal Impact" (CC0 1.0) |  |
 | `world/anchor_deflect` | `world/anchor_deflect` | World | 570853 "magicShield_block" (CC0 1.0) |  |
 | `world/anchor_break` | `world/anchor_break` | World | 703247 "Big falling debris (crash)" (CC0 1.0); 387240 "chain" (CC0 1.0) |  |
 | `world/brand_charge` | `world/brand_charge` (loop) | World | 407052 "Power Charge" (CC0 1.0) | pitch follows the meter |
 | `world/brand_done` | `world/brand_done` | World | 854670 "Sacred Rune Lock 02 - Arcane Seal Activation" (CC BY 4.0) | CC BY |
-| `world/well_grind` | `world/well_grind` (loop) | World | 457529 "Opening the sarcophagus" (CC0 1.0) | while a well is being sealed |
+| `world/well_grind` | `world/well_grind` (loop) | World | 558254 "Heavy Stone Push" (CC0 1.0) | while a well is being sealed |
 | `world/well_sealed` | `world/well_sealed` | World | 558254 "Heavy Stone Push" (CC0 1.0); 365071 "Steam" (CC0 1.0) |  |
 | `world/gate_open` | `world/gate_open` | World | 352829 "Tomb Door Open, Stone Scrape" (CC0 1.0) |  |
 | `bed/0` | `beds/ember_gate` (loop) | Ambience | 397092 "Soft Tonal Wind_02" (CC0 1.0); 474852 "Lava Loop 4" (CC0 1.0) | The Ember Gate: ash wind over the lava |

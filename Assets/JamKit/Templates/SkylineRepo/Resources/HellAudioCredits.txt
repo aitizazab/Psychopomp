@@ -4,6 +4,7 @@ CC BY 4.0 (this repo's assets)	Synthesised layers made for HellDescent (tools/au
 CC0 1.0	"gong" by nkuitse (https://freesound.org/people/nkuitse/sounds/18654/), CC0 1.0
 CC0 1.0	"Four Heartbeats HQ_BeatSmith" by Lunardrive (https://freesound.org/people/Lunardrive/sounds/22416/), CC0 1.0
 CC0 1.0	"reverse cymbal" by John Rayson (https://freesound.org/people/John Rayson/sounds/23127/), CC0 1.0
+CC BY 4.0	"BreathOfDeath" by gabemiller74 (https://freesound.org/people/gabemiller74/sounds/60571/) licensed under CC BY 4.0
 CC0 1.0	"Final angelic sound" by hjohnl (https://freesound.org/people/hjohnl/sounds/61521/), CC0 1.0
 CC0 1.0	"wingflap_fast" by philberts (https://freesound.org/people/philberts/sounds/71417/), CC0 1.0
 CC0 1.0	"To Hell With Vinyl" by dland (https://freesound.org/people/dland/sounds/74385/), CC0 1.0
@@ -34,7 +35,6 @@ CC0 1.0	"Steam/hiss" by wubitog (https://freesound.org/people/wubitog/sounds/234
 CC0 1.0	"Goblin Death" by spookymodem (https://freesound.org/people/spookymodem/sounds/249813/), CC0 1.0
 CC0 1.0	"Kirkstall Rock Crumble " by rokenjocu (https://freesound.org/people/rokenjocu/sounds/262118/), CC0 1.0
 CC0 1.0	"Short-Fireball-Woosh" by wjl (https://freesound.org/people/wjl/sounds/267887/), CC0 1.0
-CC0 1.0	"Dragons Dying Breath" by MickBoere (https://freesound.org/people/MickBoere/sounds/276577/), CC0 1.0
 CC0 1.0	"Fast reverse vortex" by earlcash05 (https://freesound.org/people/earlcash05/sounds/280222/), CC0 1.0
 CC0 1.0	"viscous liquid fall in" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/315931/), CC0 1.0
 CC0 1.0	"Concrete Hit 2" by dslrguide (https://freesound.org/people/dslrguide/sounds/321478/), CC0 1.0
@@ -43,8 +43,8 @@ CC0 1.0	"Tomb Door Open, Stone Scrape" by Kinoton (https://freesound.org/people/
 CC0 1.0	"Bubbling Mud with Steam" by ProductionNow (https://freesound.org/people/ProductionNow/sounds/352904/), CC0 1.0
 CC0 1.0	"Steam" by sniperous (https://freesound.org/people/sniperous/sounds/365071/), CC0 1.0
 CC0 1.0	"Quick Zoom / Slow Down" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/366092/), CC0 1.0
+CC0 1.0	"Dragon Death" by bevibeldesign (https://freesound.org/people/bevibeldesign/sounds/366096/), CC0 1.0
 CC0 1.0	"Energy Blast" by Kinoton (https://freesound.org/people/Kinoton/sounds/369516/), CC0 1.0
-CC0 1.0	"Chains" by cribbler (https://freesound.org/people/cribbler/sounds/370877/), CC0 1.0
 CC0 1.0	"Sizzle / Acid Burn" by bottles (https://freesound.org/people/bottles/sounds/382313/), CC0 1.0
 CC0 1.0	"chain" by nettimato (https://freesound.org/people/nettimato/sounds/387240/), CC0 1.0
 CC0 1.0	"Industrial ambience" by Lewente (https://freesound.org/people/Lewente/sounds/393398/), CC0 1.0
@@ -61,7 +61,6 @@ CC0 1.0	"Mud Splat" by Breviceps (https://freesound.org/people/Breviceps/sounds/
 CC0 1.0	"Backwards Whoosh" by SlavicMagic (https://freesound.org/people/SlavicMagic/sounds/446010/), CC0 1.0
 CC0 1.0	"Blast + Flamethrower cooldown" by Breviceps (https://freesound.org/people/Breviceps/sounds/447941/), CC0 1.0
 CC0 1.0	"Hot Bubbling Mud" by Breviceps (https://freesound.org/people/Breviceps/sounds/456806/), CC0 1.0
-CC0 1.0	"Opening the sarcophagus" by Breviceps (https://freesound.org/people/Breviceps/sounds/457529/), CC0 1.0
 CC0 1.0	"Long Ethereal Woosh" by newagesoup (https://freesound.org/people/newagesoup/sounds/462879/), CC0 1.0
 CC0 1.0	"Lava Loop 4" by Fission9 (https://freesound.org/people/Fission9/sounds/474852/), CC0 1.0
 CC0 1.0	"BODY FALL - V HVY - DIRT" by leonelmail (https://freesound.org/people/leonelmail/sounds/504626/), CC0 1.0
