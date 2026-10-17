@@ -103,10 +103,13 @@ namespace JamKit.SkylineRepo
             s._blade = SkylineBotLook.Empty("Spinner", go.transform, Vector3.zero);
             var bone = HellLook.HostileLit(HellLook.Bone);
             var edge = HellLook.HostileGlow(HellLook.BeamHot);
-            var a = HellBodies.BuildBlade(s._blade, new Vector3(0f, 0.55f, 0f), 1.1f, bone, edge);
-            var b = HellBodies.BuildBlade(s._blade, new Vector3(0f, 0.55f, 0f), 1.1f, bone, edge);
-            a.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            b.localRotation = Quaternion.Euler(0f, 180f, 90f);
+            // two blades on opposite arms of the wheel (the spin is about the Spinner's local Z, across the lane)
+            for (int k = 0; k < 2; k++)
+            {
+                var arm = SkylineBotLook.Empty("Arm" + k, s._blade, Vector3.zero);
+                arm.localRotation = Quaternion.Euler(0f, 0f, k * 180f);
+                HellBodies.BuildBlade(arm, new Vector3(0f, 0.3f, 0f), 0.8f, bone, edge);
+            }
             SkylineBotLook.Visual(PrimitiveType.Sphere, "Hub", s._blade, HellLook.HostileGlow(HellLook.FlameYellow), false).transform.localScale = Vector3.one * 0.2f;
             s._mote = SkylineBotLook.Visual(PrimitiveType.Sphere, "Mote", null, HellLook.HostileGlow(HellLook.BeamHot), false).transform;
             s._mote.SetParent(go.transform, false);
