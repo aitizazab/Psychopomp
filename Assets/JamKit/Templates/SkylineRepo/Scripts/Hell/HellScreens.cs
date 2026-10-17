@@ -40,7 +40,7 @@ namespace JamKit.SkylineRepo
         static readonly Color Ash = new Color(0.97f, 0.93f, 0.86f, 1f);
         static readonly Color Dim = new Color(0.97f, 0.93f, 0.86f, 0.45f);
         // the faces by role (docs/HELL-UI.md): the title Cinzel Decorative, headings and menu items Metal Mania, small print
-        // and hints Barlow Condensed, numbers Luckiest Guy; story prose keeps the project face (it is read, not glanced at)
+        // and hints Grenze Gotisch, numbers Luckiest Guy; the opening cards Metal Mania; other story prose keeps the project face (it is read, not glanced at)
         const string Display = HellFaces.Heading, Numbers = HellFaces.Numbers, TitleFace = HellFaces.Title, Fine = HellFaces.Fine;
         const int EmberCount = 46;
         static readonly Color SplashYellow = new Color(1f, 0.93f, 0.25f, 1f);
@@ -140,7 +140,7 @@ namespace JamKit.SkylineRepo
             _hint.style.left = 0;
             _hint.style.right = 0;
             _hint.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _hint.style.fontSize = 20f;
+            _hint.style.fontSize = 24f;   // Grenze Gotisch reads small: 24 at 1080p
             _hint.style.color = Dim;
             _hint.style.letterSpacing = 3f;
             SkylineHudStyle.ApplyFace(_hint.style, Fine);
@@ -298,7 +298,7 @@ namespace JamKit.SkylineRepo
             foreach (var c in _cardSpeaker.Children()) c.style.letterSpacing = 10f;
             _cardSpeaker.style.marginBottom = 26f;
             _card.Add(_cardSpeaker);
-            _cardText = new KeylinedLabel(50f, 3.5f, null);
+            _cardText = new KeylinedLabel(50f, 3.5f, Display);   // the opening cards: the subheading face (the creator, 2026-10-18)
             _cardText.SetWrap(true, TextAnchor.MiddleCenter);
             _cardText.style.maxWidth = 1300f;
             _card.Add(_cardText);
@@ -447,7 +447,7 @@ namespace JamKit.SkylineRepo
             n.SetText(format(0f));
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Fine);
+            var l = new KeylinedLabel(27f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -463,7 +463,7 @@ namespace JamKit.SkylineRepo
             n.SetText(word);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Fine);
+            var l = new KeylinedLabel(27f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -477,7 +477,7 @@ namespace JamKit.SkylineRepo
             n.SetText("0 / " + offered);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Fine);
+            var l = new KeylinedLabel(27f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;

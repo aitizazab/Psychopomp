@@ -203,12 +203,12 @@ namespace JamKit.SkylineRepo
             _name = HellHudStyle.Label(30f, HellFaces.Heading, HellHudStyle.Ash, 2.5f, 1f);
             _name.SetWrap(false, TextAnchor.MiddleCenter);
             mid.Add(_name);
-            _state = FineLabel(mid, 20f, HellHudStyle.Sand);
+            _state = FineLabel(mid, 22f, HellHudStyle.Sand);
             _state.style.marginTop = 2f;
-            _desc = FineLabel(mid, 18f, HellHudStyle.Ash);
+            _desc = FineLabel(mid, 21f, HellHudStyle.Ash);
             _desc.style.whiteSpace = WhiteSpace.Normal;
             _desc.style.marginTop = 8f;
-            _how = FineLabel(_root, 18f, HellHudStyle.AshDim);
+            _how = FineLabel(_root, 20f, HellHudStyle.AshDim);
             _how.style.position = Position.Absolute;
             _how.style.left = 0;
             _how.style.right = 0;

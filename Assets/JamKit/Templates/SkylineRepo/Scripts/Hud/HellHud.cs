@@ -139,7 +139,7 @@ namespace JamKit.SkylineRepo
                 l.style.width = TileW;
                 l.style.top = LabelTop;
                 l.style.right = i * TileW;
-                l.style.fontSize = 17f;
+                l.style.fontSize = 21f;   // Grenze Gotisch reads small
                 l.style.color = HellHudStyle.AshDim;
                 l.style.unityTextAlign = TextAnchor.UpperCenter;
                 l.style.whiteSpace = WhiteSpace.NoWrap;

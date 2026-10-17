@@ -149,7 +149,7 @@ namespace JamKit.Skyline
             new HellCreditLine("Luckiest Guy by Astigmatic (Apache 2.0)"),
             new HellCreditLine("Cinzel Decorative by Natanael Gama (SIL OFL 1.1)"),
             new HellCreditLine("Metal Mania by Open Window (SIL OFL 1.1)"),
-            new HellCreditLine("Barlow Condensed by Jeremy Tribby (SIL OFL 1.1)"),
+            new HellCreditLine("Grenze Gotisch by Omnibus-Type (SIL OFL 1.1)"),
             new HellCreditLine(""),
             new HellCreditLine("SOUND AND MUSIC", true),
             new HellCreditLine("[from the sound pass: to fill]", placeholder: true),

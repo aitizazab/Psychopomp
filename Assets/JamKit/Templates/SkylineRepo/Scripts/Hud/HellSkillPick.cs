@@ -199,10 +199,10 @@ namespace JamKit.SkylineRepo
             c.Add(icon);
             var name = Text(d.name.ToUpperInvariant(), 34f, SkylineHudStyle.Paper, HellFaces.Heading);
             c.Add(name);
-            var flav = Text(d.flavour.ToString().ToUpperInvariant(), 18f, hue, HellFaces.Fine);
+            var flav = Text(d.flavour.ToString().ToUpperInvariant(), 21f, hue, HellFaces.Fine);
             flav.style.marginBottom = 16f;
             c.Add(flav);
-            var desc = Text(d.description, 21f, new Color(0.9f, 0.88f, 0.84f), HellFaces.Fine);
+            var desc = Text(d.description, 24f, new Color(0.9f, 0.88f, 0.84f), HellFaces.Fine);
             desc.style.whiteSpace = WhiteSpace.Normal;
             desc.style.unityTextAlign = TextAnchor.UpperCenter;
             c.Add(desc);

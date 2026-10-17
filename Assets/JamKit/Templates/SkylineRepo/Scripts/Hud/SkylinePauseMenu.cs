@@ -236,7 +236,7 @@ namespace JamKit.SkylineRepo
             l.style.marginLeft = l.style.marginRight = l.style.marginTop = l.style.marginBottom = 0;
             l.style.paddingLeft = l.style.paddingRight = l.style.paddingTop = l.style.paddingBottom = 0;
             l.style.textShadow = new TextShadow { offset = new Vector2(0f, 2f), blurRadius = 3f, color = Shadow };
-            if (HellHudStyle.Active) SkylineHudStyle.ApplyFace(l.style, JamKit.Skyline.HellFaces.Fine);   // settings are non-game text
+            if (HellHudStyle.Active) { SkylineHudStyle.ApplyFace(l.style, JamKit.Skyline.HellFaces.Fine); l.style.fontSize = size + 4; }   // settings are non-game text (Grenze Gotisch reads small: 4 up)
             parent.Add(l);
             return l;
         }

@@ -276,7 +276,7 @@ namespace JamKit.Tests.Skyline
             Assert.That(faces.Distinct().Count(), Is.EqualTo(faces.Length));
             Assert.That(HellFlowText.Title, Is.EqualTo("PSYCHOPOMP"));
             Assert.That(HellFlowText.Credits[0].text, Is.EqualTo(HellFlowText.Title), "the credits open on the title");
-            foreach (var name in new[] { "Cinzel Decorative", "Metal Mania", "Barlow Condensed" })
+            foreach (var name in new[] { "Cinzel Decorative", "Metal Mania", "Grenze Gotisch" })
                 Assert.That(HellFlowText.Credits.Any(c => c.text.Contains(name)), Is.True, name + " is credited");
         }
 

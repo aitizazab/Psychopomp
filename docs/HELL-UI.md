@@ -79,11 +79,11 @@ HUD to sand, change `HellFxPalette.Rewind` (one line).
 | Role | Face | Used on |
 |---|---|---|
 | `HellFaces.Title` | **Cinzel Decorative Black** | the title screen word, the credits' first line. Nothing else |
-| `HellFaces.Heading` | **Metal Mania** | banners, the objective line, job card titles and tasks, the tracker's job name, ability names (wheel, pick cards), the decision prompt and escape line, Vesper's name, menu items, screen headings, the pause menu's title |
-| `HellFaces.Fine` | **Barlow Condensed Bold** | settings rows and notes, credits small print, stat labels, screen hints, key labels under the ability tiles, the wheel's state and description, skill descriptions |
+| `HellFaces.Heading` | **Metal Mania** | the opening cards, banners, the objective line, job card titles and tasks, the tracker's job name, ability names (wheel, pick cards), the decision prompt and escape line, Vesper's name, menu items, screen headings, the pause menu's title |
+| `HellFaces.Fine` | **Grenze Gotisch SemiBold (replaced Grenze Gotisch, 2026-10-18)** | settings rows and notes, credits small print, stat labels, screen hints, key labels under the ability tiles, the wheel's state and description, skill descriptions |
 | `HellFaces.Numbers` | **Luckiest Guy** (kept) | ammo, clocks, stats, skill glyphs, the tutorial hint cards, Vesper's hint, the job marker and count |
 | `HellFaces.Comic` | **Bangers** (kept, with Luckiest Guy) | the comic lettering, unchanged |
-| (project face) | | story prose: opening cards, subtitles, Baja's job line (read, not glanced at) |
+| (project face) | | story prose: subtitles, Baja's job line (read, not glanced at) |
 
 The working title is **PSYCHOPOMP**, written once: `HellFlowText.Title`. Under it, at its lower right, a **Minecraft-style splash line**: tilted, yellow, Luckiest Guy, pulsing gently, picked at random each time the title shows from `HellFlowText.Splashes` (20 lines, ALL PLACEHOLDER for the creator to edit, e.g. "To Hell and Back Before Lunch!").
 
@@ -101,7 +101,7 @@ both). So Hell keeps two layers, re-skinned (`HellHudVessel`, drawn into the sam
 
 ### The abilities (bottom right, above the ammo)
 
-`HellHud` (rewritten). A row of tiles, right to left, each with its **control for the device in use** under it (Barlow, e.g.
+`HellHud` (rewritten). A row of tiles, right to left, each with its **control for the device in use** under it (Grenze Gotisch, e.g.
 "RIGHT MOUSE" / "LT", "V" / "LB", "E" / "RB", "G" / "D-PAD DOWN"; `HellInputDevice`):
 
 - **Time Dilation**: a sand dial with a little hourglass; it **empties while the world is slowed** (`TimeDilationState.HoldLeft01`), full when ready (it has no cooldown).
@@ -120,7 +120,7 @@ A tile coming ready flashes white. It repaints only when a value it draws change
   the right stick is free to point while the left thumb holds it).
 - Opens a radial: **the three gifts first (Shadow Step at twelve o'clock, Rewind, Time Dilation), then every floor skill you
   own**, each slot a dial of its readiness; the middle shows the pointed slot's **name** (Metal Mania), its **state**
-  (`1 / 2`, `READY`, `8 s`, `ACTIVE`, `PASSIVE`, `ON THE SKILL BUTTON`) and **what it does** (Barlow).
+  (`1 / 2`, `READY`, `8 s`, `ACTIVE`, `PASSIVE`, `ON THE SKILL BUTTON`) and **what it does** (Grenze Gotisch).
 - **Time slows to 0.2x** while it is open (`HellTime` key `wheel`, the Time theme). The look holds still and the gun, Shadow
   Step and Rewind are quiet (`SkylineDeviceInput.LookHeld`); moving and jumping go on. It won't open while aiming a step,
   in the pause menu or the pick, or when wrecked.
@@ -181,8 +181,8 @@ It sits under the HUD's root, so the clean picture hides it.
 - The Brand's objective shows a **brand sigil** on the ring and markers; the Skyline job strip is hidden in Hell.
 - **Vesper's bar in soulfire cyan** (an enemy), her name and banners in Metal Mania; all banners share one height.
 - Subtitle colours: **BAJA sand, VESPER violet**.
-- Skill pick: Metal Mania names, Barlow descriptions, obsidian cards with ember rims, Time in sand.
-- Pause menu (Hell scenes): Metal Mania title, Barlow rows, an ember top edge; Subtitles page gains **Tutorial hints
+- Skill pick: Metal Mania names, Grenze Gotisch descriptions, obsidian cards with ember rims, Time in sand.
+- Pause menu (Hell scenes): Metal Mania title, Grenze Gotisch rows, an ember top edge; Subtitles page gains **Tutorial hints
   On/Off** and **Show the tutorial hints again**; the sample subtitle is neutral; Controls lists **Ability wheel (hold)**.
 - No garbage a frame from the HUD's texts: clock strings cached (`HellClockText`), the job tracker/count/marker cached by
   value, the ammo name upper-cased once per gun, the objective line re-read 5 times a second.
@@ -202,7 +202,7 @@ It sits under the HUD's root, so the clean picture hides it.
 | `Scripts/Hud/HellAbilityWheel.cs` | the wheel |
 | `Scripts/Hud/HellInputDevice.cs` | the device in use, short control labels (cached) |
 | `Scripts/Hud/HellUiShots.cs` | `-hell-ui-shots <dir>`: the stills below |
-| `ThirdParty/Fonts/Resources/SkylineFonts/{CinzelDecorative,MetalMania,BarlowCondensed}/` | the fonts with their OFL.txt; `ThirdParty/Fonts/CREDITS.md` |
+| `ThirdParty/Fonts/Resources/SkylineFonts/{CinzelDecorative,MetalMania,GrenzeGotisch}/` | the fonts with their OFL.txt; `ThirdParty/Fonts/CREDITS.md` |
 | Edited | `SkylineHudHealth` (the vessel hook), `SkylineHudObjective` (sigil, no strip), `SkylineHudSubtitles` (Hell width and height), `SkylineHudFlashes`, `SkylineHud` (bone flashes), `SkylineHudAmmo` (no garbage), `SkylineHudStyle` (faces), `SkylinePauseMenu`, `SkylineDeviceInput` (`LookHeld`), `HellAbilities` (no step/rewind under the wheel), `HellSkills` (Nightfall obeys the binding), `HellHudLine` (faces, places, the clock), `HellRunDirector` (line/clock split, cleared outside play), `HellJobDirector`, `HellLinePlayer`, `HellEndingHud`, `HellVesperHud`, `HellScreens`, `HellEndingCards`, `HellSkillPick`, `HellFlowText` (PSYCHOPOMP, font credits), `HudModels` (speaker colours), `BindingTable` (`Wheel`), the replay buttons |
 
 Unity makes the `.meta` files for the new scripts, fonts and font folders on import (none were written by hand): commit them.
@@ -224,7 +224,7 @@ an import (fonts need their metas). A build (`out\hell\build\HellDescent.exe`) o
 Each writes `<name>.png` into the folder and logs `HELL_UI_SHOT <name> <path>`, then quits (about 15 s). What to look for:
 
 1. **Fonts load** (no `SKYLINE_HUD font missing` in the log): PSYCHOPOMP in Cinzel Decorative on `title.png`; Metal Mania on
-   the objective line, banners, job card title, wheel names, decision prompt; Barlow on the key labels and pause menu rows.
+   the objective line, banners, job card title, wheel names, decision prompt; Grenze Gotisch on the key labels and pause menu rows.
 2. `play.png`: the vessel (ember, Ward over it), the tiles with key labels, three skill chips, the hourglass top right,
    the objective line with the clock under it, nothing overlapping.
 3. `low-health.png`: cracks across the drained vessel, the gem bright, no Ward.
@@ -242,7 +242,7 @@ Each writes `<name>.png` into the folder and logs `HELL_UI_SHOT <name> <path>`, 
   OBJECTION! on the Writ's spot). A Hell set (imp: FWOOSH! / POP!, demon: SHRAK! / KRUNCH!, ooze: SPLORCH! kept) is a data
   change there and in `ComicLetteringTests`; left for the creator to approve since they are words on screen.
 - **Gun names** "WRIT" / "BREACHER" under the ammo are the kit's guns' names: the creator's call.
-- The opening cards, subtitles and Baja's job line keep the project face (prose). If they should be Barlow or Metal Mania,
+- The opening cards are Metal Mania (the creator, 2026-10-18); subtitles and Baja's job line keep the project face (prose).
   it is one constant per screen.
 - A tutorial hint for the wheel ("HOLD {Wheel} TO SEE YOUR POWERS") belongs in `HellLines` (the creator's words).
 - The Rewind's world effect is still cyan (`HellFxPalette.Rewind`, FX lane).

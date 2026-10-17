@@ -15,7 +15,7 @@ namespace JamKit.Skyline
         /// prompt, menu items, screen headings.</summary>
         public const string Heading = "MetalMania";
         /// <summary>Non-game text: legal and credits small print, settings and their descriptions, control hints on screens.</summary>
-        public const string Fine = "BarlowCondensed";
+        public const string Fine = "GrenzeGotisch";
         /// <summary>Numbers (ammo, clocks, stats) and the tutorial hint cards: kept from Skyline.</summary>
         public const string Numbers = "LuckiestGuy";
         /// <summary>The comic lettering's second face (hit words and callouts), kept from Skyline with Luckiest Guy.</summary>
