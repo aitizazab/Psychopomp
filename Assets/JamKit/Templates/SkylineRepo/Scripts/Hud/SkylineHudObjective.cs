@@ -111,6 +111,7 @@ namespace JamKit.SkylineRepo
         /// <summary>Draws an asset glyph filling <paramref name="r"/> (a slight lean to the right at the top, like the bars).</summary>
         public static void DrawGlyph(Painter2D p, AssetKind kind, Rect r, Color fill, Color ink, float line)
         {
+            if (HellHudStyle.Active) { HellHudStyle.BrandSigil(p, r, fill, ink, line); return; }   // Hell has no mall assets: the Brand's sigil
             const float lean = 0.10f;
             var g = GlyphOf(kind);
             for (int pass = 0; pass < 2; pass++)
@@ -332,7 +333,7 @@ namespace JamKit.SkylineRepo
         void TickSheet(float dt)
         {
             bool have = _rep != null;
-            _strip.style.display = have ? DisplayStyle.Flex : DisplayStyle.None;
+            _strip.style.display = have && !HellHudStyle.Active ? DisplayStyle.Flex : DisplayStyle.None;   // Hell: the objective line says it; no asset sheet
             if (!have)
             {
                 for (int i = 0; i < 3; i++) { _modes[i] = MarkerMode.Hidden; _markerEls[i].style.display = DisplayStyle.None; }

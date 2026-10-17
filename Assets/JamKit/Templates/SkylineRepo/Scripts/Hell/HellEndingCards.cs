@@ -13,7 +13,7 @@ namespace JamKit.SkylineRepo
     {
         static readonly Color Ember = new Color(1f, 0.55f, 0.25f);
         static readonly Color Paper = new Color(1f, 0.93f, 0.85f);
-        const string Display = "Anton";
+        const string Display = JamKit.Skyline.HellFaces.Heading;   // the ending's name and the speakers: important subtext (docs/HELL-UI.md)
 
         UIDocument _doc;
         VisualElement _root, _black, _column;

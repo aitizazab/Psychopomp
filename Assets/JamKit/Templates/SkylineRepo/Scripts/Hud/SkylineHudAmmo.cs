@@ -22,7 +22,7 @@ namespace JamKit.SkylineRepo
         string _iconGun;
         int _lastAmmo = -2, _lastReserve = -2, _lastMag = -1;
         bool _lastReloading, _lastSpecial;
-        string _lastName;
+        string _lastName, _lastDisplay, _upperName = "";
         float _flash;
         Color _flashColour = SkylineHudStyle.Green;
 
@@ -109,7 +109,8 @@ namespace JamKit.SkylineRepo
                 _reserve.style.display = special ? DisplayStyle.Flex : DisplayStyle.None;
                 if (special) _reserve.SetText("/" + reserve);
             }
-            string name = g.Def.displayName.ToUpperInvariant();
+            if (!ReferenceEquals(g.Def.displayName, _lastDisplay)) { _lastDisplay = g.Def.displayName; _upperName = (_lastDisplay ?? "").ToUpperInvariant(); }
+            string name = _upperName;   // upper-cased once per gun, not every frame
             if (reloading != _lastReloading || name != _lastName)
             {
                 _lastReloading = reloading;

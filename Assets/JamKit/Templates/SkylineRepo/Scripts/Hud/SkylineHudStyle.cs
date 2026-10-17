@@ -33,6 +33,10 @@ namespace JamKit.SkylineRepo
             { "Anton", "SkylineFonts/Anton/Anton-Regular" },
             { "Bangers", "SkylineFonts/Bangers/Bangers-Regular" },
             { "LuckiestGuy", "SkylineFonts/LuckiestGuy/LuckiestGuy-Regular" },
+            // Hell's faces by role (JamKit.Skyline.HellFaces; docs/HELL-UI.md): the title, important subtext, small print
+            { "CinzelDecorative", "SkylineFonts/CinzelDecorative/CinzelDecorative-Black" },
+            { "MetalMania", "SkylineFonts/MetalMania/MetalMania-Regular" },
+            { "BarlowCondensed", "SkylineFonts/BarlowCondensed/BarlowCondensed-Bold" },
         };
 
         static string _ammoFont;

@@ -1,3 +1,4 @@
+using JamKit.Skyline;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,7 +11,9 @@ namespace JamKit.SkylineRepo
     /// </summary>
     public sealed class HellEndingHud
     {
-        public const float RingRadiusPx = 46f, RingLinePx = 7f, PromptTopPercent = 58f;
+        public const float RingRadiusPx = 46f, RingLinePx = 7f;
+        /// <summary>The prompt's top in percent of the screen: the layout's prompt box, between the crosshair's rings and the hint card.</summary>
+        public static float PromptTopPercent => HellHudPlaces.PromptTopPercent;
         static readonly Color Ring = new Color(1f, 0.82f, 0.55f);
         static readonly Color RingBack = new Color(0f, 0f, 0f, 0.55f);
         static readonly Color PromptColour = new Color(1f, 0.86f, 0.62f);
@@ -29,14 +32,14 @@ namespace JamKit.SkylineRepo
             var hud = SkylineHud.Instance;
             if (hud == null || hud.Safe == null) return false;
             var safe = hud.Safe;
-            string face = SkylineHudStyle.AmmoFontDefault;
+            string face = HellFaces.Heading;   // the decision prompt, the escape line and the banners: important subtext (docs/HELL-UI.md)
 
             _promptBox = SkylineHudStyle.Layer(safe, "hell-ending-prompt");
             _promptBox.style.left = 0;
             _promptBox.style.right = 0;
             _promptBox.style.top = Length.Percent(PromptTopPercent);
             _promptBox.style.alignItems = Align.Center;
-            _prompt = new KeylinedLabel(30f, 2.5f, face);
+            _prompt = new KeylinedLabel(32f, 2.5f, face);
             _prompt.SetColor(PromptColour);
             _promptBox.Add(_prompt);
 
@@ -51,18 +54,16 @@ namespace JamKit.SkylineRepo
             _ring.generateVisualContent += DrawRing;
 
             _lineBox = SkylineHudStyle.Layer(safe, "hell-ending-line");
-            _lineBox.style.left = 0;
-            _lineBox.style.right = 0;
-            _lineBox.style.top = 96f;
+            HellHudStyle.Place(_lineBox, HellHudPlaces.Objective);   // the same slot as the rooms' objective line (never both)
+            _lineBox.style.justifyContent = Justify.Center;
             _lineBox.style.alignItems = Align.Center;
             _line = new KeylinedLabel(34f, 2.5f, face);
             _line.SetColor(BannerColour);
             _lineBox.Add(_line);
 
             _bannerBox = SkylineHudStyle.Layer(safe, "hell-ending-banner");
-            _bannerBox.style.left = 0;
-            _bannerBox.style.right = 0;
-            _bannerBox.style.top = Length.Percent(30);
+            HellHudStyle.Place(_bannerBox, HellHudPlaces.Banner);
+            _bannerBox.style.justifyContent = Justify.Center;
             _bannerBox.style.alignItems = Align.Center;
             _banner = new KeylinedLabel(72f, 4f, face);
             _banner.SetColor(BannerColour);
@@ -125,6 +126,11 @@ namespace JamKit.SkylineRepo
         {
             if (_bannerBox != null && _bannerBox.style.display == DisplayStyle.Flex && Time.unscaledTime > _bannerUntil)
                 _bannerBox.style.display = DisplayStyle.None;
+            if (_promptBox != null)
+            {
+                float o = HellAbilityWheel.IsOpen ? 0f : 1f;   // the wheel has the middle of the screen
+                if (_promptBox.style.opacity != o) _promptBox.style.opacity = o;
+            }
         }
 
         public void Clear()

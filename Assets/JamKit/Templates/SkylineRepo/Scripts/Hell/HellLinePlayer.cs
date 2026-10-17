@@ -14,7 +14,9 @@ namespace JamKit.SkylineRepo
     public sealed class HellLinePlayer : MonoBehaviour
     {
         public const string VoiceFolder = "SkylineAudio/hell-voice/";
-        public const float HintTopPercent = 60f, HintPx = 30f, LetterboxPercent = 11f, LetterboxSeconds = 0.35f;
+        public const float HintPx = 30f, LetterboxPercent = HellHudPlaces.LetterboxShare * 100f, LetterboxSeconds = 0.35f;
+        /// <summary>The hint card's top, in percent of the screen (the layout's hint box, under the decision prompt; docs/HELL-UI.md).</summary>
+        public static float HintTopPercent => HellHudPlaces.HintTopPercent;
         static readonly Color HintColour = new Color(1f, 0.86f, 0.62f);
 
         static HellLinePlayer _instance;
@@ -148,6 +150,11 @@ namespace JamKit.SkylineRepo
             {
                 _voice.volume = VoiceGain();
                 if (Time.unscaledTime > _voiceUntil + 0.5f) _voice.Stop();
+            }
+            if (_hintBox != null)
+            {
+                float o = HellAbilityWheel.IsOpen ? 0f : 1f;   // the wheel has the middle of the screen
+                if (_hintBox.style.opacity != o) _hintBox.style.opacity = o;
             }
             if (_barTop == null) { if (_letterboxTarget > 0f) Build(); return; }
             if (Mathf.Approximately(_letterbox, _letterboxTarget)) return;

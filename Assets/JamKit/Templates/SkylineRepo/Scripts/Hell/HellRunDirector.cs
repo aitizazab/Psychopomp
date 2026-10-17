@@ -40,6 +40,8 @@ namespace JamKit.SkylineRepo
         bool _skipScreens;
         int _chapter = -1, _chapterPicks, _chapterPicked;
         float _pickWait;
+        float _lineAt = -1f;   // the objective line is re-read at most every LineEvery s (the objectives build their text on read)
+        const float LineEvery = 0.2f;
 
         static long Key(int floor, HellRoomKind kind) => floor * 100L + (int)kind;
 
@@ -325,7 +327,7 @@ namespace JamKit.SkylineRepo
             if (Run == null || player == null || Flow == null) return;
             bool held = SkylineDeviceInput.Paused || SkylinePauseMenu.IsOpen || (Screens != null && Screens.Visible);
             if (!held && Run.Phase != HellRunPhase.AwaitingPick) Flow.Tick(Time.unscaledDeltaTime);
-            if (Flow.Stage != HellFlowStage.Playing) return;
+            if (Flow.Stage != HellFlowStage.Playing) { _hud.SetLine(""); return; }   // the boss and the ending own the objective slot
             var feet = player.transform.position;
             switch (Run.Phase)
             {
@@ -333,7 +335,8 @@ namespace JamKit.SkylineRepo
                     if (Current != null)
                     {
                         float c = Current.Clock;
-                        _hud.SetLine(Current.Objective.Line + "     " + (int)(c / 60f) + ":" + ((int)c % 60).ToString("00"));
+                        if (Time.unscaledTime >= _lineAt) { _lineAt = Time.unscaledTime + LineEvery; _hud.SetLine(Current.Objective.Line); }
+                        _hud.SetClock(c);
                         if (_fast != null && !held) _fast.Observe(HellRoom.N(feet));
                         if (Current.InDrop(feet) && Run.ReachedDrop())
                         {
@@ -371,6 +374,7 @@ namespace JamKit.SkylineRepo
             Flow.EnteredShaft();
             player.Movement.Teleport(HellRoom.U(HellWorld.ShaftArrival(Run.Floor)), 0f, Vector3.zero);
             _hud.SetLine("DOWN");
+            _hud.SetClock(-1f);
             Debug.Log("HELL_RUN shaft of floor " + Run.Floor);
         }
 

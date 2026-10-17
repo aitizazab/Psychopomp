@@ -74,6 +74,16 @@ namespace JamKit.Skyline
         public float Scale { get; private set; } = 1f;
         /// <summary>0 normal time, 1 the strongest slow-down (0.35x at the default curve): for the screen effect and the pitch.</summary>
         public float Strength(float minScale) => minScale < 1f ? Math.Max(0f, Math.Min(1f, (1f - Scale) / (1f - minScale))) : 0f;
+        /// <summary>How much of the slow-down is left (1 at the press, 0 when it has eased back out or isn't on): the HUD's arc.</summary>
+        public float HoldLeft01
+        {
+            get
+            {
+                float total = holdSeconds + easeOut;
+                if (!Active || !(total > 0f)) return 0f;
+                return Math.Max(0f, Math.Min(1f, 1f - _since / total));
+            }
+        }
 
         public void Press(float targetScale)
         {

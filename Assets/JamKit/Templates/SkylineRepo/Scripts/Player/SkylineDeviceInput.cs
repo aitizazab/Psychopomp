@@ -31,6 +31,10 @@ namespace JamKit.SkylineRepo
         /// <summary>Set by the pause menu while it is open: the game gets an empty frame.</summary>
         public static bool Paused;
 
+        /// <summary>Set by the Hell ability wheel while it is open: the mouse and right stick drive the wheel, so the look is
+        /// held still and the gun does not fire or aim; moving and jumping go on.</summary>
+        public static bool LookHeld;
+
         static bool _lookFromPad;
         static float _lastScroll = -1f;
         static float _turnHeld;
@@ -110,6 +114,12 @@ namespace JamKit.SkylineRepo
             }
             f.move = Vector2.ClampMagnitude(move, 1f);
             f.lookFromPad = _lookFromPad;
+            if (LookHeld)
+            {
+                f.look = Vector2.zero;
+                f.fireHeld = f.firePressed = f.aimHeld = false;
+                f.swapPressed = false;
+            }
             return f;
         }
     }

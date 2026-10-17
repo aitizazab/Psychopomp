@@ -39,8 +39,13 @@ namespace JamKit.SkylineRepo
         static readonly Color EmberHot = new Color(1f, 0.78f, 0.42f, 1f);
         static readonly Color Ash = new Color(0.97f, 0.93f, 0.86f, 1f);
         static readonly Color Dim = new Color(0.97f, 0.93f, 0.86f, 0.45f);
-        const string Display = "Anton", Numbers = "LuckiestGuy";
+        // the faces by role (docs/HELL-UI.md): the title Cinzel Decorative, headings and menu items Metal Mania, small print
+        // and hints Barlow Condensed, numbers Luckiest Guy; story prose keeps the project face (it is read, not glanced at)
+        const string Display = HellFaces.Heading, Numbers = HellFaces.Numbers, TitleFace = HellFaces.Title, Fine = HellFaces.Fine;
         const int EmberCount = 46;
+        static readonly Color SplashYellow = new Color(1f, 0.93f, 0.25f, 1f);
+        KeylinedLabel _splash;
+        readonly System.Random _splashRng = new System.Random();
         const float Fade = 0.45f, CreditsSpeed = 70f;
 
         UIDocument _doc;
@@ -138,6 +143,7 @@ namespace JamKit.SkylineRepo
             _hint.style.fontSize = 20f;
             _hint.style.color = Dim;
             _hint.style.letterSpacing = 3f;
+            SkylineHudStyle.ApplyFace(_hint.style, Fine);
             _root.Add(_hint);
             _root.style.display = DisplayStyle.None;
         }
@@ -145,11 +151,22 @@ namespace JamKit.SkylineRepo
         void BuildTitle()
         {
             _title = Column(_root);
-            var name = new KeylinedLabel(168f, 7f, Display);
+            var name = new KeylinedLabel(124f, 6f, TitleFace);
             name.SetText(HellFlowText.Title);
             name.SetColor(Ember);
-            foreach (var c in name.Children()) c.style.letterSpacing = 22f;
-            _title.Add(name);
+            foreach (var c in name.Children()) c.style.letterSpacing = 10f;
+            var nameBox = new VisualElement { pickingMode = PickingMode.Ignore };
+            nameBox.Add(name);
+            _title.Add(nameBox);
+            // the splash line (Minecraft-style; HellFlowText.Splashes): tilted, yellow, pulsing at the title's lower right
+            _splash = new KeylinedLabel(34f, 3f, Numbers);
+            _splash.SetColor(SplashYellow);
+            _splash.style.position = Position.Absolute;
+            _splash.style.right = -70f;
+            _splash.style.bottom = -12f;
+            _splash.style.rotate = new Rotate(new Angle(-12f));
+            _splash.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+            nameBox.Add(_splash);
             var rule = new VisualElement { pickingMode = PickingMode.Ignore };
             rule.style.width = 520f;
             rule.style.height = 3f;
@@ -312,7 +329,8 @@ namespace JamKit.SkylineRepo
             _credits.Add(_creditsColumn);
             foreach (var line in HellFlowText.Credits)
             {
-                var l = new KeylinedLabel(line.heading ? 44f : 32f, line.heading ? 3f : 2.5f, line.heading ? Display : null);
+                bool isTitle = line.heading && line.text == HellFlowText.Title;
+                var l = new KeylinedLabel(isTitle ? 64f : line.heading ? 44f : 32f, line.heading ? 3f : 2.5f, isTitle ? TitleFace : line.heading ? Display : Fine);
                 l.SetText(line.text.Length == 0 ? " " : line.text);
                 l.SetColor(line.heading ? Ember : Ash);
                 l.style.marginTop = line.heading ? 26f : 4f;
@@ -328,6 +346,7 @@ namespace JamKit.SkylineRepo
         {
             Show(Screen.Title);
             _title.style.display = DisplayStyle.Flex;
+            if (_splash != null) _splash.SetText(HellFlowText.Splash(_splashRng.Next()));
             OpenChapters(false);
             VesperErrands = null;
             _sel = 0;
@@ -428,7 +447,7 @@ namespace JamKit.SkylineRepo
             n.SetText(format(0f));
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -444,7 +463,7 @@ namespace JamKit.SkylineRepo
             n.SetText(word);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -458,7 +477,7 @@ namespace JamKit.SkylineRepo
             n.SetText("0 / " + offered);
             n.SetColor(Ash);
             cell.Add(n);
-            var l = new KeylinedLabel(24f, 2f, Display);
+            var l = new KeylinedLabel(24f, 2f, Fine);
             l.SetText(label);
             l.SetColor(Ember);
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
@@ -509,6 +528,11 @@ namespace JamKit.SkylineRepo
             switch (Showing)
             {
                 case Screen.Title:
+                    if (_splash != null)
+                    {
+                        float pulse = 1f + 0.06f * Mathf.Sin(now * Mathf.PI * 2f * 1.1f);   // a gentle pulse
+                        _splash.style.scale = new Scale(new Vector3(pulse, pulse, 1f));
+                    }
                     if (!skipInput) TitleInput();
                     break;
                 case Screen.Opening:

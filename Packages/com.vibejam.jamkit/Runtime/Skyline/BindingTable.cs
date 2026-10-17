@@ -6,7 +6,7 @@ namespace JamKit.Skyline
 {
     /// <summary>The buttons a player can rebind (the pause menu's Controls page). Moves and look stay on WASD / the left stick
     /// and the mouse / the right stick in this pass.</summary>
-    public enum BindAction { Jump, Crouch, Sprint, Fire, Aim, Reload, Swap, Inspect, Pause, ShadowStep, Rewind, Skill }
+    public enum BindAction { Jump, Crouch, Sprint, Fire, Aim, Reload, Swap, Inspect, Pause, ShadowStep, Rewind, Skill, Wheel }
 
     /// <summary>Which half of the table a binding lives in: the keyboard and mouse, or a pad.</summary>
     public enum BindDevice { KeyboardMouse, Pad }
@@ -34,14 +34,14 @@ namespace JamKit.Skyline
     /// </summary>
     public sealed class BindingTable
     {
-        public const int ActionCount = 12;
+        public const int ActionCount = 13;
         public const char Alt = '|';
         public const string Header = "skyline-bindings 1";
 
         public static readonly BindAction[] AllActions =
         {
             BindAction.Jump, BindAction.Crouch, BindAction.Sprint, BindAction.Fire, BindAction.Aim,
-            BindAction.Reload, BindAction.Swap, BindAction.Inspect, BindAction.ShadowStep, BindAction.Rewind, BindAction.Skill, BindAction.Pause,
+            BindAction.Reload, BindAction.Swap, BindAction.Inspect, BindAction.ShadowStep, BindAction.Rewind, BindAction.Skill, BindAction.Wheel, BindAction.Pause,
         };
 
         readonly string[,] _paths = new string[2, ActionCount];
@@ -67,6 +67,7 @@ namespace JamKit.Skyline
                     case BindAction.ShadowStep: return "<Keyboard>/e";
                     case BindAction.Rewind: return "<Keyboard>/v";
                     case BindAction.Skill: return "<Keyboard>/g";
+                    case BindAction.Wheel: return "<Keyboard>/tab";
                     default: return "<Keyboard>/escape";
                 }
             }
@@ -83,6 +84,7 @@ namespace JamKit.Skyline
                 case BindAction.ShadowStep: return "<Gamepad>/rightShoulder";
                 case BindAction.Rewind: return "<Gamepad>/leftShoulder";
                 case BindAction.Skill: return "<Gamepad>/dpad/down";
+                case BindAction.Wheel: return "<Gamepad>/dpad/left";
                 default: return "<Gamepad>/start";
             }
         }

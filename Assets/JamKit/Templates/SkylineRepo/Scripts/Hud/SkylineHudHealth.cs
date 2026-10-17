@@ -47,6 +47,13 @@ namespace JamKit.SkylineRepo
             _el.style.bottom = margin - ShardFall - 2f;
             _el.style.width = ElementW;
             _el.style.height = ElementH;
+            if (HellHudStyle.Active)
+            {
+                // Hell: the ember vessel (HellHudVessel; docs/HELL-UI.md), in the layout's bottom-left box
+                _el.AddToClassList("hell-vessel");
+                _el.style.bottom = StyleKeyword.Null;
+                HellHudStyle.Place(_el, JamKit.Skyline.HellHudPlaces.Vessel);
+            }
             _el.generateVisualContent += Draw;
             return _el;
         }
@@ -134,6 +141,11 @@ namespace JamKit.SkylineRepo
         {
             if (Model == null) return;
             var p = ctx.painter2D;
+            if (HellHudStyle.Active)
+            {
+                HellHudVessel.Draw(p, Model, _hasPlating, _shatterT >= 0f ? Mathf.Clamp01(_shatterT / ShatterSeconds) : -1f, _flash > 0f && Mathf.Repeat(_flash, 0.14f) > 0.07f);
+                return;
+            }
             float cf = Model.ChassisFrac, pf = Model.PlatingFrac, pulse = Model.LowPulse;
             float ox = OriginX, oy = OriginY;
 

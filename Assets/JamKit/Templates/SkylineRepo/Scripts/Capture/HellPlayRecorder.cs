@@ -97,6 +97,7 @@ namespace JamKit.SkylineRepo
             if (SkylineBindings.Held(KM, BindAction.ShadowStep, mouseOk) || SkylineBindings.Held(Pad, BindAction.ShadowStep, mouseOk)) b |= HellReplayButtons.StepHeld;
             if (SkylineBindings.Pressed(KM, BindAction.Rewind, mouseOk) || SkylineBindings.Pressed(Pad, BindAction.Rewind, mouseOk)) b |= HellReplayButtons.RewindPressed;
             if (SkylineBindings.Pressed(KM, BindAction.Skill, mouseOk) || SkylineBindings.Pressed(Pad, BindAction.Skill, mouseOk)) b |= HellReplayButtons.SkillPressed;
+            if (HellAbilityWheel.IsOpen) b |= HellReplayButtons.WheelHeld;
             var p = _player.transform.position;
             _rec.frames.Add(new HellReplayFrame
             {

@@ -246,6 +246,9 @@ namespace JamKit.Skyline
                 case "DOT": return (1f, 0.8f, 0.35f);
                 case "NAN": return (0.55f, 0.92f, 0.85f);
                 case "CONCIERGE": return (0.96f, 0.88f, 0.62f);
+                // Hell (docs/HELL-UI.md): Baja, the God of Death, in hourglass sand (Time is hers); Vesper in violet (Shadow)
+                case "BAJA": return (0.95f, 0.78f, 0.42f);
+                case "VESPER": return (0.72f, 0.56f, 1f);
                 default: return (1f, 1f, 1f);
             }
         }
