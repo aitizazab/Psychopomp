@@ -25,6 +25,12 @@ namespace JamKit.SkylineRepo
         /// <summary>What the player feels: player/hurt, player/plating_break and CONCIERGE's PA chime and sting. At the guns' level, so
         /// the player's own hit feedback is never buried under the bots' noise.</summary>
         Feedback,
+        /// <summary>The player's own Hell abilities (hell/&lt;ability id&gt;, HellSoundTable's Ability bus): at the guns' level, never
+        /// slowed or muffled by Time Dilation, never ducking the bots.</summary>
+        Abilities,
+        /// <summary>The Hell rooms (hell/world/...: lava, platforms, objectives, the shaft): between the guns and the bots, slowed and
+        /// muffled by Time Dilation with the bots and the beds.</summary>
+        World,
     }
 
     /// <summary>
@@ -61,22 +67,24 @@ namespace JamKit.SkylineRepo
             1f,     // Voices    (the lines carry their own level, SkylineMix.VoiceGain; the player's slider scales it)
             1f,     // Music     (none yet)
             0.79f,  // Feedback  (-2 dB: the player's own hurt and plating cues; they were on the bots' bus, 9 dB down)
+            0.79f,  // Abilities (-2 dB: the Hell abilities at the guns' level; they were on the bots' bus, 10 dB down)
+            0.5f,   // World     (-6 dB: the Hell rooms' lava, platforms, objectives and shaft)
         };
 
         /// <summary>How far each category ducks (dB) while a teaching line is spoken (a bark ducks by
         /// <see cref="BarkDuckShare"/> of it). The handling never ducks: a reload must stay audible.</summary>
-        public static readonly float[] DuckDb = { -3f, 0f, -4f, -8f, -9f, 0f, 0f, 0f };
+        public static readonly float[] DuckDb = { -3f, 0f, -4f, -8f, -9f, 0f, 0f, 0f, -3f, -6f };
 
         /// <summary>How far each category ducks (dB) under the player's own shots and hits (the sidechain: the bots' chatter gets out
         /// of the way of the gun while a shot, an impact or a hurt cue plays, then comes back over <see cref="ShotRelease"/>).</summary>
-        public static readonly float[] ShotDuckDb = { 0f, 0f, 0f, -5f, -4f, 0f, 0f, 0f };
+        public static readonly float[] ShotDuckDb = { 0f, 0f, 0f, -5f, -4f, 0f, 0f, 0f, 0f, -3f };
         /// <summary>How long a player sound holds the sidechain, by kind (seconds): a shot, an impact, hurt feedback.</summary>
         public const float ShotHold = 0.30f, ImpactHold = 0.18f, FeedbackHold = 0.35f;
         /// <summary>Sidechain time constants (seconds): in fast, out smoothly.</summary>
         public const float ShotAttack = 0.015f, ShotRelease = 0.30f;
 
         /// <summary>Unity voice priority per category (0 = most important).</summary>
-        public static readonly int[] Priority = { 16, 32, 48, 128, 200, 24, 220, 20 };
+        public static readonly int[] Priority = { 16, 32, 48, 128, 200, 24, 220, 20, 22, 100 };
 
         /// <summary>The arena's teaching-line voice (the 2D source the lines are spoken from): its level on the bus.</summary>
         public const float VoiceGain = 0.8f;
@@ -186,6 +194,7 @@ namespace JamKit.SkylineRepo
         public static SkylineSoundCategory CategoryOf(string sound)
         {
             if (string.IsNullOrEmpty(sound)) return SkylineSoundCategory.Bots;
+            if (sound.StartsWith("hell/", StringComparison.Ordinal)) return OfHellBus(HellSoundTable.BusOf(sound));
             if (sound.EndsWith("/idle_loop", StringComparison.Ordinal) || sound == "writ/hush") return SkylineSoundCategory.Ambience;
             if (sound.StartsWith("impact/", StringComparison.Ordinal)) return SkylineSoundCategory.Impacts;
             if (sound.StartsWith("player/", StringComparison.Ordinal) || sound.StartsWith("concierge/", StringComparison.Ordinal))
@@ -205,6 +214,23 @@ namespace JamKit.SkylineRepo
             }
             return SkylineSoundCategory.Bots;
         }
+
+        /// <summary>The mix category of a Hell sound's bus (HellSoundTable, docs/HELL-SOUND-PASS.md).</summary>
+        public static SkylineSoundCategory OfHellBus(HellSoundBus bus)
+        {
+            switch (bus)
+            {
+                case HellSoundBus.Ability: return SkylineSoundCategory.Abilities;
+                case HellSoundBus.World: return SkylineSoundCategory.World;
+                case HellSoundBus.Bed: return SkylineSoundCategory.Ambience;
+                case HellSoundBus.Ui: return SkylineSoundCategory.Feedback;
+                default: return SkylineSoundCategory.Bots;
+            }
+        }
+
+        /// <summary>True for a category Time Dilation slows and muffles (HellSoundTable.Dilated: the bots, the world, the beds).</summary>
+        public static bool Dilated(SkylineSoundCategory c) =>
+            c == SkylineSoundCategory.Bots || c == SkylineSoundCategory.World || c == SkylineSoundCategory.Ambience;
 
         /// <summary>The player's own volume for a category (the pause menu's Audio page): Voices and Music have a slider each;
         /// every other category is an effect. The master volume is the listener's (SkylineSettings.ApplyMaster).</summary>
@@ -291,6 +317,7 @@ namespace JamKit.SkylineRepo
         public static string GroupOf(string sound)
         {
             if (string.IsNullOrEmpty(sound) || CategoryOf(sound) != SkylineSoundCategory.Bots) return null;
+            if (sound.StartsWith("hell/scythe/", StringComparison.Ordinal)) return null;   // a scythe's beam is a warning: never gated
             int slash = sound.LastIndexOf('/');
             string kind = slash >= 0 ? sound.Substring(slash + 1) : sound;
             switch (kind)
