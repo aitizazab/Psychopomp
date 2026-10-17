@@ -46,7 +46,7 @@ namespace JamKit.Skyline
         public const string QuickStep = "quick_step";
         /// <summary>Rewind's cooldown 3 s shorter (not under 11 s).</summary>
         public const string ShortMemory = "short_memory";
-        /// <summary>Time Dilation holds 0.75 s longer.</summary>
+        /// <summary>Time Dilation's fuel lasts 0.75 s longer.</summary>
         public const string LongBreath = "long_breath";
 
         public const float QuickStepSeconds = 1f, QuickStepFloor = 3f, ShortMemorySeconds = 3f, ShortMemoryFloor = 11f, LongBreathSeconds = 0.75f;
@@ -71,7 +71,7 @@ namespace JamKit.Skyline
                 case Mend: return "Mended: plating and chassis full";
                 case QuickStep: return "Quick Shadow: Shadow Step recharges 1 s sooner";
                 case ShortMemory: return "Short Memory: Rewind cools down 3 s sooner";
-                case LongBreath: return "Long Breath: Time Dilation holds 0.75 s longer";
+                case LongBreath: return "Long Breath: Time Dilation's fuel lasts 0.75 s longer";
                 default: return boon;
             }
         }

@@ -60,11 +60,11 @@ namespace JamKit.Skyline
             new HellLine("tut.shadowstep.done", HellSpeakers.Death, "Look at you. A little shadow. Adorable."),
 
             new HellLine("tut.rewind.1", HellSpeakers.Death, "Ooh, that looked fatal. Take four seconds back. I have plenty."),
-            new HellLine("tut.rewind.hint", HellSpeakers.Hint, "{Rewind}   REWIND 4 SECONDS"),
+            new HellLine("tut.rewind.hint", HellSpeakers.Hint, "{Rewind}   REWIND 4 SECONDS   THEN HEAL A QUARTER"),
             new HellLine("tut.rewind.done", HellSpeakers.Death, "See? Time is cheap when it isn't yours."),
 
             new HellLine("tut.dilation.1", HellSpeakers.Death, "You're quick. Aim while you're quick and the world waits for you. Rude of it, really."),
-            new HellLine("tut.dilation.hint", HellSpeakers.Hint, "AIM {Aim} WHILE MOVING FAST   TIME SLOWS"),
+            new HellLine("tut.dilation.hint", HellSpeakers.Hint, "AIM {Aim} WHILE MOVING FAST   TIME SLOWS WHILE THE GAUGE LASTS"),
             new HellLine("tut.dilation.done", HellSpeakers.Death, "Faster you go, slower it gets. Don't think about it too hard."),
 
             new HellLine("tut.lava.1", HellSpeakers.Death, "That's lava. It's hot. I'm told that's the main thing about it."),

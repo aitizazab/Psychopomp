@@ -90,10 +90,10 @@ namespace JamKit.SkylineRepo
                     if (a.StepCharges != null) a.StepCharges.Recharge = HellJobBoons.StepRecharge(a.StepCharges.Recharge);
                     break;
                 case HellJobBoons.ShortMemory:
-                    if (a.Rewind != null && a.Rewind.Cooldown != null) a.Rewind.Cooldown.Duration = HellJobBoons.RewindCooldown(a.Rewind.Cooldown.Duration);
+                    if (a.Rewind != null) a.Rewind.cooldown = HellJobBoons.RewindCooldown(a.Rewind.cooldown);   // the field: HellRewind copies it into Cooldown.Duration each frame
                     break;
                 case HellJobBoons.LongBreath:
-                    a.dilationHold += HellJobBoons.LongBreathSeconds;
+                    a.dilationFuelSeconds += HellJobBoons.LongBreathSeconds;   // a bigger tank (it refills at the same share)
                     break;
             }
         }

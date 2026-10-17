@@ -184,7 +184,7 @@ Lucifer grew bored of her after a century; she is lost without purpose.
 
 The jobs' gifts (HUD text, not voiced; jobs: `HellJobBoons.Describe`): "Mended: plating and chassis full", "Quick
 Shadow: Shadow Step recharges 1 s sooner", "Short Memory: Rewind cools down 3 s sooner", "Long Breath: Time Dilation
-holds 0.75 s longer", "Her gift: <skill>". The fail reasons (`HellJobDirector`): "He got away.", "The ledger was
+fuel lasts 0.75 s longer", "Her gift: <skill>". The fail reasons (`HellJobDirector`): "He got away.", "The ledger was
 filed.", "You left the room."
 
 ### 8.2 Vesper's third beat: she sees herself in you

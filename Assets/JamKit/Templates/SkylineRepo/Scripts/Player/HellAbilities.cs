@@ -14,11 +14,14 @@ namespace JamKit.SkylineRepo
     /// arrive there at once keeping your velocity. The landing must be reachable ground or a ledge within 18 m in sight
     /// (<see cref="BlinkPlanner"/>) and dark (<see cref="HellDarkness"/>; lava too with Ashwalker). Charges (1; 2 with
     /// Ambush), 6 s each. Dark smoke at both ends. Blocked while <see cref="ShadowStepBlocked"/>.</item>
-    /// <item><b>Rewind</b> (V / LB): the whole game goes back 4 s (6 with Deeper Rewind), cooldown 20 s
-    /// (<see cref="HellRewind"/>). This component is also the player's <see cref="IHellRewindable"/>.</item>
-    /// <item><b>Time Dilation</b> (passive): pressing aim down sights slows time for 3 s after the press, by the speed at the
-    /// press (<see cref="DilationCurve"/>: none standing, 0.35x at slide speed), easing 0.15 s in and out; the look stays
-    /// real-time (the player reads look on unscaled time). Through <see cref="HellTime"/>.</item>
+    /// <item><b>Rewind</b> (V / LB): the whole game goes back 4 s (6 with Deeper Rewind), cooldown 30 s
+    /// (<see cref="HellRewind"/>), then mends 25% of the max health and of the max shields over 4 s (<see cref="Mend"/>; a
+    /// new Rewind restarts the mend, never stacks it). This component is also the player's <see cref="IHellRewindable"/>.</item>
+    /// <item><b>Time Dilation</b> (passive, a fuel gauge, the creator 2026-10-18): pressing aim down sights slows time by the
+    /// speed at the press (<see cref="DilationCurve"/>: none standing, 0.35x at slide speed) while you keep aiming and the
+    /// fuel lasts (<see cref="Fuel"/>: full to empty in 4 s of use, refills in 8 s out of use, needs 25% to start), easing
+    /// 0.15 s in and out; aiming when it can't start, or after it ran dry, is plain aiming. The look stays real-time (the
+    /// player reads look on unscaled time). Through <see cref="HellTime"/>. The HUD reads <see cref="DilationFuel01"/>.</item>
     /// <item><b>Floor skills</b>: <see cref="Grant"/> adds a skill's component (<see cref="HellSkills"/>); <see cref="Has"/>
     /// asks. The skills hook <see cref="Stepped"/>, <see cref="HellRewind.Rewound"/>, the player's gun and damage events,
     /// <see cref="SkylineBot.Killed"/> and <see cref="HellTime"/>.</item>
@@ -43,6 +46,12 @@ namespace JamKit.SkylineRepo
         /// <summary>Off: nothing is added to the player (scripted demos that must stay as they were).</summary>
         public static bool AutoAttach = true;
         public static HellAbilities Instance { get; private set; }
+        /// <summary>Time Dilation's fuel, 0 empty to 1 full (1 when there is no player): for the HUD's gauge.</summary>
+        public static float DilationFuel01 => Instance != null ? Instance.Fuel.Fuel01 : 1f;
+        /// <summary>Time Dilation is slowing time now (the fuel draining).</summary>
+        public static bool DilationInUse => Instance != null && Instance.Fuel.InUse;
+        /// <summary>Time Dilation could start on the next aim press (at least 25% fuel).</summary>
+        public static bool DilationCanStart => Instance == null || Instance.Fuel.CanStart;
 
         // ------------------------------------------------------------------ tuning
 
@@ -52,7 +61,11 @@ namespace JamKit.SkylineRepo
         public float minAimSeconds = 0f;
         [Header("Time Dilation")]
         public DilationCurve dilationCurve = new DilationCurve();
-        public float dilationHold = 3f, dilationEase = 0.15f;
+        [Tooltip("Seconds of slow-down a full gauge holds (the Long Breath boon adds to it); it refills at half that rate.")]
+        public float dilationFuelSeconds = 4f;
+        public float dilationEase = 0.15f;
+        [Header("Rewind's mend")]
+        public float rewindMendShare = 0.25f, rewindMendSeconds = 4f;
         public MomentumBank momentumBank = new MomentumBank();
         [Header("Skills")]
         public float umbralChainWindow = 1f;
@@ -66,6 +79,10 @@ namespace JamKit.SkylineRepo
         public HellTargeting Targeting { get; private set; }
         public AbilityCharges StepCharges { get; private set; }
         public TimeDilationState Dilation { get; } = new TimeDilationState();
+        /// <summary>Time Dilation's fuel gauge (real seconds; not rewound).</summary>
+        public DilationFuel Fuel { get; } = new DilationFuel();
+        /// <summary>The Rewind's mend over time (game time; not rewound: it starts after the restore).</summary>
+        public RewindMend Mend { get; } = new RewindMend();
         /// <summary>The Shadow Step preview this frame (valid or why not), while aiming.</summary>
         public BlinkPlan Preview => _plan;
         public bool Aiming => _aiming;
@@ -79,7 +96,7 @@ namespace JamKit.SkylineRepo
         readonly UnityBlinkWorld _world = new UnityBlinkWorld();
         BlinkPlan _plan;
         bool _aiming, _aimWas;
-        float _aimSince, _chainUntil = -1f, _lavaImmuneUntil = -1f, _lastJumpAt = -10f;
+        float _aimSince, _chainUntil = -1f, _lavaImmuneUntil = -1f, _lastJumpAt = -10f, _drainScale = 1f;
         GameObject _marker;
 
         // ------------------------------------------------------------------ setup
@@ -173,6 +190,7 @@ namespace JamKit.SkylineRepo
                 if (Rewind.TryRewind()) OnRewound();
                 else HellAbilityAudio.Play("rewind_denied", transform.position);
             }
+            TickMend(dt, wrecked);
             TickDilation(udt);
         }
 
@@ -306,7 +324,28 @@ namespace JamKit.SkylineRepo
             HellFx.RewindFlash();
             HellAbilityAudio.Play("rewind", transform.position);
             Dilation.Cancel();
+            Fuel.Stop();
             CancelAim();
+            StartMend();
+        }
+
+        /// <summary>The Rewind's mend: 25% of the max health and shields over 4 s, from the restored values. Called after every
+        /// Rewind the player presses; a running mend restarts rather than stacks.</summary>
+        public void StartMend()
+        {
+            Mend.share = rewindMendShare;
+            Mend.seconds = rewindMendSeconds;
+            Mend.Start();
+            Debug.Log("HELL_REWIND mend " + (rewindMendShare * 100f).ToString("0") + "% over " + rewindMendSeconds.ToString("0.#") + " s");
+        }
+
+        void TickMend(float dt, bool wrecked)
+        {
+            var ar = Player.Armor;
+            if (wrecked || ar == null) { Mend.Cancel(); return; }
+            if (!Mend.Active) return;
+            float k = Mend.Tick(dt);
+            if (k > 0f) ar.Restore(ar.Plating + k * ar.PlatingMax, ar.Chassis + k * ar.ChassisMax);
         }
 
         readonly HellSnapPool<SkylinePlayer.RewindState> _snaps = new HellSnapPool<SkylinePlayer.RewindState>();
@@ -320,23 +359,32 @@ namespace JamKit.SkylineRepo
 
         // ------------------------------------------------------------------ Time Dilation
 
+        /// <summary>The fuel gauge: an aim press while moving fast starts it (if at least 25% is left), at a strength set by the
+        /// speed at the press (the old rule, kept); it lasts while the aim is held and the fuel lasts. Letting go of the aim
+        /// or running dry eases time back; holding the aim on after that, or pressing with too little fuel, is plain aiming.</summary>
         void TickDilation(float udt)
         {
             bool aim = Player.AimWanted;
+            Fuel.drainSeconds = dilationFuelSeconds;
             if (aim && !_aimWas)
             {
                 var mc = Player.Movement;
                 float speed = mc != null ? mc.Speed : 0f;
                 float target = dilationCurve.Scale(speed);
-                if (target < 0.995f)
+                if (target < 0.995f && Fuel.TryStart())
                 {
-                    Dilation.holdSeconds = Has(HellSkills.MomentumBank) ? momentumBank.Hold(speed) : dilationHold;
+                    // Momentum Bank: the faster the press, the slower the fuel drains (up to twice as long at full speed)
+                    _drainScale = Has(HellSkills.MomentumBank) ? momentumBank.baseHold / Mathf.Max(0.01f, momentumBank.Hold(speed)) : 1f;
+                    Dilation.holdSeconds = Fuel.SecondsLeft(_drainScale);
                     Dilation.easeIn = Dilation.easeOut = dilationEase;
                     if (!Dilation.Active) HellAbilityAudio.Play("dilation_in", transform.position);
                     Dilation.Press(target);
-                    Debug.Log("HELL_DILATION speed=" + speed.ToString("0.0") + " scale=" + target.ToString("0.00") + " hold=" + Dilation.holdSeconds.ToString("0.0"));
+                    Debug.Log("HELL_DILATION speed=" + speed.ToString("0.0") + " scale=" + target.ToString("0.00") + " fuel=" + Fuel.Fuel01.ToString("0.00") + " lasts=" + Dilation.holdSeconds.ToString("0.0"));
                 }
+                else if (target < 0.995f) Debug.Log("HELL_DILATION refused: fuel " + Fuel.Fuel01.ToString("0.00") + " (needs " + Fuel.minToStart.ToString("0.00") + ")");
             }
+            if (Fuel.InUse && !aim) { Fuel.Stop(); Dilation.Release(); }
+            if (Fuel.Tick(udt, _drainScale)) { Dilation.Release(); Debug.Log("HELL_DILATION fuel ran dry"); }
             _aimWas = aim;
             bool was = Dilation.Active;
             float scale = Dilation.Tick(udt);

@@ -137,10 +137,62 @@ namespace JamKit.Tests.Skyline
             Assert.That(HellRoomLayouts.CollapseTileSeconds(HellRoomLayouts.CollapseStartZ, false), Is.EqualTo(HellRoomLayouts.CollapseFastDelay), "the bridge starts falling at its start, after the delay");
             var r = HellRoomLayouts.Build(HellRoomKind.Collapse);
             Assert.That(r.hazards.Count(h => h.Timeline), Is.GreaterThan(25));
-            Assert.That(r.exitGateId, Is.Empty);
+            Assert.That(r.exitGateId, Is.EqualTo("exit-gate"), "the Collapse's gate opens when you reach the exit (the 2026-10-18 softlock)");
             Assert.That(HellRoomLayouts.CollapseFastLaneSpeed, Is.GreaterThan(new MoveDef().sprintSpeed), "the fast lane's front outruns a sprint");
             Assert.That(HellRoomLayouts.CollapseSafeLaneSpeed, Is.LessThan(new MoveDef().sprintSpeed));
             Assert.That(HellRoomLayouts.CollapseFrontZ(HellRoomLayouts.CollapseTileSeconds(80f, false), false), Is.EqualTo(80f).Within(1e-3));
+        }
+
+        /// <summary>The 2026-10-18 softlock (the creator stuck in The Collapse with the objective done): in every room, base
+        /// layout and floor variant, the exit is passable once the objective is done. The exit gate is named (HellRoom opens
+        /// exactly <c>exitGateId</c> on Done), every gate solid is one something opens, and from just inside the exit doorway
+        /// to the drop hole and down into its zone nothing solid stands in a body's way except that gate.</summary>
+        [Test]
+        public void EveryRoomsExitIsPassableOnceTheObjectiveIsDone()
+        {
+            var rooms = Kinds.Select(k => HellRoomLayouts.Build(k)).Concat(HellRoomVariants.All()).ToList();
+            foreach (var r in rooms)
+            {
+                string who = r.name + " (floor " + r.floor + ")";
+                Assert.That(r.exitGateId, Is.Not.Empty, who + ": the exit gate must be named, or nothing opens it");
+                var gate = r.Solid(r.exitGateId);
+                Assert.That(gate, Is.Not.Null, who + ": the exit gate id names no solid");
+                Assert.That(gate.role, Is.EqualTo("gate"), who);
+                foreach (var s in r.solids.Where(s => s.role == "gate"))
+                    Assert.That(s.id == r.exitGateId || s.id == r.innerGateId, Is.True, who + ": gate " + s.id + " is never opened");
+                // a body's way: 1 m inside the exit doorway at chest height, over the corridor to above the hole, then down
+                var drop = (r.dropZone.min + r.dropZone.max) * 0.5f;
+                Assert.That(HellRoomLint.Contains(r.dropZone, drop), Is.True, who);
+                var b = new Vector3(drop.X, r.exit.Y + 1f, drop.Z);
+                var way = new Vector3(b.X - r.exit.X, 0f, b.Z - r.exit.Z);
+                Assert.That(way.Length(), Is.GreaterThan(0.5f), who + ": the drop hole is beyond the doorway");
+                var a = r.exit - Vector3.Normalize(way) + new Vector3(0f, 1f, 0f);
+                Assert.That(SegmentHits(gate.box, a, b, 0f), Is.True, who + ": the exit gate should stand across the way out (else this test checks the wrong way)");
+                foreach (var s in r.solids)
+                {
+                    if (s.id == r.exitGateId) continue;
+                    Assert.That(SegmentHits(s.box, a, b, 0.3f), Is.False, who + ": " + s.id + " (" + s.role + ") blocks the exit corridor");
+                    Assert.That(SegmentHits(s.box, b, drop, 0.3f), Is.False, who + ": " + s.id + " (" + s.role + ") blocks the drop hole");
+                }
+            }
+        }
+
+        /// <summary>Does the segment a-b pass through the box grown by <paramref name="pad"/> on X and Z (slab test)?</summary>
+        static bool SegmentHits(CoverBox box, Vector3 a, Vector3 b, float pad)
+        {
+            Vector3 lo = box.min - new Vector3(pad, 0f, pad), hi = box.max + new Vector3(pad, 0f, pad), d = b - a;
+            float t0 = 0f, t1 = 1f;
+            for (int i = 0; i < 3; i++)
+            {
+                float o = i == 0 ? a.X : i == 1 ? a.Y : a.Z, v = i == 0 ? d.X : i == 1 ? d.Y : d.Z;
+                float l = i == 0 ? lo.X : i == 1 ? lo.Y : lo.Z, h = i == 0 ? hi.X : i == 1 ? hi.Y : hi.Z;
+                if (System.Math.Abs(v) < 1e-6f) { if (o <= l || o >= h) return false; continue; }
+                float u0 = (l - o) / v, u1 = (h - o) / v;
+                if (u0 > u1) { var t = u0; u0 = u1; u1 = t; }
+                t0 = System.Math.Max(t0, u0); t1 = System.Math.Min(t1, u1);
+                if (t0 >= t1) return false;
+            }
+            return true;
         }
 
         // ------------------------------------------------------------------ The Collapse, run in the movement engine

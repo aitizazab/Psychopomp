@@ -437,7 +437,8 @@ namespace JamKit.Skyline
             // the fast line: up the hall kicking between the stalactites (HellFastLines.Collapse), down the central lane
             k.r.fastPath.AddRange(new[] { k.r.entry, V(0.6f, 0, 26), V(0, 2, 40), V(0, 0, 56), V(0, 0, 78), k.r.exit });
             k.Stop("exit", V(0, 0, L - 2f), 2.5f);
-            k.r.exitGateId = "";
+            // the exit gate stays the shell's "exit-gate": HellRoom opens it when you reach the exit (rooms3 left it unnamed, so
+            // nothing opened it and its collider shut the doorway to the drop hole: the creator's softlock, 2026-10-18)
             k.Spawn(HellEnemyRole.Imp, V(-12, 6, 40));
             k.Spawn(HellEnemyRole.Imp, V(8, 6, 66));
             k.Spawn(HellEnemyRole.Imp, V(-12, 6, 92), minFloor: 2);

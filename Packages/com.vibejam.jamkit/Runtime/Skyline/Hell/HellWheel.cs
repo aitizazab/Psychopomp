@@ -136,8 +136,8 @@ namespace JamKit.Skyline
 
         public static string GiftDescription(string id) =>
             id == HellWheelSlots.ShadowStep ? "Hold to aim, release to arrive. Only into darkness."
-            : id == HellWheelSlots.Rewind ? "Pull you, your foes and their shots back a few seconds."
-            : id == HellWheelSlots.Dilation ? "Aim while moving fast: the faster you go, the slower the world."
+            : id == HellWheelSlots.Rewind ? "Pull you, your foes and their shots back a few seconds, then heal a quarter."
+            : id == HellWheelSlots.Dilation ? "Aim while moving fast: the faster you go, the slower the world, while the gauge lasts."
             : "";
 
         static readonly string[] SecondsCache = new string[121];

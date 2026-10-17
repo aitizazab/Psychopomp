@@ -97,7 +97,7 @@ namespace JamKit.SkylineRepo
         Page _page = Page.Main;
         int _sel, _col;
         bool _dirtyUi = true, _dirtyOptions, _resumePending, _evLive, _evPressed, _evReleased, _evHeld;
-        float _prevScale = 1f, _lastCommit, _quitArmedUntil = -1f, _navNext;
+        float _prevScale = 1f, _lastCommit, _quitArmedUntil = -1f, _titleArmedUntil = -1f, _navNext;
         Vector2 _evPos, _lastPtr;
         Vector2Int _navPrev;
         Item _drag;
@@ -411,6 +411,10 @@ namespace JamKit.SkylineRepo
                     bool hellScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.StartsWith("Hell");
                     if (!hellScene) AddButton(() => SkylineRelayMode.Active ? "Relay (test): new run" : "Relay (test)", () => { Close(); SkylineRelayMode.Restart(true); });
                     if (!hellScene && SkylineRelayMode.Active) AddButton(() => "Back to the normal mode", () => { Close(); SkylineRelayMode.Restart(false); });
+                    // Hell's safety nets (2026-10-18): start the room over (no death counted), or go back to the title
+                    if (hellScene && HellRunDirector.CanRestartRoom) AddButton(() => "Restart room", () => { Close(); HellRunDirector.RestartRoom(); });
+                    if (hellScene && HellRunDirector.InGame)
+                        AddButton(() => Time.unscaledTime < _titleArmedUntil ? "Return to title: press again to confirm" : "Return to title", TitlePressed);
                     AddButton(() => Time.unscaledTime < _quitArmedUntil ? "Quit to desktop: press again to confirm" : "Quit to desktop", QuitPressed);
                     break;
                 case Page.Audio:
@@ -464,6 +468,20 @@ namespace JamKit.SkylineRepo
                     break;
             }
             if (page != Page.Controls) _hint.text = "D-pad or stick: move and adjust     A / Cross: select     B / Circle: back     Esc / Start: resume";
+            _dirtyUi = true;
+        }
+
+        void TitlePressed()
+        {
+            if (Time.unscaledTime < _titleArmedUntil)
+            {
+                _titleArmedUntil = -1f;
+                Debug.Log("SKYLINE_PAUSE return to title");
+                Close();
+                HellRunDirector.ReturnToTitle();
+                return;
+            }
+            _titleArmedUntil = Time.unscaledTime + QuitConfirmSeconds;
             _dirtyUi = true;
         }
 
@@ -550,9 +568,14 @@ namespace JamKit.SkylineRepo
                 return;
             }
 
+            // the frame it opened from code (the Hell title's Settings, picked with A / Enter, runs earlier in the frame): that
+            // press is not also a pick in here (it chose "Resume" and closed the menu at once on the pad, 2026-10-18)
+            if (Time.frameCount == _openedFrame) return;
+
             float now = Time.unscaledTime;
             if (_dirtyOptions && now - _lastCommit > CommitInterval) CommitOptions();
             if (_quitArmedUntil > 0f && now >= _quitArmedUntil) { _quitArmedUntil = -1f; _dirtyUi = true; }
+            if (_titleArmedUntil > 0f && now >= _titleArmedUntil) { _titleArmedUntil = -1f; _dirtyUi = true; }
 
             if (_capturing) UpdateCapture();
             else
@@ -584,9 +607,12 @@ namespace JamKit.SkylineRepo
             return _player.ScriptedInput == null;
         }
 
+        int _openedFrame = -1;
+
         void Open()
         {
             IsOpen = true;
+            _openedFrame = Time.frameCount;
             _resumePending = false;
             SkylineDeviceInput.Paused = true;
             _prevScale = Time.timeScale > 0f ? Time.timeScale : 1f;

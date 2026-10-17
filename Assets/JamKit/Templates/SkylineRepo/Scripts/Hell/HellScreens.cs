@@ -13,7 +13,9 @@ namespace JamKit.SkylineRepo
     /// cards, a floor's intro card, the credits and the stats. Dark and ember: a black-to-ember gradient, drifting embers, the
     /// HUD's keylined display faces. Words come from <see cref="HellFlowText"/>. While a screen shows, the game holds still
     /// (the time scale is 0, the player's input is empty, the cursor is free) and the pause menu's binding is left to the
-    /// screen (but the title's Settings opens the pause menu, and Escape on the title does too). Keyboard and mouse
+    /// screen (the title's Settings opens the pause menu, and Escape / Start on the title's main list do too; in a sub-list,
+    /// the difficulty question, the chapters, the errands question, Escape / B / Start go back a list instead, and the
+    /// difficulty and the chapters have a Back row for the mouse; 2026-10-18). Keyboard and mouse
     /// (arrows / W S, Enter / Space, click; Escape skips) and pad (D-pad or stick, A, B or Start skips). Made by the
     /// <see cref="HellRunDirector"/> at run time (no scene setup), on the HUD's panel settings.
     /// </summary>
@@ -225,6 +227,7 @@ namespace JamKit.SkylineRepo
             body.style.marginBottom = 30f;
             _difficultyBox.Add(body);
             foreach (var word in HellHourLines.DifficultyChoices) _difficultyMenu.Add(MenuItem(_difficultyBox, word, 40f));
+            _difficultyMenu.Add(MenuItem(_difficultyBox, HellFlowText.Back, 36f));   // a way back for the mouse (Start by accident)
             _difficultyBox.style.display = DisplayStyle.None;
         }
 
@@ -507,8 +510,9 @@ namespace JamKit.SkylineRepo
             _cardSpeaker.style.display = _cardText.style.display = DisplayStyle.Flex;
             _floorNumber.style.display = _floorName.style.display = _floorTagline.style.display = DisplayStyle.None;
             Hold();
-            // Escape skips a card; on the title it opens the pause menu (the settings)
-            SkylinePauseMenu.Blocked = s != Screen.Title;
+            // Escape skips a card; on the title the screen itself opens the pause menu (the settings) from its main list only,
+            // so a sub-list's Escape / B / Start goes back instead of also opening the menu
+            SkylinePauseMenu.Blocked = true;
         }
 
         // ------------------------------------------------------------------ the frame
@@ -639,12 +643,23 @@ namespace JamKit.SkylineRepo
             else if (_errandsOpen && SkipPressed()) { OpenChapters(true); _sel = HellFlow.VesperChapter; SyncMenu(); }
             else if (_chaptersOpen && SkipPressed()) OpenChapters(false);
             else if (_difficultyOpen && SkipPressed()) OpenDifficulty(false);
+            else if (!_chaptersOpen && !_errandsOpen && !_difficultyOpen && MenuPressed()) SkylinePauseMenu.OpenMenu();
+        }
+
+        /// <summary>Escape or the pad's Start / Menu (or whatever the Pause binding is): the title's main list opens the settings.</summary>
+        static bool MenuPressed()
+        {
+            var kb = Keyboard.current;
+            var pad = Gamepad.current;
+            return (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.startButton.wasPressedThisFrame)
+                || SkylineBindings.Pressed(BindDevice.KeyboardMouse, BindAction.Pause, true) || SkylineBindings.Pressed(BindDevice.Pad, BindAction.Pause, true);
         }
 
         void Activate(int i)
         {
             if (_difficultyOpen)
             {
+                if (i >= HellHourLines.DifficultyChoices.Length) { OpenDifficulty(false); return; }   // Back
                 SkylineSettings.Options.difficulty = (int)HellHourRules.FromInt(i);
                 SkylineSettings.Commit();
                 Debug.Log("HELL_FLOW difficulty " + HellHourRules.FromInt(i));

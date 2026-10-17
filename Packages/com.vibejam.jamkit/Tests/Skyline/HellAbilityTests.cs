@@ -206,6 +206,111 @@ namespace JamKit.Tests.Skyline
             Assert.That(d.Scale, Is.EqualTo(0.8f).Within(1e-5f));
         }
 
+        // ---------------------------------------------------------------- the 2026-10-18 rules: the fuel gauge, the Rewind's mend
+
+        static void Run(DilationFuel f, float seconds, float drainScale = 1f)
+        {
+            for (int i = 0; i < (int)Math.Round(seconds / 0.01f); i++) f.Tick(0.01f, drainScale);
+        }
+
+        [Test]
+        public void DilationFuelDrainsInFourSecondsAndRefillsInEight()
+        {
+            var f = new DilationFuel();
+            Assert.That(f.Fuel01, Is.EqualTo(1f));
+            Assert.That(f.TryStart(), Is.True);
+            Run(f, 2f);
+            Assert.That(f.Fuel01, Is.EqualTo(0.5f).Within(0.01f));
+            Assert.That(f.InUse, Is.True);
+            Run(f, 2.05f);
+            Assert.That(f.Fuel01, Is.LessThan(0.01f), "dry (and refilling the few steps since)");
+            Assert.That(f.InUse, Is.False, "it stops itself when it runs dry");
+            Assert.That(f.RefillSeconds, Is.EqualTo(8f).Within(1e-4f));
+            Run(f, 4f);
+            Assert.That(f.Fuel01, Is.EqualTo(0.5f).Within(0.01f), "half the drain rate: 4 s refills half");
+            Run(f, 4.1f);
+            Assert.That(f.Fuel01, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void DilationFuelNeedsAQuarterToStartAndStopsOnRelease()
+        {
+            var f = new DilationFuel();
+            f.TryStart();
+            Run(f, 4.1f);                                        // dry
+            Assert.That(f.CanStart, Is.False);
+            Assert.That(f.TryStart(), Is.False, "aiming with no fuel is plain aiming");
+            Run(f, 1.9f);                                        // 0.2375 refilled
+            Assert.That(f.TryStart(), Is.False);
+            Run(f, 0.2f);                                        // 0.2625
+            Assert.That(f.TryStart(), Is.True);
+            Run(f, 0.5f);
+            f.Stop();
+            float left = f.Fuel01;
+            Run(f, 1f);
+            Assert.That(f.Fuel01, Is.GreaterThan(left), "out of use it refills");
+            Assert.That(f.SecondsLeft(0.5f), Is.EqualTo(f.SecondsLeft() * 2f).Within(1e-4f), "a slower drain (Momentum Bank) lasts longer");
+        }
+
+        [Test]
+        public void DilationReleaseEasesOutFromWhereItIsWithoutAJump()
+        {
+            var d = new TimeDilationState { holdSeconds = 4f };
+            d.Press(0.35f);
+            d.Tick(1f);
+            Assert.That(d.Scale, Is.EqualTo(0.35f).Within(1e-5f));
+            d.Release();
+            d.Tick(0.001f);
+            Assert.That(d.Scale, Is.EqualTo(0.35f).Within(0.01f));
+            d.Tick(0.2f);
+            Assert.That(d.Scale, Is.EqualTo(1f));
+            Assert.That(d.Active, Is.False);
+            // mid ease-in: it eases back from the scale reached, not from the target
+            d.Press(0.35f);
+            d.Tick(0.05f);
+            float mid = d.Scale;
+            d.Release();
+            d.Tick(0.001f);
+            Assert.That(d.Scale, Is.EqualTo(mid).Within(0.01f));
+        }
+
+        [Test]
+        public void RewindMendGivesAQuarterOverFourSecondsAndNeverStacks()
+        {
+            var m = new RewindMend();
+            m.Start();
+            float sum = 0f;
+            for (int i = 0; i < 200; i++) sum += m.Tick(0.01f);
+            Assert.That(sum, Is.EqualTo(0.125f).Within(1e-4f), "half the mend in 2 s");
+            for (int i = 0; i < 300; i++) sum += m.Tick(0.01f);
+            Assert.That(sum, Is.EqualTo(0.25f).Within(1e-4f), "a quarter in all, no more");
+            Assert.That(m.Active, Is.False);
+            // a second Rewind mid-mend restarts it: at most one mend runs
+            m.Start();
+            float again = 0f;
+            for (int i = 0; i < 100; i++) again += m.Tick(0.01f);
+            m.Start();
+            Assert.That(m.Pending, Is.EqualTo(0.25f).Within(1e-5f));
+            for (int i = 0; i < 500; i++) again += m.Tick(0.01f);
+            Assert.That(again, Is.LessThanOrEqualTo(0.25f + 0.0625f + 1e-4f));
+            m.Cancel();
+            Assert.That(m.Tick(1f), Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void TheExitHintComesAfterFortyFiveSecondsDone()
+        {
+            float t = 0f;
+            t = HellExitHint.Tick(t, false, 10f);
+            Assert.That(t, Is.EqualTo(0f));
+            for (int i = 0; i < 44; i++) t = HellExitHint.Tick(t, true, 1f);
+            Assert.That(HellExitHint.Due(t), Is.False);
+            t = HellExitHint.Tick(t, true, 1f);
+            Assert.That(HellExitHint.Due(t), Is.True);
+            Assert.That(HellExitHint.Tick(t, false, 0.1f), Is.EqualTo(0f), "a restart (objective not done) resets it");
+            Assert.That(HellExitHint.Line, Does.Contain("RESTART ROOM"));
+        }
+
         [Test]
         public void TimeScaleIsTheSmallestRequest()
         {

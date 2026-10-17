@@ -27,6 +27,7 @@ namespace JamKit.SkylineRepo
         public int seed;
 
         public HellFlow Flow { get; private set; }
+        public static HellRunDirector Instance { get; private set; }
         public HellRun Run => Flow != null ? Flow.Run : null;
         public HellRoom Current { get; private set; }
         public HellScreens Screens { get; private set; }
@@ -44,11 +45,59 @@ namespace JamKit.SkylineRepo
         float _pickWait;
         float _lineAt = -1f;   // the objective line is re-read at most every LineEvery s (the objectives build their text on read)
         const float LineEvery = 0.2f;
+        float _doneFor;   // seconds the current room's objective has been done (the exit hint, HellExitHint)
+
+        /// <summary>The pause menu's "Restart room" can act now: a room is being played (not the boss, the ending, a shaft).</summary>
+        public static bool CanRestartRoom =>
+            Instance != null && Instance.Flow != null && Instance.Flow.Stage == HellFlowStage.Playing && Instance.Run != null
+            && Instance.Run.Phase == HellRunPhase.InRoom && Instance.Current != null && Instance.player != null;
+
+        /// <summary>A run is on (past the title): the pause menu offers "Return to title".</summary>
+        public static bool InGame => Instance != null && Instance.Flow != null && Instance.Flow.Stage != HellFlowStage.Title
+            && Instance.Flow.Stage != HellFlowStage.Quit;
+
+        /// <summary>The pause menu's "Return to title" (the creator, 2026-10-18): the same fresh scene as the end of a run
+        /// (the Title stage reloads it), with what outlives a scene load cleared first: the time scale and its requests, the
+        /// Rewind's history, the jobs' ledger and the Vesper chapter's assumed answer, and the music (its director survives
+        /// scene loads; a fresh one boots with the scene and follows the title).</summary>
+        public static void ReturnToTitle()
+        {
+            Debug.Log("HELL_FLOW return to title (pause menu)");
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
+            HellTime.ClearAll();
+            if (HellRewind.Instance != null) HellRewind.Instance.ClearHistory();
+            HellJobs.ResetRun();
+            HellJobs.ClearAssumedErrands();
+            var music = FindAnyObjectByType<HellMusicDirector>();
+            if (music != null) Destroy(music.gameObject);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>The pause menu's "Restart room" (the softlock safety net, 2026-10-18): the current room starts over as after a
+        /// death, back at its entry, but no death is counted. False when no room is being played.</summary>
+        public static bool RestartRoom()
+        {
+            if (!CanRestartRoom) return false;
+            var d = Instance;
+            d.Current.Restart();
+            d._momentum.Reset();
+            if (d._fast != null) d._fast.Reset();
+            d._doneFor = 0f;
+            d.player.Restart(HellRoom.U(d.Current.Def.entry), d.Current.Def.entryYaw);
+            d._hud.Banner("RESTART", 1.2f);
+            Debug.Log("HELL_RUN restarted " + d.Current.kind + " from the pause menu (no death counted)");
+            HellRunEvents.RaiseRoomRestarted();
+            return true;
+        }
 
         static long Key(int floor, HellRoomKind kind) => floor * 100L + (int)kind;
 
+        void Awake() { Instance = this; }
+
         void OnEnable()
         {
+            Instance = this;
             HellRewindRegistry.Register(this);
             HellRunEvents.FinalBossDefeated += OnBossDefeated;
             HellRunEvents.EndingReached += OnEndingReached;
@@ -111,6 +160,7 @@ namespace JamKit.SkylineRepo
 
         void OnDestroy()
         {
+            if (Instance == this) Instance = null;
             if (player != null) player.Wrecked -= OnWrecked;
             if (Screens != null) Destroy(Screens.gameObject);
         }
@@ -342,7 +392,13 @@ namespace JamKit.SkylineRepo
                     if (Current != null)
                     {
                         float c = Current.Clock;
-                        if (Time.unscaledTime >= _lineAt) { _lineAt = Time.unscaledTime + LineEvery; _hud.SetLine(Current.Objective.Line); }
+                        if (!held) _doneFor = HellExitHint.Tick(_doneFor, Current.Objective.Done, Time.unscaledDeltaTime);
+                        if (Time.unscaledTime >= _lineAt)
+                        {
+                            _lineAt = Time.unscaledTime + LineEvery;
+                            // the safety net: done for 45 s and still here, the line points at the way out
+                            _hud.SetLine(HellExitHint.Due(_doneFor) ? HellExitHint.Line : Current.Objective.Line);
+                        }
                         _hud.SetClock(c);
                         if (_fast != null && !held) _fast.Observe(HellRoom.N(feet));
                         if (!held && player.Movement != null && player.Movement.Sim != null) _momentum.Tick(Time.deltaTime, player.Movement.Sim.HorizontalSpeed);

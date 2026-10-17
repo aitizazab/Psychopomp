@@ -70,7 +70,7 @@ ledger when you leave the room, so a Rewind still has the chance.
   that flavour's boon.
 - **Boons** (stacking, with floors): **Mended** (plating and chassis full), **Quick Shadow** (Shadow Step recharges 1 s
   sooner, not under 3 s), **Short Memory** (Rewind cools down 3 s sooner, not under 11 s), **Long Breath** (Time Dilation
-  holds 0.75 s longer).
+  fuel lasts 0.75 s longer).
 
 ## The ending's count
 

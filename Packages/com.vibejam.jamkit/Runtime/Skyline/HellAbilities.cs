@@ -67,7 +67,7 @@ namespace JamKit.Skyline
         public float easeIn = 0.15f;
         public float easeOut = 0.15f;
 
-        float _since = float.PositiveInfinity, _target = 1f, _from = 1f;
+        float _since = float.PositiveInfinity, _target = 1f, _from = 1f, _outFrom = float.NaN;
 
         public bool Active => _since < holdSeconds + easeOut;
         public float Target => _target;
@@ -85,8 +85,18 @@ namespace JamKit.Skyline
             }
         }
 
+        /// <summary>Ends the hold now (the aim let go, the fuel ran out): the scale eases back to 1 over <see cref="easeOut"/>
+        /// from wherever it is (no jump, also mid ease-in). Nothing when it isn't on or is already easing out.</summary>
+        public void Release()
+        {
+            if (!Active || _since >= holdSeconds) return;
+            _outFrom = Scale;
+            holdSeconds = _since;
+        }
+
         public void Press(float targetScale)
         {
+            _outFrom = float.NaN;
             _from = Scale;
             _target = Math.Max(0.01f, Math.Min(1f, targetScale));
             _since = 0f;
@@ -105,13 +115,92 @@ namespace JamKit.Skyline
             _since += unscaledDt;
             if (_since < easeIn) Scale = Lerp(_from, _target, Smooth(_since / Math.Max(1e-4f, easeIn)));
             else if (_since < holdSeconds) Scale = _target;
-            else if (_since < holdSeconds + easeOut) Scale = Lerp(_target, 1f, Smooth((_since - holdSeconds) / Math.Max(1e-4f, easeOut)));
+            else if (_since < holdSeconds + easeOut) Scale = Lerp(float.IsNaN(_outFrom) ? _target : _outFrom, 1f, Smooth((_since - holdSeconds) / Math.Max(1e-4f, easeOut)));
             else { Scale = 1f; _since = float.PositiveInfinity; }
             return Scale;
         }
 
         static float Smooth(float t) { t = Math.Max(0f, Math.Min(1f, t)); return t * t * (3f - 2f * t); }
         static float Lerp(float a, float b, float t) => a + (b - a) * t;
+    }
+
+    /// <summary>
+    /// Time Dilation's fuel gauge (the creator, 2026-10-18; docs/HELL-ABILITIES.md). In use (<see cref="InUse"/>) it drains
+    /// full to empty in <see cref="drainSeconds"/> (times the drain scale a skill passes); out of use it refills at
+    /// <see cref="rechargeRatio"/> of the base drain rate (0.5: 8 s empty to full). <see cref="TryStart"/> refuses below
+    /// <see cref="minToStart"/> (25%). It stops itself when it runs dry. Real (unscaled) seconds; not rewound.
+    /// </summary>
+    public sealed class DilationFuel
+    {
+        public float drainSeconds = 4f;
+        public float rechargeRatio = 0.5f;
+        public float minToStart = 0.25f;
+
+        public float Fuel01 { get; private set; } = 1f;
+        public bool InUse { get; private set; }
+        public bool CanStart => Fuel01 >= minToStart - 1e-5f;
+        /// <summary>Seconds of use left at the drain scale <paramref name="drainScale"/> (1 the base rate).</summary>
+        public float SecondsLeft(float drainScale = 1f) => Fuel01 * Math.Max(0.01f, drainSeconds) / Math.Max(0.01f, drainScale);
+        /// <summary>Seconds from empty to full while not in use.</summary>
+        public float RefillSeconds => Math.Max(0.01f, drainSeconds) / Math.Max(1e-4f, rechargeRatio);
+
+        /// <summary>Starts using it; false (and nothing changes) when below <see cref="minToStart"/>.</summary>
+        public bool TryStart()
+        {
+            if (InUse) return true;
+            if (!CanStart) return false;
+            InUse = true;
+            return true;
+        }
+
+        public void Stop() => InUse = false;
+
+        /// <summary>Drains while in use (at <paramref name="drainScale"/> times the base rate) or refills; true on the tick it
+        /// runs dry (it has stopped itself).</summary>
+        public bool Tick(float unscaledDt, float drainScale = 1f)
+        {
+            if (!(unscaledDt > 0f)) return false;
+            float rate = 1f / Math.Max(0.01f, drainSeconds);
+            if (InUse)
+            {
+                Fuel01 = Math.Max(0f, Fuel01 - rate * Math.Max(0f, drainScale) * unscaledDt);
+                if (Fuel01 <= 0f) { InUse = false; return true; }
+                return false;
+            }
+            Fuel01 = Math.Min(1f, Fuel01 + rate * rechargeRatio * unscaledDt);
+            return false;
+        }
+
+        public void Set(float fuel01) => Fuel01 = Math.Max(0f, Math.Min(1f, fuel01));
+        public void Refill() { Fuel01 = 1f; InUse = false; }
+    }
+
+    /// <summary>
+    /// The Rewind's mend (the creator, 2026-10-18): after a Rewind, <see cref="share"/> (25%) of the max health and of the
+    /// max shields come back over <see cref="seconds"/> (4 s, game time). <see cref="Tick"/> gives the share of the max to add
+    /// this tick (the shares over the whole mend add up to <see cref="share"/> exactly). A new Rewind restarts it (it
+    /// never stacks: at most one mend runs); <see cref="Cancel"/> on a wreck or a restart.
+    /// </summary>
+    public sealed class RewindMend
+    {
+        public float share = 0.25f, seconds = 4f;
+        float _left;
+
+        public bool Active => _left > 0f;
+        /// <summary>The share still to come (0 when none).</summary>
+        public float Pending => share * Math.Max(0f, _left) / Math.Max(1e-4f, seconds);
+
+        public void Start() => _left = Math.Max(1e-4f, seconds);
+        public void Cancel() => _left = 0f;
+
+        public float Tick(float dt)
+        {
+            if (!(dt > 0f) || _left <= 0f) return 0f;
+            float d = Math.Min(dt, _left);
+            _left -= d;
+            if (_left < 1e-6f) _left = 0f;
+            return share * d / Math.Max(1e-4f, seconds);
+        }
     }
 
     /// <summary>Everything that wants the game slower asks here by key (Time Dilation, the hit stop, a skill); the game's

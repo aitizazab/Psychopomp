@@ -53,7 +53,7 @@ namespace JamKit.SkylineRepo
     public sealed class HellRewind : MonoBehaviour
     {
         public float seconds = 4f;
-        public float cooldown = 20f;
+        public float cooldown = 30f;   // 20 -> 30 s with the mend (the creator, 2026-10-18)
         /// <summary>The ring always holds this much (the longest rewind any skill gives).</summary>
         public const float MaxSeconds = 6f;
         /// <summary>The snapshot pools' size: more than the ring holds at the fixed step.</summary>

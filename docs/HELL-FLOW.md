@@ -25,7 +25,13 @@ While a screen shows, the game holds still: the time scale is 0, the player's in
 **Controls on the screens:**
 - Keyboard and mouse: arrows or W/S to move, Enter or Space to pick, click an item, Escape or Backspace to skip.
 - Pad: D-pad or stick to move, A to pick, B or Start to skip.
-- On the title, Escape opens the pause menu too.
+- On the title's main list, Escape or the pad's Start / Menu opens the pause menu too (the screen opens it itself:
+  `SkylinePauseMenu.Blocked` stays on over every screen). In a sub-list (the difficulty question after START, the chapters,
+  the errands question) Escape / Backspace, B and Start go back a list instead, and the difficulty question has a BACK row
+  for the mouse (the creator clicked START by accident and couldn't get back, 2026-10-18).
+- Fixed 2026-10-18: Settings picked with A (or Enter) opened the pause menu and the same press then picked its first row,
+  Resume, closing it at once (the screens run before the menu in a frame). The menu now ignores input on the frame it
+  opens.
 
 **Scripted runs** (`-skylineOut`, `-skyline-perf`, `-skyline-demo`) and `-hellSkipTitle` skip every screen. They drop
 straight into the first room, show the floor names as HUD banners, and stop on the stats, which are written to the log
@@ -199,5 +205,9 @@ Tested in all 18 rooms: walking the fast path counts as taken; walking the safe 
 - The title uses Anton (in the kit), not Pirata One (the art pass's pick, not downloaded).
 - There is no title music or menu sounds yet: that is the sound lane's job. Note that `SkylineMixer` and
   `SkylineQuality` still act only in `Skyline*` scenes.
-- There is no "quit to title" in the pause menu.
+- The pause menu has **Return to title** in a run (press again within the confirm window, like Quit): it clears what
+  outlives a scene load (the time scale and its requests, the Rewind's history, the jobs' ledger and the Vesper chapter's
+  assumed answer, the music director, which a fresh scene boots again) and reloads the scene, as the end of a run does
+  (`HellRunDirector.ReturnToTitle`, logs `HELL_FLOW return to title (pause menu)`). And **Restart room** while a room is
+  being played (docs/HELL-ROOMS.md).
 - The art pass's "slow camera across the Sigils room" behind the title is not done: the title is on its own gradient.

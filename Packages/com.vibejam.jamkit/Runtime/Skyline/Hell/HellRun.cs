@@ -176,4 +176,17 @@ namespace JamKit.Skyline
             return true;
         }
     }
+
+    /// <summary>The softlock safety net (the creator, 2026-10-18): when a room's objective has been done for
+    /// <see cref="AfterSeconds"/> and the player is still in it, the objective line points at the way out instead.</summary>
+    public static class HellExitHint
+    {
+        public const float AfterSeconds = 45f;
+        public const string Line = "THE WAY OUT: THROUGH THE OPEN GATE AT THE FAR END, THEN DROP DOWN THE HOLE   (STUCK? PAUSE > RESTART ROOM)";
+
+        /// <summary>Counts the seconds the objective has been done (unpaused, in the room); 0 while it isn't done.</summary>
+        public static float Tick(float doneFor, bool objectiveDone, float dt) => objectiveDone ? doneFor + Math.Max(0f, dt) : 0f;
+
+        public static bool Due(float doneFor) => doneFor >= AfterSeconds;
+    }
 }

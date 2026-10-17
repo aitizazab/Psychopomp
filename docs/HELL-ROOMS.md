@@ -84,8 +84,24 @@ but standing in it for 1 s sinks you.
    (6 m) apart between the wells; the piers of wells 1 and 3 run out to the row of stones, well 2's pier out to its well.
    Safe: the ring walkway and the piers.
 
-Each room has an entry vestibule and an exit corridor with a drop hole. Every room except The Collapse has an exit gate
-that opens when the objective is done.
+Each room has an entry vestibule and an exit corridor with a drop hole. Every room, The Collapse included, has an exit
+gate that opens when the objective is done.
+
+**The Collapse softlock (fixed 2026-10-18).** The creator's first playthroughs got stuck in every Collapse (floors 1 and
+2): "objective done" at the exit, and the doorway stayed shut. Cause: rooms2/rooms3's Collapse layout set
+`exitGateId = ""` (meaning "no gate"), but `Kit.Shell` still built the `exit-gate` solid across the north doorway, and
+the scene builder made it a collider. `HellRoom` opens only the gate named by `exitGateId`, so nothing ever opened it, and
+the drop hole behind it was unreachable (the escape never noticed: it ends on reaching the exit). The Collapse now keeps
+the shell's `exit-gate` as its exit gate (no rebuild needed: the gate object is already in the scene, and `HellRoom`
+reads the id from the code). `HellRoomTests.EveryRoomsExitIsPassableOnceTheObjectiveIsDone` checks every base layout and
+all 18 variants: the exit gate is named and is a gate, every gate solid is one something opens, and from inside the
+doorway over the corridor and down into the drop zone nothing solid but that gate is in a body's way.
+
+**Safety nets (2026-10-18):** the pause menu has **Restart room** while a room is being played (`HellRunDirector.
+RestartRoom`: the room starts over at its entry like a death, but no death is counted; logs `HELL_RUN restarted <room>
+from the pause menu`), and **when the objective has been done for 45 s** (unpaused) and you are still in the room, the
+objective line becomes "THE WAY OUT: THROUGH THE OPEN GATE AT THE FAR END, THEN DROP DOWN THE HOLE (STUCK? PAUSE >
+RESTART ROOM)" (`HellExitHint`).
 
 ### Open edges (`hell-rooms3`, 2026-10-18)
 

@@ -40,7 +40,8 @@ pass. The play checks are at the end.
    powers are hers, and so is the clock. A slow-motion trick that also stretched the hour would make dilation a way to bank
    time, which the design doesn't want.
 5. **The window closing shows in the escape** (`HellHourGate`). The Collapse's exit doorway gets **Baja's gate**: the
-   room's own red gate is hidden (its collider stays) and two dark leaves with ember edges slide in from the sides.
+   room's own red gate is hidden (its collider stays until you reach the exit, when `HellRoom` opens it as in every
+   room) and two dark leaves with ember edges slide in from the sides.
    - **Each escape attempt gets a window:** 13 s, plus 3 s for every minute left on the hour (none when overtime).
    - **How it looks:** the gate is drawn fully open while 40 s or more of its window remain, then closes linearly. It
      grinds (`well_grind`, more often as it closes) and slams (`platform_fall`) when it shuts.
