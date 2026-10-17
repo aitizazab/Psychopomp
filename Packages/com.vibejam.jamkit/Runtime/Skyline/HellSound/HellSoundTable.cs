@@ -131,6 +131,17 @@ namespace JamKit.Skyline
             new HellSoundCue("hell/world/well_sealed", "hell/world/well_sealed", Wo, false, ""),
             new HellSoundCue("hell/world/gate_open", "hell/world/gate_open", Wo, false, ""),
 
+            // ---- the ending (HellEndingDirector, docs/HELL-ENDING.md; reused files until the ear check)
+            new HellSoundCue("hell/ending/rumble", "hell/world/platform_shake", Wo, false, "Hell shaking while you decide: more often as it builds"),
+            new HellSoundCue("hell/ending/hold", "hell/world/sigil", Ab, false, "you start to offer your hand (the hold ring)"),
+            new HellSoundCue("hell/ending/spare", "hell/world/brand_done", Ab, false, "she takes your hand"),
+            new HellSoundCue("hell/ending/kill", "hell/world/anchor_break", Ab, false, "the shot that ends her: her body breaks into smoke"),
+            new HellSoundCue("hell/ending/soul", "hell/world/lantern_pickup", Wo, false, "a soul into your lantern (hers on a kill, your sister's on the way)"),
+            new HellSoundCue("hell/ending/step", "hell/abilities/shadowstep_in", Wo, false, "Vesper Shadow Steps beside you in the escape"),
+            new HellSoundCue("hell/ending/escape", "hell/world/shaft_start", Wo, false, "the floor gives way: the escape starts"),
+            new HellSoundCue("hell/ending/out", "hell/ui/room_cleared", Ui, false, "out of the Collapse: the endings begin"),
+            new HellSoundCue("hell/ending/card", "hell/ui/skill_open", Ui, false, "an ending card"),
+
             // ---- the beds, one per floor (OneBedForAll swaps to a shared one)
             new HellSoundCue("hell/bed/0", "hell/beds/ember_gate", Be, true, "The Ember Gate: ash wind over the lava"),
             new HellSoundCue("hell/bed/1", "hell/beds/molten_works", Be, true, "The Molten Works: forge drone, chains, lava"),
