@@ -1,0 +1,12 @@
+{
+  "name": "dutch-low",
+  "//": "A low dutch angle beside the player's path, tilting level as the action passes.",
+  "follow": "player",
+  "space": "target",
+  "followLag": 0.3,
+  "keys": [
+    { "t": 0, "position": [-2.5, 0.4, 3], "lookAt": [0, 1.6, 0], "lens": 24, "roll": 14, "ease": "in" },
+    { "t": 2.5, "position": [-3.5, 0.6, -1], "lookAt": [0, 1.4, 4], "lens": 24, "roll": 0 }
+  ],
+  "shake": { "amplitude": 0.6, "frequency": 1.4, "seed": 11 }
+}
