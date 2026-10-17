@@ -34,6 +34,7 @@ namespace JamKit.SkylineRepo
         readonly List<HellCollapsePlatform> _platforms = new List<HellCollapsePlatform>();
         readonly List<Renderer> _stopViews = new List<Renderer>();
         readonly List<GameObject> _anchorViews = new List<GameObject>();
+        HellChainViews _chainViews;   // Break the Chains: the chains, the straining links, the shatter
         readonly List<Renderer> _wellCaps = new List<Renderer>();
         readonly List<List<SkylineBot>> _wellBots = new List<List<SkylineBot>>();
         readonly List<int> _living = new List<int>();
@@ -106,6 +107,7 @@ namespace JamKit.SkylineRepo
                 _brandBlock = new MaterialPropertyBlock();
             }
             if (Def.debris.Count > 0) MakeDebrisViews();
+            if (Objective is ChainAnchors) _chainViews = new HellChainViews(this, _anchorViews, _exitGate);
         }
 
         void OnEnable() { HellRewindRegistry.Register(this); }
@@ -273,6 +275,7 @@ namespace JamKit.SkylineRepo
         {
             if (_brandRing.Count > 0 && Objective is BrandHold brand) TickBrandGlow(brand);
             if (_debrisShadows.Count > 0) TickDebrisViews();
+            if (_chainViews != null) _chainViews.Tick();
         }
 
         /// <summary>The brand ring's glow pulses faster the faster you charge it (the charge rate's cue; the HUD ring does the
