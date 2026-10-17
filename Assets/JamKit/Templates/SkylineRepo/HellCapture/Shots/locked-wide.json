@@ -1,0 +1,11 @@
+{
+  "name": "locked-wide",
+  "//": "A locked-off wide set where the player is when the shot starts, with a slow push in.",
+  "follow": "player",
+  "anchorAtStart": true,
+  "space": "targetWorld",
+  "keys": [
+    { "t": 0, "position": [9, 7, -12], "lookAt": [0, 1, 8], "lens": 20, "ease": "linear" },
+    { "t": 8, "position": [8, 6.2, -10], "lookAt": [0, 1, 8], "lens": 22 }
+  ]
+}

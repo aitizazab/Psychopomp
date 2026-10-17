@@ -116,6 +116,18 @@ namespace JamKit.SkylineRepo
             }
         }
 
+        /// <summary>A replay's pick (docs/HELL-CAPTURE.md): grants <paramref name="id"/> as if it had been chosen on the open
+        /// screen (whatever was offered), closes it and lets the run go on. False when the screen is not open.</summary>
+        public bool PickById(string id)
+        {
+            if (!Open || string.IsNullOrEmpty(id)) return false;
+            Close();
+            _a.Grant(id);
+            HellRunEvents.ContinueAfterPick();
+            Debug.Log("HELL_SKILL picked by the replay: " + id);
+            return true;
+        }
+
         void Pick(int i)
         {
             if (!Open || _offer == null || i < 0 || i >= _offer.Count) return;

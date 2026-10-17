@@ -82,7 +82,7 @@ namespace JamKit.SkylineRepo
             if (HellRunEvents.Stage != HellFlowStage.Title) HellRunEvents.RaiseStageChanged(HellRunEvents.Stage, HellFlowStage.Title);
             Flow.RewindBoundary += HellRunEvents.RaiseRewindBoundary;
 
-            _skipScreens = SkylineRunArgs.Demo || SkylineRunArgs.Has("-hellSkipTitle") || player == null || player.ScriptedInput != null;
+            _skipScreens = SkylineRunArgs.Demo || SkylineRunArgs.Has("-hellSkipTitle") || SkylineRunArgs.Has("-hell-replay") || SkylineRunArgs.Has("-hell-perf") || player == null || player.ScriptedInput != null;
             if (!_skipScreens)
             {
                 PanelSettings ps = null;

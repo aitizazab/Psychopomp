@@ -302,6 +302,9 @@ namespace JamKit.SkylineRepo
         {
             if (_root == null) return;
             float dt = Time.unscaledDeltaTime;
+            // the clean picture (HellCleanPicture, docs/HELL-CAPTURE.md): no HUD element at all, the Hell line and banners included
+            var show = HellCleanPicture.HideHud ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_root.style.display != show) _root.style.display = show;
             FitSafeArea(false);
 
             if (_markerLeft > 0f)
