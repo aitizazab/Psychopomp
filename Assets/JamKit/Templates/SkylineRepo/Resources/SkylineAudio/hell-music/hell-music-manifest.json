@@ -45,15 +45,15 @@
       },
       "mood_hint": "quiet = no enemy alerted and no objective pressure; normal = enemies alerted or an objective running; danger = health under 35% or an objective about to fail / last seconds of a clock; the boss uses its own cue.",
       "mix_lufs": {
-        "quiet_still": -23,
-        "quiet_fast": -21.5,
-        "quiet_flying": -20.5,
-        "normal_still": -18,
-        "normal_fast": -16,
-        "normal_flying": -15.5,
-        "danger_still": -17,
-        "danger_fast": -15.5,
-        "danger_flying": -15
+        "quiet_still": -24.3,
+        "quiet_fast": -22.8,
+        "quiet_flying": -21.8,
+        "normal_still": -19.3,
+        "normal_fast": -17.3,
+        "normal_flying": -16.8,
+        "danger_still": -18.3,
+        "danger_fast": -16.8,
+        "danger_flying": -13.8
       },
       "stems": [
         {
@@ -196,7 +196,8 @@
         "the escape (danger mood, speed by the player)",
         "boss fallback if vesper_boss is pending (danger mood)"
       ],
-      "dark_drone_note": "dark_drone is pre-levelled ~6 dB under normal_still; DarkHush.MusicDrone gives it up to 0.8."
+      "dark_drone_note": "dark_drone is pre-levelled ~6 dB under normal_still; DarkHush.MusicDrone gives it up to 0.8.",
+      "danger_flying_note": "Round 3: Danger Flying is the most panicked layer in the game (blast beat, tremolo-picked Riff, 32nd-note strings, screaming choir, a siren every 2 bars); 3 dB over Danger Fast."
     },
     "baja_hold": {
       "kind": "loop",
@@ -258,9 +259,14 @@
           "note": "the same file as baja_stats: the full lounge waltz"
         },
         "fall": {
-          "kind": "stinger",
-          "page": "last panel: you fall, the title burns in (stop the loop)",
-          "resource": "SkylineAudio/hell-music/baja/opening_fall"
+          "kind": "stinger_into_cue",
+          "page": "last panel: you fall, the title burns in; the cutscene swaps to gameplay ON the hit",
+          "resource": "SkylineAudio/hell-music/baja/opening_fall",
+          "into_cue": "inrun",
+          "downbeat_sample": 170667,
+          "downbeat_seconds": 3.555563,
+          "bpm": 135,
+          "how": "Schedule this stinger at dspTime T (PlayScheduled). Schedule ALL inrun stems at T + 170667/48000 (= T + 3.555563 s) with the mood quiet or normal and speed still: the stinger's hit lands exactly on the in-run set's first downbeat and rings ~3 s over it. Stop the opening's loop at T (or let it end)."
         }
       }
     },
