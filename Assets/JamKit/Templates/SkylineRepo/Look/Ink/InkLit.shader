@@ -395,6 +395,9 @@ Shader "Skyline/InkLit"
 
             #include "Assets/JamKit/Templates/SkylineRepo/Look/Ink/InkLitInput.hlsl"
 
+            // A global (not per material): Hell's hostile-outline override, set by HellLookSwitch; w > 0.5 = on.
+            float4 _SkHellHostile;
+
             struct MaskAttributes
             {
                 float4 positionOS : POSITION;
@@ -423,6 +426,10 @@ Shader "Skyline/InkLit"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 int role = (int)(_InkRole + 0.5h);
+                // Hell's look test (HellLookSwitch, -hellOutline): with an override on, the hostile mask's blue channel carries the
+                // enemy's wind-up (1 - _InkWidth, set per renderer by HellLookPulse) for the composite's pulse; the hue itself
+                // comes from the override there. Off (the default, _SkHellHostile = 0): exactly the kit's mask.
+                if (role == 1 && _SkHellHostile.w > 0.5) return half4(1.0h, 0.1804h, (half)(1.0 - saturate(_InkWidth)), 1.0h);
                 if (role == 1) return half4(1.0h, 0.1804h, 0.3882h, 1.0h);        // #FF2E63 hostile
                 if (role == 2) return half4(0.7020h, 0.4196h, 1.0h, 1.0h);        // #B36BFF objective
                 // #8FD3FF strippable wreck: its own alpha class, carrying the outline width fraction (0.4..1) for the composite

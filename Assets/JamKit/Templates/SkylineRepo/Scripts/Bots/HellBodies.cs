@@ -30,7 +30,9 @@ namespace JamKit.SkylineRepo
         public static SkylineBotParts Build(EnemyDef def, Transform root, MonoBehaviour owner)
         {
             var p = new SkylineBotParts();
-            var model = Resources.Load<GameObject>(ModelFolder + Name(def.hell));
+            // the look test's model swap (HellLookSwitch: only under -hellLook / a baked look), else the drop-in prefab
+            var model = HellLookSwitch.ModelOverride(Name(def.hell));
+            if (model == null) model = Resources.Load<GameObject>(ModelFolder + Name(def.hell));
             if (model != null)
             {
                 p.fromModel = true;

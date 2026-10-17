@@ -45,6 +45,9 @@ Shader "Hidden/Skyline/InkComposite"
         float4 _SkInkMode;      // x: 1 = creases from the depth curvature, y: crease slope threshold, z: one pixel's angle (rad)
         float4 _SkInkStyle;     // x: line-weight variation, y: wobble amplitude (px), z: paper grain (all 0..1 / px, 0 = off)
         float4 _SkInkOccParams;     // x: dilation blocks k, z,w: occupancy size in texels
+        // Hell's look test (HellLookSwitch, -hellOutline), a global: rgb the hostile outline (linear), w 0 off (the kit's
+        // red-magenta), 1 a steady hue, 2 the pulse (brightness pulsing, faster as the enemy winds up: the mask's blue).
+        float4 _SkHellHostile;
         ENDHLSL
 
         Pass
@@ -315,11 +318,28 @@ Shader "Hidden/Skyline/InkComposite"
                             // a bot's own weak point: the hostile red-magenta tinted towards yellow, t pulsing 0.35..0.6 at 1.2 Hz
                             float t = lerp(0.35, 0.6, 0.5 + 0.5 * sin(_SkInkTime.x * 7.5398));   // 2*pi*1.2
                             outlineRgb = SRGBToLinear(lerp(float3(1.0, 0.1804, 0.3882), float3(1.0, 0.8392, 0.0392), t));
+                            // Hell override: the hostile hue pulsing towards white-hot (the weak point is the hottest thing)
+                            if (_SkHellHostile.w > 0.5) outlineRgb = lerp(_SkHellHostile.rgb, float3(1.0, 0.93, 0.8), t + 0.2);
                             cover = smoothstep(0.0, 4.0, h.botWeak);
                         }
                         else if (!centreHas && h.hue > 0.0)
                         {
                             outlineRgb = SRGBToLinear(h.bestHue);
+                            if (_SkHellHostile.w > 0.5 && h.bestRank > 2.5)
+                            {
+                                // Hell override on a hostile outline: the chosen hue; in pulse mode its brightness pulses at
+                                // 0.6 Hz idle up to 6 Hz fully wound up (the wind-up rides in the mask's blue channel)
+                                outlineRgb = _SkHellHostile.rgb;
+                                if (_SkHellHostile.w > 1.5)
+                                {
+                                    // HellLookOptions.PulseHz / PulseDepth: a slow shallow breath idle, fast and deep at the peak
+                                    float wind = saturate(h.bestHue.b);
+                                    float hz = lerp(0.6, 6.0, wind);
+                                    float depth = lerp(0.25, 0.75, wind);
+                                    float s11 = sin(_SkInkTime.x * 6.2831853 * hz);
+                                    outlineRgb *= 1.0 + depth * s11;
+                                }
+                            }
                             cover = smoothstep(0.0, 4.0, h.hue);
                         }
                         else if (!centreHas && h.wreck > 0.0)

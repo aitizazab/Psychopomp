@@ -1,0 +1,6 @@
+basalt_diff.jpg, basalt_nor.jpg: Poly Haven 'dark_rock' https://polyhaven.com/a/dark_rock (CC0 1.0)
+ash_diff.jpg, ash_nor.jpg: Poly Haven 'burned_ground_01' https://polyhaven.com/a/burned_ground_01 (CC0 1.0)
+rust_diff.jpg, rust_nor.jpg: Poly Haven 'rusty_metal_02' https://polyhaven.com/a/rusty_metal_02 (CC0 1.0)
+tiles_diff.jpg, tiles_nor.jpg: Poly Haven 'volcanic_rock_tiles' https://polyhaven.com/a/volcanic_rock_tiles (CC0 1.0)
+lava_diff.jpg: ambientCG Lava004 https://ambientcg.com/view?id=Lava004 (CC0 1.0)
+lava_emis.jpg: ambientCG Lava004 https://ambientcg.com/view?id=Lava004 (CC0 1.0)
