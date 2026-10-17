@@ -187,6 +187,21 @@ Renderers without colliders get box colliders. The other rules:
 - **Origins**: the imp's is its centre; the demon's and the ooze's are their feet.
 - **Not pooled**: Hell bodies are never built ahead by `SkylineBodyPool`. Primitive bodies are cheap.
 
+**The final models (2026-10-18).** Blender-built from CC0 parts by `tools/hell-models/` (`scythe_demon.py`, `lava_ooze.py`;
+CREDITS.md), exported as FBX to `Look/HellLook/Models/`, and made into the prefabs above by
+`JamKit/Hell/Models/Build the model prefabs` (`HellModelsBuild`; command line:
+`-executeMethod JamKit.SkylineRepo.EditorTools.HellModelsBuild.FromCommandLine`):
+- **Scythe demon**: a gliding robed reaper, 2.8 m to its horn tips: a horned KayKit skull with burning eyes in a ragged hood,
+  rust pauldrons with bone spikes and flames (the plates), an open bone ribcage round the core, gaunt clawed arms, the
+  Quaternius scythe in `ArmR` (blade edge glowing), a tattered robe with a smouldering hem, front flaps as `LegL`/`LegR`
+  (they flutter in its stride). `HellModelMotion` bobs it (0.07 m) and sways the robe, flaps and hood.
+- **Lava ooze**: a slumped molten blob (`Blob`, unit height, so the throb code keeps its feet on the floor) with runnels,
+  cooled crust plates riding the throb (`Plate_crust`), slanted hollow eyes with embers, a ragged grin, the core in a
+  crust collar on top, and glowing drips round its base (`Flame*`).
+- Hit zones: a box per part, a sphere on the core; decorations (names ending `_nc`: ribs, hood, belt, eyes, cloth flaps, the
+  scythe) get a disabled box, so they never take or block a hit. Charred parts carry the hide and the ember cracks
+  (the `HellLookTextures` pair, saved as PNGs) in every look.
+
 **Damage states** are kept. They are the same stages (70% and 30%), with the animation and the limp:
 - Hell colours: the torn shards are char, bone and rust, and two glowing fire cracks replace the wires.
 - The demon droops and twitches like the spotlight did.
