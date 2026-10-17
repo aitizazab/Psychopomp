@@ -9,10 +9,10 @@ namespace JamKit.SkylineRepo
     /// The lava ooze's pool in the world (docs/HELL-ENEMIES.md; the pure timeline is <see cref="LavaPool"/>). It splashes out to its
     /// radius, glows and bubbles while it burns (damage ticks while the target's feet are in it and on its surface: a jump clears it),
     /// then darkens to a crust, shrinks a little and sinks away. Scaled time throughout.
-    /// <para>Pooled; rewindable (registers while active; the <see cref="HellRewindLedger"/> switches off one that a Rewind goes back
-    /// before).</para>
+    /// <para>Pooled; rewindable (registers while active; <see cref="HellRewind"/> switches off one that a Rewind goes back
+    /// before, through <see cref="IHellRewindSpawnAware"/>).</para>
     /// </summary>
-    public sealed class HellLavaPool : MonoBehaviour, IHellRewindSpawned
+    public sealed class HellLavaPool : MonoBehaviour, IHellRewindable, IHellRewindSpawnAware
     {
         const int PrewarmCount = 8, Bubbles = 6;
         static readonly List<HellLavaPool> _pool = new List<HellLavaPool>();
@@ -93,17 +93,8 @@ namespace JamKit.SkylineRepo
             return p;
         }
 
-        void OnEnable()
-        {
-            HellRewindRegistry.Register(this);
-            HellRewindLedger.Enabled(this);
-        }
-
-        void OnDisable()
-        {
-            HellRewindRegistry.Unregister(this);
-            HellRewindLedger.Disabled(this);
-        }
+        void OnEnable() => HellRewindRegistry.Register(this);
+        void OnDisable() => HellRewindRegistry.Unregister(this);
 
         void Update()
         {
@@ -181,7 +172,8 @@ namespace JamKit.SkylineRepo
             Draw();
         }
 
-        public void VanishForRewind() => gameObject.SetActive(false);
+        /// <summary>The Rewind went back to before this appeared: switch off quietly.</summary>
+        public void RewoundBeforeSpawn() => gameObject.SetActive(false);
 
         static NVec3 N(Vector3 v) => new NVec3(v.x, v.y, v.z);
     }

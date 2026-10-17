@@ -49,7 +49,7 @@ namespace JamKit.SkylineRepo
     /// in <see cref="liftZone"/> end the floor (<c>SKYLINE_ARENA exit reached</c>). A restart rolls it down again.</item>
     /// </list>
     /// </summary>
-    public sealed class SkylineArenaDirector : MonoBehaviour
+    public sealed partial class SkylineArenaDirector : MonoBehaviour
     {
         public const float BeatGap = 0.5f, WarmupDelay = 1f, PracticeSeenRange = 25f, NearLedgeRange = 6f;
         const float ChestHeight = 1.25f;

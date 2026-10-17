@@ -169,6 +169,15 @@ namespace JamKit.Combat
             return added;
         }
 
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): the magazine and reserve as they were, no reload or burst running.</summary>
+        public void RestoreAmmo(int magazine, int reserve)
+        {
+            if (IsReloading) CancelReload();
+            _burstLeft = 0;
+            AmmoInMagazine = Math.Max(0, HasMagazine ? Math.Min(Def.magazineSize, magazine) : 0);
+            Reserve = Math.Max(0, reserve);
+        }
+
         /// <summary>Overwrites the reserve (never below 0, ignoring maxReserve). For games that keep ammo
         /// outside the gun: shared pools by ammo type feed the reserve before Tick and read it back after.</summary>
         public void SetReserve(int amount)

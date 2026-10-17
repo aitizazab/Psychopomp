@@ -44,6 +44,25 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void AReusedSnapshotIsRefilledInPlaceAndStillRestoresExactly()
+        {
+            foreach (var d in HellEnemies.All())
+            {
+                var b = new BotBrain(d, 42);
+                Run(b, 0, 60);
+                var old = StateCopy.Capture(b);
+                Run(b, 60, 150);
+                var snap = StateCopy.Capture(b, old);
+                Assert.That(snap, Is.SameAs(old), d.id);
+                string first = Run(b, 150, 400);
+                StateCopy.Apply(b, snap);
+                string again = Run(b, 150, 400);
+                Assert.That(again, Is.EqualTo(first), d.id);
+            }
+            Assert.That(StateCopy.Capture(new BotBrain(HellEnemies.FireImp(), 1), new object()), Is.Not.Null);
+        }
+
+        [Test]
         public void AWreckedBrainComesBackAlive()
         {
             var d = HellEnemies.FireImp();

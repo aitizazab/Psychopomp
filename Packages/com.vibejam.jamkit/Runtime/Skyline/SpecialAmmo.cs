@@ -113,6 +113,14 @@ namespace JamKit.Skyline
                 }
         }
 
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): the reserve and the kill counter as they were (no Gained raised).</summary>
+        public void Restore(int shots, int killProgress)
+        {
+            _shots = Clamp(shots);
+            _specialKills = Math.Max(0, killProgress);
+            Push();
+        }
+
         int Clamp(int shots) => Math.Max(0, Math.Min(_def.max, shots));
 
         void Push()

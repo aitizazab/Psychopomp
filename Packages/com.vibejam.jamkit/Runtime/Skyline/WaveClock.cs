@@ -125,6 +125,15 @@ namespace JamKit.Skyline
         /// <summary>The third asset is towed: no more waves, and the waiting wave is cancelled.</summary>
         public void Stop() { Running = false; Waiting = null; }
 
+        /// <summary>The clock's whole state (a rewind, docs/HELL-ABILITIES.md).</summary>
+        public object SaveState() => MemberwiseClone();
+
+        public void RestoreState(object state)
+        {
+            if (!(state is WaveClock s)) return;
+            elapsed = s.elapsed; nextNumber = s.nextNumber; Running = s.Running; Released = s.Released; Skipped = s.Skipped; Waiting = s.Waiting;
+        }
+
         /// <summary>A wreck: everything back to the beginning, not running.</summary>
         public void Reset()
         {

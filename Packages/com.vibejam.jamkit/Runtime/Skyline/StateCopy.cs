@@ -55,6 +55,20 @@ namespace JamKit.Skyline
             return new Captured { type = t, values = vals };
         }
 
+        /// <summary>As <see cref="Capture(object)"/>, refilled into <paramref name="reuse"/> (an earlier snapshot of an object of the
+        /// same type, no longer needed) when it is one: the snapshot's own containers (the value array, the deep Rng copies, the
+        /// array and list copies) are reused, so a pooled snapshot makes no new containers per fixed step (the value fields are
+        /// still boxed: reflection reads them as objects). Returns the snapshot to keep (<paramref name="reuse"/> or a new one).</summary>
+        public static object Capture(object obj, object reuse)
+        {
+            if (obj == null) return null;
+            var t = obj.GetType();
+            var fs = Fields(t);
+            if (!(reuse is Captured c) || c.type != t || c.values == null || c.values.Length != fs.Length) return Capture(obj);
+            for (int i = 0; i < fs.Length; i++) c.values[i] = CopyValue(fs[i].GetValue(obj), c.values[i]);
+            return c;
+        }
+
         /// <summary>Puts <paramref name="obj"/> back as it was when <paramref name="snapshot"/> was taken of it (or of another object of
         /// the same type). A null or mismatched snapshot does nothing.</summary>
         public static void Apply(object obj, object snapshot)
@@ -94,6 +108,24 @@ namespace JamKit.Skyline
                 if (f.IsInitOnly) continue;
                 f.SetValue(obj, v);
             }
+        }
+
+        static object CopyValue(object v, object reuse)
+        {
+            if (v == null || reuse == null) return CopyValue(v);
+            if (v is Rng) return Capture(v, reuse);
+            if (v is Array a && reuse is ArrayCopy ac && ac.items.GetType() == a.GetType() && ac.items.Length == a.Length)
+            {
+                Array.Copy(a, ac.items, a.Length);
+                return ac;
+            }
+            if (v is IList l && reuse is ListCopy lc && lc.listType == v.GetType())
+            {
+                lc.items.Clear();
+                for (int k = 0; k < l.Count; k++) lc.items.Add(l[k]);
+                return lc;
+            }
+            return CopyValue(v);
         }
 
         static object CopyValue(object v)

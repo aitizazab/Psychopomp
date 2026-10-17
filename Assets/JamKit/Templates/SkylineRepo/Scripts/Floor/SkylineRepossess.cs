@@ -26,7 +26,7 @@ namespace JamKit.SkylineRepo
     /// Logs (all prefixed SKYLINE_FLOOR): <c>socket &lt;asset&gt;=&lt;socket id&gt;</c> at setup, <c>meter-start &lt;asset&gt;</c>,
     /// <c>towed &lt;asset&gt; at &lt;s&gt;</c>, <c>left-circle &lt;asset&gt;</c>, <c>all-towed</c>, <c>exit reached</c>, <c>restart</c>.
     /// </summary>
-    public sealed class SkylineRepossess : MonoBehaviour
+    public sealed partial class SkylineRepossess : MonoBehaviour
     {
         [Tooltip("The Unit's root (its position is its feet). The director sets it; Step can also be driven with a position.")]
         public Transform feet;

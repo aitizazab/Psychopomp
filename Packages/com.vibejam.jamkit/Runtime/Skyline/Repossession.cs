@@ -36,6 +36,10 @@ namespace JamKit.Skyline
         }
 
         public void Reset() { _seconds = 0.0; _done = false; }
+
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): the time spent in the circle (a finished tow stays finished).</summary>
+        public double SecondsIn => _seconds;
+        public void RestoreSeconds(double seconds) { if (!_done) _seconds = Math.Max(0.0, Math.Min(seconds, FloorRules.TowSeconds - 0.01)); }
     }
 
     /// <summary>One line of the job sheet: an asset, the socket it sits on this run, and its meter.</summary>

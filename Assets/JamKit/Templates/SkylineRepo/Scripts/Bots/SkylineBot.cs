@@ -445,6 +445,7 @@ namespace JamKit.SkylineRepo
 
             _initialized = true;
             Live.Add(this);
+            if (isActiveAndEnabled) HellRewindListed(true);   // the Rewind's one bot path (SkylineBot.HellRewind.cs)
             if (isActiveAndEnabled && !SkylineTargets.Aimables.Contains(this)) SkylineTargets.Aimables.Add(this);
             if (def.hell != HellKind.None) HellInit();
             Pose(0f);
@@ -454,12 +455,14 @@ namespace JamKit.SkylineRepo
         {
             if (_initialized && Alive && !SkylineTargets.Aimables.Contains(this)) SkylineTargets.Aimables.Add(this);
             if (_initialized && Def.hell != HellKind.None) HellEnabled();
+            HellRewindListed(true);
         }
 
         void OnDisable()
         {
             SkylineTargets.Aimables.Remove(this);
             if (_initialized && Def.hell != HellKind.None) HellDisabled();
+            HellRewindListed(false);
         }
 
         void OnDestroy()

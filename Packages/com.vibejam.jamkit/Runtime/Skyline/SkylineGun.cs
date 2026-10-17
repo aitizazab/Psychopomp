@@ -244,6 +244,17 @@ namespace JamKit.Skyline
             return true;
         }
 
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): the magazine and reserve as they were, the gun idle (no reload, inspect,
+        /// equip or clip running).</summary>
+        public void RestoreForRewind(int magazine, int reserve)
+        {
+            _state.RestoreAmmo(magazine, reserve);
+            _handling.Stop();
+            _equipping = false;
+            _inspecting = false;
+            _reloadAfterDry = false;
+        }
+
         void OnFired()
         {
             _inspecting = false;

@@ -19,7 +19,7 @@ namespace JamKit.SkylineRepo
     /// <c>SKYLINE_RELAY wave &lt;n&gt; ...</c>.</para>
     /// </summary>
     [DefaultExecutionOrder(10)]
-    public sealed class SkylineRelayDirector : MonoBehaviour
+    public sealed partial class SkylineRelayDirector : MonoBehaviour
     {
         /// <summary>The seconds the won screen holds before a new run starts.</summary>
         public const float WinHold = 4.5f;

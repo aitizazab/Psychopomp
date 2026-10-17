@@ -301,6 +301,197 @@ namespace JamKit.Skyline
         static BlinkPlan Fail(string why) => new BlinkPlan { valid = false, kind = BlinkKind.None, reason = why };
     }
 
+    /// <summary>Shadow Step's charges: <see cref="Max"/> of them (1, +1 with Ambush); spent ones come back one at a time, each
+    /// after <see cref="Recharge"/> seconds. <see cref="Shave"/> takes time off the one recharging (Borrowed Time).</summary>
+    public sealed class AbilityCharges
+    {
+        public int Max = 1;
+        public float Recharge = 6f;
+        public int Charges { get; private set; }
+        /// <summary>Seconds until the next charge comes back (0 when full).</summary>
+        public float Remaining { get; private set; }
+
+        public AbilityCharges(int max, float recharge) { Max = Math.Max(1, max); Recharge = recharge; Charges = Max; }
+
+        public bool Ready => Charges > 0;
+        /// <summary>0 just spent, 1 the next charge is back (1 when full).</summary>
+        public float Fraction => Charges >= Max || Recharge <= 0f ? 1f : 1f - Math.Min(1f, Math.Max(0f, Remaining / Recharge));
+
+        public bool TrySpend()
+        {
+            if (Charges <= 0) return false;
+            if (Charges == Max) Remaining = Recharge;
+            Charges--;
+            return true;
+        }
+
+        public void Tick(float dt)
+        {
+            if (Charges > Max) Charges = Max;
+            if (Charges >= Max) { Remaining = 0f; return; }
+            if (!(dt > 0f)) return;
+            Remaining -= dt;
+            while (Remaining <= 0f && Charges < Max)
+            {
+                Charges++;
+                Remaining += Recharge;
+            }
+            if (Charges >= Max) Remaining = 0f;
+        }
+
+        /// <summary>Takes <paramref name="seconds"/> off the recharge (a charge may come back now).</summary>
+        public void Shave(float seconds)
+        {
+            if (Charges >= Max || !(seconds > 0f)) return;
+            Remaining -= seconds;
+            Tick(0f);
+            if (Remaining <= 0f && Charges < Max) { Charges++; Remaining = Charges < Max ? Recharge : 0f; }
+        }
+
+        /// <summary>A new maximum (a skill); the new charge is there at once.</summary>
+        public void SetMax(int max)
+        {
+            max = Math.Max(1, max);
+            if (max > Max) Charges += max - Max;
+            Max = max;
+            if (Charges > Max) Charges = Max;
+            if (Charges >= Max) Remaining = 0f;
+        }
+    }
+
+    /// <summary>Darkness, for Shadow Step's rule (you can only step INTO darkness): authored dark zones (boxes), dynamic dark
+    /// spheres (Nightfall), and fire lights that light whatever is within their radius (lit beats dark). Pure; the Unity side
+    /// (HellDarkness) converts bounds and keeps the time.</summary>
+    public sealed class DarknessField
+    {
+        struct Box { public Vector3 min, max; }
+        struct Sphere { public Vector3 c; public float r; public double until; }
+
+        readonly Dictionary<int, Box> _zones = new Dictionary<int, Box>();
+        readonly Dictionary<int, Sphere> _spheres = new Dictionary<int, Sphere>();
+        readonly Dictionary<int, Sphere> _lights = new Dictionary<int, Sphere>();
+        int _next = 1;
+
+        public int ZoneCount => _zones.Count;
+
+        public int AddZone(Vector3 min, Vector3 max) { int id = _next++; _zones[id] = new Box { min = Vector3.Min(min, max), max = Vector3.Max(min, max) }; return id; }
+        public bool RemoveZone(int id) => _zones.Remove(id);
+        /// <summary>A dark sphere until <paramref name="until"/> (game seconds; +infinity: until removed).</summary>
+        public int AddSphere(Vector3 c, float r, double until = double.PositiveInfinity) { int id = _next++; _spheres[id] = new Sphere { c = c, r = r, until = until }; return id; }
+        public bool RemoveSphere(int id) => _spheres.Remove(id);
+        public int AddLight(Vector3 c, float r) { int id = _next++; _lights[id] = new Sphere { c = c, r = r, until = double.PositiveInfinity }; return id; }
+        public bool RemoveLight(int id) => _lights.Remove(id);
+
+        public void Clear() { _zones.Clear(); _spheres.Clear(); _lights.Clear(); }
+
+        /// <summary>Drops spheres whose time is up.</summary>
+        public void Expire(double now)
+        {
+            List<int> gone = null;
+            foreach (var kv in _spheres) if (kv.Value.until <= now) (gone ?? (gone = new List<int>())).Add(kv.Key);
+            if (gone != null) foreach (var id in gone) _spheres.Remove(id);
+        }
+
+        public bool IsLit(Vector3 p)
+        {
+            foreach (var l in _lights.Values) if (Vector3.DistanceSquared(p, l.c) <= l.r * l.r) return true;
+            return false;
+        }
+
+        public bool IsDark(Vector3 p, double now = double.NegativeInfinity)
+        {
+            bool dark = false;
+            foreach (var s in _spheres.Values)
+                if (s.until > now && Vector3.DistanceSquared(p, s.c) <= s.r * s.r) { dark = true; break; }
+            if (!dark)
+                foreach (var z in _zones.Values)
+                    if (p.X >= z.min.X && p.X <= z.max.X && p.Y >= z.min.Y && p.Y <= z.max.Y && p.Z >= z.min.Z && p.Z <= z.max.Z) { dark = true; break; }
+            return dark && !IsLit(p);
+        }
+
+        /// <summary>The segment a..b passes through a live dark sphere (Nightfall blocks sight through it).</summary>
+        public bool SegmentThroughSphere(Vector3 a, Vector3 b, double now = double.NegativeInfinity)
+        {
+            foreach (var s in _spheres.Values)
+            {
+                if (s.until <= now) continue;
+                var ab = b - a;
+                float len2 = ab.LengthSquared();
+                float t = len2 > 1e-8f ? Math.Max(0f, Math.Min(1f, Vector3.Dot(s.c - a, ab) / len2)) : 0f;
+                if (Vector3.DistanceSquared(a + ab * t, s.c) <= s.r * s.r) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Inside a live dark sphere.</summary>
+        public bool InSphere(Vector3 p, double now = double.NegativeInfinity)
+        {
+            foreach (var s in _spheres.Values) if (s.until > now && Vector3.DistanceSquared(p, s.c) <= s.r * s.r) return true;
+            return false;
+        }
+    }
+
+    /// <summary>Shadow Step's landing rule on top of the geometry: the landing must be dark, or lava when the player owns
+    /// Ashwalker.</summary>
+    public static class BlinkRules
+    {
+        public static BlinkPlan Apply(BlinkPlan geometric, bool dark, bool lava, bool ashwalker)
+        {
+            if (!geometric.valid) return geometric;
+            if (dark || (lava && ashwalker)) return geometric;
+            geometric.valid = false;
+            geometric.reason = lava ? "lava (needs Ashwalker)" : "not dark";
+            return geometric;
+        }
+    }
+
+    /// <summary>A burn on an enemy: <see cref="dps"/> for <see cref="Remaining"/> seconds; a new burn refreshes to the longer
+    /// time and the hotter dps. Damage comes out in ticks of <see cref="tick"/> seconds.</summary>
+    public sealed class BurnStatus
+    {
+        public float tick = 0.25f;
+        public float dps { get; private set; }
+        public float Remaining { get; private set; }
+        float _acc;
+
+        public bool Burning => Remaining > 0f;
+
+        public void Apply(float seconds, float damagePerSecond)
+        {
+            if (!(seconds > 0f) || !(damagePerSecond > 0f)) return;
+            if (seconds > Remaining) Remaining = seconds;
+            if (damagePerSecond > dps || !Burning) dps = damagePerSecond;
+        }
+
+        /// <summary>Damage due this call (0 between ticks).</summary>
+        public float Tick(float dt)
+        {
+            if (!Burning || !(dt > 0f)) return 0f;
+            float live = Math.Min(dt, Remaining);
+            Remaining -= dt;
+            _acc += live;
+            float due = 0f;
+            while (_acc >= tick - 1e-6f) { _acc -= tick; due += dps * tick; }
+            if (Remaining <= 0f) { Remaining = 0f; due += dps * _acc; _acc = 0f; dps = 0f; }
+            return due;
+        }
+
+        public void Clear() { Remaining = 0f; dps = 0f; _acc = 0f; }
+    }
+
+    /// <summary>Momentum Bank: Time Dilation's hold grows with speed at the press, from <see cref="baseHold"/> standing to
+    /// baseHold + <see cref="bonusAtFull"/> at <see cref="fullAt"/> m/s and above.</summary>
+    public sealed class MomentumBank
+    {
+        public float baseHold = 3f, bonusAtFull = 3f, from = 2.5f, fullAt = 13f;
+
+        public float Hold(float speed)
+        {
+            float t = Math.Max(0f, Math.Min(1f, (speed - from) / Math.Max(0.01f, fullAt - from)));
+            return baseHold + bonusAtFull * t;
+        }
+    }
+
     // ------------------------------------------------------------------ floor skills
 
     public enum HellFlavour { Shadow, Time, Fire }

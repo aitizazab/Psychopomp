@@ -15,9 +15,9 @@ namespace JamKit.SkylineRepo
     /// from the side. Pooled (filled up front by <see cref="Prewarm"/>): a spent bolt is switched off and reused, never
     /// destroyed.</para>
     /// <para>Hell (docs/HELL-ENEMIES.md): <see cref="MakeEmber"/> turns a fired bolt into the fire imp's ember (a glowing orange-yellow
-    /// core with a short red-orange trail, no arc, a flare where it strikes). Rewindable: a bolt registers while it flies, and the
-    /// <see cref="HellRewindLedger"/> switches off one fired after the moment a Rewind goes back to.</para></summary>
-    public sealed class SkylineBolt : MonoBehaviour, IHellRewindSpawned
+    /// core with a short red-orange trail, no arc, a flare where it strikes). Rewindable as one pool (SkylineBolt.HellRewind.cs,
+    /// docs/HELL-INTEGRATION.md): a restore switches every bolt off and flies the snapshot's ones again, embers as embers.</para></summary>
+    public sealed partial class SkylineBolt : MonoBehaviour
     {
         const float MaxAge = 4f;
         const int PrewarmCount = 24;
@@ -256,57 +256,6 @@ namespace JamKit.SkylineRepo
             if (_arc != null) _arc.positionCount = 0;
             gameObject.SetActive(false);
         }
-
-        void OnEnable()
-        {
-            HellRewindRegistry.Register(this);
-            HellRewindLedger.Enabled(this);
-        }
-
-        void OnDisable()
-        {
-            HellRewindRegistry.Unregister(this);
-            HellRewindLedger.Disabled(this);
-        }
-
-        sealed class Snap
-        {
-            public bool active, ember;
-            public Vector3 position, vel, attackerPos, from;
-            public Quaternion rotation;
-            public float radius, damage, age;
-            public string attackerId;
-            public ISkylineTarget target;
-            public Transform owner;
-        }
-
-        public object Snapshot() => new Snap
-        {
-            active = gameObject.activeSelf, ember = _ember, position = transform.position, rotation = transform.rotation, vel = _vel,
-            attackerPos = _attackerPos, from = _from, radius = _radius, damage = _damage, age = _age, attackerId = _attackerId, target = _target, owner = _owner,
-        };
-
-        public void Restore(object snapshot)
-        {
-            if (!(snapshot is Snap s)) return;
-            if (!s.active) { if (gameObject.activeSelf) Stop(); return; }
-            _vel = s.vel;
-            _radius = s.radius;
-            _damage = s.damage;
-            _age = s.age;
-            _attackerId = s.attackerId;
-            _attackerPos = s.attackerPos;
-            _from = s.from;
-            _target = s.target;
-            _owner = s.owner;
-            transform.SetPositionAndRotation(s.position, s.rotation);
-            SetEmber(s.ember);
-            if (!gameObject.activeSelf) gameObject.SetActive(true);
-            _trail.Clear();
-            _trail.emitting = true;
-        }
-
-        public void VanishForRewind() => Stop();
 
         bool IsTarget(Collider c)
         {

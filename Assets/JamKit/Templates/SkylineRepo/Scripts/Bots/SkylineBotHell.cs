@@ -20,13 +20,11 @@ namespace JamKit.SkylineRepo
     /// at most <c>poolMax</c> burning at once.</item>
     /// <item><b>Death</b>: a burst of fire and smoke (<see cref="HellFx.DeathBurst"/>), plates thrown off, then the bot is DEACTIVATED,
     /// never destroyed, so the Rewind can bring it back.</item>
-    /// <item><b>Rewind</b>: <see cref="IHellRewindable"/>; registered while active. The snapshot holds the position, facing, velocity
-    /// (knock and patrol), health and plates, alive, the brain, patrol, search, arrival, idle work, aim trail, random stream, damage
-    /// stage and its own attack state (the ooze's throb and pools, the demon's arm, the imp's charge). Restore puts all of it back,
-    /// reactivating a bot that died since.</item>
+    /// <item><b>Rewind</b>: one snapshot path for every bot, in SkylineBot.HellRewind.cs (docs/HELL-INTEGRATION.md); the Hell attack
+    /// state here (throb, pools, arm, stride, charge) is in it. A dead Hell enemy is reactivated by a restore.</item>
     /// </list>
     /// </summary>
-    public sealed partial class SkylineBot : IHellRewindSpawned
+    public sealed partial class SkylineBot
     {
         // ---- the rig's animated parts (found by name: HellBodies' contract)
         Transform _wingL, _wingR, _armR, _legL, _legR, _blob;
@@ -78,15 +76,11 @@ namespace JamKit.SkylineRepo
         void HellEnabled()
         {
             if (Alive && !Live.Contains(this)) Live.Add(this);
-            HellRewindRegistry.Register(this);
-            HellRewindLedger.Enabled(this);
         }
 
         void HellDisabled()
         {
             Live.Remove(this);
-            HellRewindRegistry.Unregister(this);
-            HellRewindLedger.Disabled(this);
         }
 
         // ------------------------------------------------------------------ every frame
@@ -264,103 +258,5 @@ namespace JamKit.SkylineRepo
             Debug.Log("HELL_ENEMY " + Id + " died (deactivated, kept for the Rewind)");
             gameObject.SetActive(false);
         }
-
-        // ------------------------------------------------------------------ rewind
-
-        sealed class HellSnap
-        {
-            public bool active, awake, sees, everSeen, sawLast, hasGoal, returning, charging, striding;
-            public Vector3 pos, home, kick, lastKnown, goal, rootPos;
-            public Quaternion rootRot;
-            public float yaw, pitch, shake, sway, swayVel, clock, lastSeenAt, eightPhase, eightWeight, charge, spin;
-            public float armRaise, armTarget, walkPhase, flap, slam;
-            public Vector3[] trail;
-            public HellLavaPool[] pools;
-            public int lookStage;
-            public GunDef killedBy;
-            public object body, brain, patrol, rng, chestTrail, arrival, cleaning, damageStates, pulse;
-        }
-
-        public object Snapshot()
-        {
-            if (!_initialized) return null;
-            return new HellSnap
-            {
-                active = gameObject.activeSelf, awake = IsAwake, sees = SeesTarget, everSeen = _everSeen, sawLast = _sawLastStep,
-                hasGoal = _hasGoal, returning = _returning, charging = _charging, striding = _striding,
-                pos = _pos, home = _home, kick = _kick, lastKnown = _lastKnown, goal = _goal, rootPos = transform.position, rootRot = transform.rotation,
-                yaw = _yaw, pitch = _pitch, shake = _shake, sway = _sway, swayVel = _swayVel, clock = _clock, lastSeenAt = _lastSeenAt,
-                eightPhase = _eightPhase, eightWeight = _eightWeight, charge = _charge, spin = _spin,
-                armRaise = _armRaise, armTarget = _armTarget, walkPhase = _walkPhase, flap = _flap, slam = _slam,
-                trail = _trail.Count > 0 ? _trail.ToArray() : null,
-                pools = _pools.Count > 0 ? _pools.ToArray() : null,
-                lookStage = _lookStage, killedBy = KilledBy,
-                body = StateCopy.Capture(Body), brain = StateCopy.Capture(Brain), patrol = StateCopy.Capture(_patrol), rng = StateCopy.Capture(_rng),
-                chestTrail = Def.aimLagSeconds > 0f ? StateCopy.Capture(_chestTrail) : null, arrival = StateCopy.Capture(_arrival),
-                cleaning = StateCopy.Capture(_cleaning), damageStates = StateCopy.Capture(_damageStates), pulse = StateCopy.Capture(_pulse),
-            };
-        }
-
-        public void Restore(object snapshot)
-        {
-            if (!(snapshot is HellSnap s) || !_initialized) return;
-            if (!s.active)
-            {
-                if (gameObject.activeSelf) gameObject.SetActive(false);
-                return;
-            }
-            StateCopy.Apply(Body, s.body);
-            StateCopy.Apply(Brain, s.brain);
-            StateCopy.Apply(_patrol, s.patrol);
-            StateCopy.Apply(_rng, s.rng);
-            if (s.chestTrail != null) StateCopy.Apply(_chestTrail, s.chestTrail);
-            StateCopy.Apply(_arrival, s.arrival);
-            StateCopy.Apply(_cleaning, s.cleaning);
-            StateCopy.Apply(_pulse, s.pulse);
-            IsAwake = s.awake;
-            SeesTarget = s.sees;
-            _everSeen = s.everSeen;
-            _sawLastStep = s.sawLast;
-            _hasGoal = s.hasGoal;
-            _returning = s.returning;
-            _charging = s.charging;
-            _striding = s.striding;
-            _pos = s.pos; _home = s.home; _kick = s.kick; _lastKnown = s.lastKnown; _goal = s.goal;
-            _yaw = s.yaw; _pitch = s.pitch; _shake = s.shake; _sway = s.sway; _swayVel = s.swayVel;
-            _clock = s.clock; _lastSeenAt = s.lastSeenAt; _eightPhase = s.eightPhase; _eightWeight = s.eightWeight; _charge = s.charge; _spin = s.spin;
-            _armRaise = s.armRaise; _armTarget = s.armTarget; _walkPhase = s.walkPhase; _flap = s.flap; _slam = s.slam;
-            _trail.Clear();
-            if (s.trail != null) _trail.AddRange(s.trail);
-            _pools.Clear();
-            if (s.pools != null) _pools.AddRange(s.pools);
-            KilledBy = s.killedBy;
-            transform.SetPositionAndRotation(s.rootPos, s.rootRot);
-
-            // the look: plates on or off, wear, the damage stage (without its animation), the face, the charge
-            for (int i = 0; i < Parts.plates.Length; i++)
-                if (Parts.plates[i] != null) Parts.plates[i].gameObject.SetActive(Body.PlateOn(i));
-            ClearFlash();
-            if (_lookStage != s.lookStage) ForceDamageStage(s.lookStage);
-            _pendingStages.Clear();
-            StateCopy.Apply(_damageStates, s.damageStates);
-            ApplyWear(true);
-            if (!_charging && _chargeBall != null) _chargeBall.SetActive(false);
-            if (!gameObject.activeSelf)
-            {
-                gameObject.SetActive(true);   // a bot that died since comes back (OnEnable re-lists it)
-                Debug.Log("HELL_ENEMY " + Id + " restored alive by the Rewind");
-            }
-            else if (!Live.Contains(this) && Alive) Live.Add(this);
-            _face.Show(Brain.Face);
-            Pose(0f);
-        }
-
-        public void VanishForRewind()
-        {
-            // the Rewind went back to before this bot was spawned: it never was (no burst, no events)
-            if (_chargeBall != null) _chargeBall.SetActive(false);
-            gameObject.SetActive(false);
-        }
-
     }
 }

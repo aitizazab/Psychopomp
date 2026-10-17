@@ -11,10 +11,10 @@ namespace JamKit.SkylineRepo
     /// (so you read which way the sweep will come), brightening through the telegraph. Then it BEAMS: the blade flies along the line
     /// at the beam speed, a thick white-hot beam filling the path behind it, held a moment, then fading. Touching the lit beam hits
     /// once (<see cref="ISkylineTarget.TakeAttack"/>). Scaled time throughout (Time Dilation and Stasis slow it).
-    /// <para>Pooled; rewindable (registers while active; the <see cref="HellRewindLedger"/> switches off one that a Rewind goes back
-    /// before).</para>
+    /// <para>Pooled; rewindable (registers while active; <see cref="HellRewind"/> switches off one that a Rewind goes back
+    /// before, through <see cref="IHellRewindSpawnAware"/>).</para>
     /// </summary>
-    public sealed class HellScythe : MonoBehaviour, IHellRewindSpawned
+    public sealed class HellScythe : MonoBehaviour, IHellRewindable, IHellRewindSpawnAware
     {
         const int PrewarmCount = 12;
         /// <summary>The player's capsule for the hit test (m): its radius, and the feet-to-head span from the target's root and chest.</summary>
@@ -135,17 +135,8 @@ namespace JamKit.SkylineRepo
             return l;
         }
 
-        void OnEnable()
-        {
-            HellRewindRegistry.Register(this);
-            HellRewindLedger.Enabled(this);
-        }
-
-        void OnDisable()
-        {
-            HellRewindRegistry.Unregister(this);
-            HellRewindLedger.Disabled(this);
-        }
+        void OnEnable() => HellRewindRegistry.Register(this);
+        void OnDisable() => HellRewindRegistry.Unregister(this);
 
         void Update()
         {
@@ -230,7 +221,8 @@ namespace JamKit.SkylineRepo
             Draw();
         }
 
-        public void VanishForRewind() => gameObject.SetActive(false);
+        /// <summary>The Rewind went back to before this appeared: switch off quietly.</summary>
+        public void RewoundBeforeSpawn() => gameObject.SetActive(false);
 
         static NVec3 N(Vector3 v) => new NVec3(v.x, v.y, v.z);
         static Vector3 U(NVec3 v) => new Vector3(v.X, v.Y, v.Z);

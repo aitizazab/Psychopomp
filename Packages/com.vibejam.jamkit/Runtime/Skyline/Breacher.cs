@@ -43,6 +43,9 @@ namespace JamKit.Skyline
 
         public void Spend() => Ready = false;
 
+        /// <summary>A rewind (docs/HELL-ABILITIES.md).</summary>
+        public void Restore(bool ready) => Ready = ready;
+
         /// <summary>Settles a requested push: spends the boost only when the push would have spent it
         /// (<paramref name="spendsCharge"/>, from <see cref="BreacherKnockback.RequestSelfPush"/>) and the engine
         /// accepted it. A refused push costs nothing.</summary>

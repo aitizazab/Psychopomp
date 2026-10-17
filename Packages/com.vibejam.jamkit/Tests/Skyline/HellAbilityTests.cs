@@ -249,6 +249,135 @@ namespace JamKit.Tests.Skyline
             Assert.That(ring.Count, Is.EqualTo(0));
         }
 
+        // ---------------------------------------------------------------- the player's rewindable parts
+
+        [Test]
+        public void GunArmorAndLedgerRestoreForRewind()
+        {
+            var cues = new List<GunCue>();
+            var gun = new SkylineGun(SkylineGuns.Writ());
+            gun.Equip(cues);
+            for (int i = 0; i < 200; i++) gun.Tick(1f / 60f, true, i == 0, cues);
+            int mag = gun.Ammo;
+            Assert.That(mag, Is.LessThan(gun.Def.weapon.magazineSize));
+            gun.Reload(cues);
+            Assert.That(gun.State.IsReloading, Is.True);
+            gun.RestoreForRewind(3, 0);
+            Assert.That(gun.State.IsReloading, Is.False);
+            Assert.That(gun.Ammo, Is.EqualTo(3));
+            gun.Tick(0.5f, false, false, cues);
+            Assert.That(gun.Ammo, Is.EqualTo(3));                 // no reload finishes later
+
+            var armor = new PlayerArmor();
+            armor.Damage(1000f);
+            Assert.That(armor.Wrecked, Is.True);
+            armor.Restore(40f, 75f);
+            Assert.That(armor.Wrecked, Is.False);
+            Assert.That(armor.Plating, Is.EqualTo(40f));
+            Assert.That(armor.Chassis, Is.EqualTo(75f));
+
+            var ledger = new SpecialAmmoLedger();
+            ledger.Restore(5, 2);
+            Assert.That(ledger.Shots, Is.EqualTo(5));
+            Assert.That(ledger.KillProgress, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void WaveClockRestoresItsCount()
+        {
+            var c = new WaveClock(8, 20f);
+            var released = new List<WaveDef>();
+            c.Start();
+            c.Tick(5f, 0, false, released);
+            var save = c.SaveState();
+            float toNext = c.SecondsToNext;
+            int rel = c.Released;
+            c.Tick(30f, 0, false, released);
+            Assert.That(c.Released, Is.GreaterThan(rel));
+            c.RestoreState(save);
+            Assert.That(c.Released, Is.EqualTo(rel));
+            Assert.That(c.SecondsToNext, Is.EqualTo(toNext).Within(1e-4f));
+        }
+
+        // ---------------------------------------------------------------- charges, darkness, burn, momentum
+
+        [Test]
+        public void ChargesRechargeOneAtATimeAndShave()
+        {
+            var c = new AbilityCharges(2, 6f);
+            Assert.That(c.TrySpend() && c.TrySpend(), Is.True);
+            Assert.That(c.TrySpend(), Is.False);
+            c.Tick(5.9f);
+            Assert.That(c.Charges, Is.EqualTo(0));
+            c.Tick(0.2f);
+            Assert.That(c.Charges, Is.EqualTo(1));
+            Assert.That(c.Remaining, Is.EqualTo(5.9f).Within(1e-3f));
+            c.Shave(6f);                                   // Borrowed Time: the second comes back at once
+            Assert.That(c.Charges, Is.EqualTo(2));
+            Assert.That(c.Remaining, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void ChargesGainAChargeWithANewMax()
+        {
+            var c = new AbilityCharges(1, 6f);
+            c.TrySpend();
+            c.SetMax(2);
+            Assert.That(c.Charges, Is.EqualTo(1));
+            Assert.That(c.Ready, Is.True);
+        }
+
+        [Test]
+        public void DarknessIsZonesAndSpheresUnlessLit()
+        {
+            var f = new DarknessField();
+            Assert.That(f.IsDark(Vector3.Zero), Is.False);
+            int z = f.AddZone(new Vector3(-5, -1, -5), new Vector3(5, 4, 5));
+            Assert.That(f.IsDark(new Vector3(1, 0, 1)), Is.True);
+            int l = f.AddLight(new Vector3(4, 0, 4), 2f);
+            Assert.That(f.IsDark(new Vector3(4, 0, 3.5f)), Is.False);    // a fire lights it
+            Assert.That(f.IsDark(new Vector3(-4, 0, -4)), Is.True);
+            f.RemoveLight(l);
+            f.RemoveZone(z);
+            f.AddSphere(new Vector3(20, 0, 0), 4f, 8.0);
+            Assert.That(f.IsDark(new Vector3(22, 0, 0), 5.0), Is.True);
+            Assert.That(f.IsDark(new Vector3(22, 0, 0), 9.0), Is.False);  // Nightfall ended
+            Assert.That(f.SegmentThroughSphere(new Vector3(10, 0, 0), new Vector3(30, 0, 0), 5.0), Is.True);
+            Assert.That(f.SegmentThroughSphere(new Vector3(10, 0, 10), new Vector3(30, 0, 10), 5.0), Is.False);
+            f.Expire(9.0);
+            Assert.That(f.InSphere(new Vector3(20, 0, 0)), Is.False);
+        }
+
+        [Test]
+        public void BlinkNeedsDarknessOrLavaWithAshwalker()
+        {
+            var ok = new BlinkPlan { valid = true, kind = BlinkKind.Ground };
+            Assert.That(BlinkRules.Apply(ok, true, false, false).valid, Is.True);
+            Assert.That(BlinkRules.Apply(ok, false, false, false).valid, Is.False);
+            Assert.That(BlinkRules.Apply(ok, false, true, false).valid, Is.False);
+            Assert.That(BlinkRules.Apply(ok, false, true, true).valid, Is.True);
+        }
+
+        [Test]
+        public void BurnTicksItsDamageAndEnds()
+        {
+            var b = new BurnStatus();
+            b.Apply(2f, 10f);
+            float total = 0f;
+            for (int i = 0; i < 300; i++) total += b.Tick(1f / 60f);
+            Assert.That(total, Is.EqualTo(20f).Within(0.3f));
+            Assert.That(b.Burning, Is.False);
+        }
+
+        [Test]
+        public void MomentumBankHoldsLongerWhenFast()
+        {
+            var m = new MomentumBank();
+            Assert.That(m.Hold(0f), Is.EqualTo(3f));
+            Assert.That(m.Hold(13f), Is.EqualTo(6f));
+            Assert.That(m.Hold(8f), Is.InRange(3.5f, 5.5f));
+        }
+
         // ---------------------------------------------------------------- skills
 
         static readonly HellSkillDef[] Pool =

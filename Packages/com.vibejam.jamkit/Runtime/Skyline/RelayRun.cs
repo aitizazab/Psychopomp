@@ -122,6 +122,8 @@ namespace JamKit.Skyline
 
         public float Seconds => _seconds;
         public float Elapsed => _elapsed;
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): the run clock as it was (the steps done stay done).</summary>
+        public void RestoreElapsed(float elapsed) { if (_outcome == RelayOutcome.Running) _elapsed = Math.Max(0f, elapsed); }
         public float Remaining => Math.Max(0f, _seconds - _elapsed);
         public RelayOutcome Outcome => _outcome;
         public bool Running => _outcome == RelayOutcome.Running;

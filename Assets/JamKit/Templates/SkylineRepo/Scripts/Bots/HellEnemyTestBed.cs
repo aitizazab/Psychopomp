@@ -9,28 +9,24 @@ namespace JamKit.SkylineRepo
     /// A drop-in check of the Hell enemies (docs/HELL-ENEMIES.md, "See them in Unity"): add it to any scene with a
     /// <see cref="SkylinePlayer"/> on flat ground (Add Component, "JamKit/Hell/Enemy Test Bed") and press Play. At start it spawns,
     /// in front of the player, a fire imp (14 m out, hovering 3 m up), a scythe demon (22 m out) and a lava ooze (9 m out), each
-    /// awake in its own group, and a beam lane across the way 6 m ahead. Keys: <b>T</b> spawns the set again, <b>R</b> is a
-    /// stand-in Rewind (until the abilities branch's HellRewind is merged): it keeps 4 s of snapshots of every registered
-    /// <see cref="IHellRewindable"/> on the fixed step and restores the oldest. Logs <c>HELL_TESTBED ...</c>.
+    /// awake in its own group, and a beam lane across the way 6 m ahead. Keys: <b>T</b> spawns the set again, <b>R</b> uses the
+    /// real <see cref="HellRewind"/> on the player for free (no cooldown; added to the player if the abilities aren't on), so
+    /// the player rewinds too (docs/HELL-INTEGRATION.md). Logs <c>HELL_TESTBED ...</c>.
     /// </summary>
     [AddComponentMenu("JamKit/Hell/Enemy Test Bed")]
     public sealed class HellEnemyTestBed : MonoBehaviour
     {
         public bool imp = true, demon = true, ooze = true, beamLane = true, debugRewind = true;
         public float impDistance = 14f, demonDistance = 22f, oozeDistance = 9f;
-        public float rewindSeconds = 4f;
 
         SkylinePlayer _player;
         int _sets;
-        readonly List<KeyValuePair<IHellRewindable, object>[]> _frames = new List<KeyValuePair<IHellRewindable, object>[]>();
-        int _head;
 
         void Start()
         {
             SkylineBot.HellRoster = true;
             HellFx.Prewarm();
             SkylineBolt.Prewarm();
-            HellRewindLedger.Ensure();
             _player = Object.FindAnyObjectByType<SkylinePlayer>();
             if (_player == null)
             {
@@ -38,6 +34,7 @@ namespace JamKit.SkylineRepo
                 enabled = false;
                 return;
             }
+            if (debugRewind && _player.GetComponent<HellRewind>() == null) _player.gameObject.AddComponent<HellRewind>();
             // the imp's patrol and search stay inside SkylineBot.SearchArea (the Skyline hall by default): here, 60 m round the player
             Vector3 at = _player.transform.position;
             SkylineBot.SearchArea = Rect.MinMaxRect(at.x - 60f, at.z - 60f, at.x + 60f, at.z + 60f);
@@ -76,34 +73,16 @@ namespace JamKit.SkylineRepo
             Debug.Log("HELL_TESTBED spawned " + what + " (" + b.Id + ", " + b.Def.displayName + ") at " + b.transform.position);
         }
 
-        void FixedUpdate()
-        {
-            if (!debugRewind) return;
-            int keep = Mathf.Max(1, Mathf.RoundToInt(rewindSeconds / Time.fixedDeltaTime));
-            var all = HellRewindRegistry.All;
-            var frame = new KeyValuePair<IHellRewindable, object>[all.Count];
-            for (int i = 0; i < all.Count; i++) frame[i] = new KeyValuePair<IHellRewindable, object>(all[i], all[i].Snapshot());
-            if (_frames.Count < keep) _frames.Add(frame);
-            else
-            {
-                _frames[_head] = frame;
-                _head = (_head + 1) % keep;
-            }
-        }
-
         void Update()
         {
             var kb = Keyboard.current;
             if (kb == null) return;
             if (kb.tKey.wasPressedThisFrame) SpawnSet();
-            if (debugRewind && kb.rKey.wasPressedThisFrame && _frames.Count > 0)
+            if (debugRewind && kb.rKey.wasPressedThisFrame)
             {
-                // the oldest frame: everything back as it was then (iterating the frame, not the registry, which restores change)
-                var oldest = _frames.Count < Mathf.Max(1, Mathf.RoundToInt(rewindSeconds / Time.fixedDeltaTime)) ? _frames[0] : _frames[_head];
-                for (int i = 0; i < oldest.Length; i++) oldest[i].Key.Restore(oldest[i].Value);
-                _frames.Clear();
-                _head = 0;
-                Debug.Log("HELL_TESTBED rewound " + oldest.Length + " rewindables; live bots now " + SkylineBot.Live.Count);
+                var rw = _player != null ? _player.GetComponent<HellRewind>() : null;
+                bool done = rw != null && rw.TryRewind(free: true);
+                Debug.Log("HELL_TESTBED rewind " + (done ? "used" : "not ready (nothing recorded)") + "; live bots now " + SkylineBot.Live.Count);
             }
         }
     }

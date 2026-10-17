@@ -56,6 +56,16 @@ namespace JamKit.Skyline
             _rng = new Rng(seed);
         }
 
+        /// <summary>The brain's state and timers (a rewind, docs/HELL-ABILITIES.md; the seeded jitter stream runs on).</summary>
+        public object SaveState() => MemberwiseClone();
+
+        public void RestoreState(object state)
+        {
+            if (!(state is BotBrain s)) return;
+            _t = s._t; _unseen = s._unseen; _hurt = s._hurt; _alertFor = s._alertFor; _sinceSeen = s._sinceSeen;
+            State = s.State;
+        }
+
         public void Tick(float dt, bool seesPlayer, List<BotCue> cues)
         {
             if (State == BotState.Wrecked || !(dt > 0f) || float.IsInfinity(dt)) return;

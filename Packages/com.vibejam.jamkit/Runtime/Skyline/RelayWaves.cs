@@ -35,6 +35,8 @@ namespace JamKit.Skyline
         public void Stop() => _clock.Stop();
 
         public void Reset() => _clock.Reset();
+        /// <summary>The clock (a rewind, docs/HELL-ABILITIES.md).</summary>
+        public WaveClock Clock => _clock;
 
         /// <summary>Advances by <paramref name="dt"/>; the waves that came due are appended to <paramref name="due"/> as the lists
         /// of enemy ids to spawn (gondolas swapped for drones).</summary>

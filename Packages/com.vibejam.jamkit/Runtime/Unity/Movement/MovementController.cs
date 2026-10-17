@@ -201,6 +201,32 @@ namespace JamKit.Movement
             ApplyView();
         }
 
+        /// <summary>The body's whole movement state (for a rewind; docs/HELL-ABILITIES.md). Null before Awake.</summary>
+        public object SaveSimState() => _sim != null ? _sim.SaveState() : null;
+
+        /// <summary>Puts the body back as <see cref="SaveSimState"/> found it: the sim, the capsule's size and position, no
+        /// interpolation across the jump; then the look.</summary>
+        public void RestoreSimState(object state, float yaw, float pitch)
+        {
+            if (_sim == null || state == null) return;
+            _sim.RestoreState(state);
+            float h = _sim.Height;
+            controller.enabled = false;
+            controller.height = h;
+            controller.center = new Vector3(0f, h * 0.5f, 0f);
+            controller.stepOffset = Mathf.Min(StepOffsetFor(h), h);
+            transform.position = ToU(_sim.Position);
+            controller.enabled = true;
+            _driver.Resync();
+            _crouchToggled = false;
+            _lean.Reset();
+            _leanOffset = 0f;
+            _eye = _sim.EyeHeightTarget;
+            _yaw = yaw;
+            _pitch = Mathf.Clamp(pitch, -maxPitch, maxPitch);
+            ApplyView();
+        }
+
         void Update()
         {
             if (_sim == null) return;

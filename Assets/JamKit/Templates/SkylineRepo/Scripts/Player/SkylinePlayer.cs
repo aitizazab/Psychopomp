@@ -95,6 +95,12 @@ namespace JamKit.SkylineRepo
         /// <summary>The Unit was wrecked. With no listener the player restarts where it began (the arena restarts at the
         /// warm-up instead; the creator's death flow is M4).</summary>
         public event Action Wrecked;
+        /// <summary>Every attack that reached the Unit (damage, attacker id, attacker position), after the armour took it (the
+        /// Hell skills' damage hook, docs/HELL-ABILITIES.md).</summary>
+        public event Action<float, string, Vector3> AttackTaken;
+        /// <summary>Asked when the Unit is wrecked, before <see cref="Wrecked"/>: true means a Hell skill undid it (it restored
+        /// the armour, e.g. by a rewind) and nothing restarts.</summary>
+        [NonSerialized] public Func<bool> WreckIntercept;
 
         // ISkylineTarget
         public Vector3 Chest => transform.position + Vector3.up * ChestHeight;
@@ -256,9 +262,11 @@ namespace JamKit.SkylineRepo
             // A stop requested this frame keeps its first frame whole: it starts ticking next frame.
             if (!_hitStopRequested) HitStop.Tick(udt);
             _hitStopRequested = false;
-            // Time.timeScale is touched only while a hit stop runs (and once after), so nothing else's scale is overridden.
+            // The time scale has one owner (HellTime, docs/HELL-ABILITIES.md; the smallest request wins): the hit stop is one
+            // request, Time Dilation another, so neither overrides the other.
             bool stopping = HitStop.IsStopped || HitStop.IsRecovering;
-            if (stopping || _hitStopWasActive) Time.timeScale = HitStopEnabled ? HitStop.CurrentTimeScale : 1f;
+            if (stopping && HitStopEnabled) HellTime.Request(HellTime.HitStopKey, HitStop.CurrentTimeScale);
+            else if (_hitStopWasActive) HellTime.Clear(HellTime.HitStopKey);
             _hitStopWasActive = stopping;
             if (kickPivot != null)
             {
@@ -417,8 +425,11 @@ namespace JamKit.SkylineRepo
                 hud.DamageFrom(attackerPosition);
                 if (hit.platingBroke) hud.FlashPlating();
             }
+            AttackTaken?.Invoke(damage, attackerId, attackerPosition);
             if (hit.wrecked)
             {
+                // a Hell skill may undo the wreck (e.g. by rewinding): then nothing restarts
+                if (WreckIntercept != null && WreckIntercept()) return;
                 if (Wrecked != null) Wrecked();
                 else Restart(_spawnFeet, _spawnYaw);
             }
@@ -434,13 +445,70 @@ namespace JamKit.SkylineRepo
             Kick.Clear();
             Shake.Clear();
             HitStop.Clear();
-            Time.timeScale = 1f;
+            HellTime.ClearAll();
             _cues.Clear();
             Loadout = new Loadout(new SkylineGun(SkylineGuns.Writ()), new SkylineGun(SkylineGuns.Breacher()), _cues);
             AimAmount = 0f;
             _aimWanted = false;
             if (movement != null) movement.Teleport(feet, yaw, Vector3.zero);
             SetAim(yaw, 0f);
+            EnsureOutsidePush();
+        }
+
+        // ---------- The Hell descent's Rewind (docs/HELL-ABILITIES.md) ----------
+
+        /// <summary>Everything of the Unit a rewind puts back: the body (movement state), the look, the armour, the boost charge,
+        /// which gun is out and both guns' ammo, and the special-ammo reserve.</summary>
+        public sealed class RewindState
+        {
+            public object sim;
+            public float yaw, pitch, plating, chassis;
+            public bool boostReady;
+            public int active, mag0, res0, mag1, res1;
+            public bool hasLedger;
+            public int specialShots, specialKills;
+        }
+
+        public RewindState SaveForRewind()
+        {
+            var s = new RewindState
+            {
+                sim = movement != null ? movement.SaveSimState() : null,
+                yaw = Yaw, pitch = Pitch, plating = Armor.Plating, chassis = Armor.Chassis, boostReady = Boost.Ready,
+                active = Loadout.ActiveIndex,
+                mag0 = Loadout[0].Ammo, res0 = Loadout[0].State.Reserve, mag1 = Loadout[1].Ammo, res1 = Loadout[1].State.Reserve,
+            };
+            var ammo = SkylineAmmo.Instance;
+            if (ammo != null)
+            {
+                s.hasLedger = true;
+                s.specialShots = ammo.Ledger.Shots;
+                s.specialKills = ammo.Ledger.KillProgress;
+            }
+            return s;
+        }
+
+        public void RestoreFromRewind(RewindState s)
+        {
+            if (s == null) return;
+            Armor.Restore(s.plating, s.chassis);
+            Boost.Restore(s.boostReady);
+            Loadout[0].RestoreForRewind(s.mag0, s.res0);
+            Loadout[1].RestoreForRewind(s.mag1, s.res1);
+            if (s.hasLedger && SkylineAmmo.Instance != null) SkylineAmmo.Instance.Ledger.Restore(s.specialShots, s.specialKills);
+            if (Loadout.ActiveIndex != s.active) Loadout.Swap(_cues);   // the other gun comes out (its equip clip plays)
+            Kick.Clear();
+            Shake.Clear();
+            HitStop.Clear();
+            HellTime.Clear(HellTime.HitStopKey);
+            _hitStopWasActive = false;
+            Yaw = Mathf.Repeat(s.yaw, 360f);
+            Pitch = Mathf.Clamp(s.pitch, -MaxPitch, MaxPitch);
+            if (movement != null)
+            {
+                if (s.sim != null) movement.RestoreSimState(s.sim, Yaw, Pitch);
+                else movement.SetLook(Yaw, Pitch);
+            }
             EnsureOutsidePush();
         }
 
@@ -461,6 +529,7 @@ namespace JamKit.SkylineRepo
 
         void OnDisable()
         {
+            HellTime.ClearAll();
             if (Time.timeScale != 1f) Time.timeScale = 1f;
             if (Cursor.lockState != CursorLockMode.None)
             {

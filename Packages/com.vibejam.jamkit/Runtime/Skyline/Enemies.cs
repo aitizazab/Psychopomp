@@ -348,6 +348,14 @@ namespace JamKit.Skyline
 
         /// <summary>This run's recovered scrap (money, delivered at the end of the run for recovered salvage): the part of
         /// stripped wrecks that plating had no room for. Only ever grows.</summary>
+        /// <summary>A rewind (docs/HELL-ABILITIES.md): plating and chassis as they were; wrecked again only at 0 chassis.</summary>
+        public void Restore(float plating, float chassis)
+        {
+            Plating = Math.Max(0f, Math.Min(PlatingMax, plating));
+            Chassis = Math.Max(0f, Math.Min(ChassisMax, chassis));
+            Wrecked = Chassis <= 0f;
+        }
+
         public float RecoveredScrap { get; private set; }
 
         /// <summary>Scrap banked per plating point that didn't fit (data; the creator's call, 2026-10-13: excess converts to
