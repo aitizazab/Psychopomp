@@ -121,3 +121,18 @@ session merges, runs Unity, and the creator plays. Art and the trailer in the ev
 - **Trailer theme cards: not explicit.** A card saying "Shadow" over the Shadow abilities is too on the nose. Better
   implicit wording, e.g. "Make the denizens of Hell suffer a new nightmare" on a shadowy stylised card, cutting to your
   abilities; even that may read as too obvious, and any such claim must be backed up in gameplay.
+
+## The creator's calls, 2026-10-18 ~01:40
+- **Title: "Overdue"** for now; more options wanted.
+- **Fonts:** title only Cinzel Decorative Black; important subtext Metal Mania; non-game text (legal etc.) Barlow
+  Condensed; Luckiest Guy and Skyline's comic-words font stay. UI to be reviewed for Hell (plating, an ability wheel).
+- **Art:** the first look test missed the vision (no Hell sky, walls vs floors unclear, flat untextured surfaces, the
+  lighting not like Deep Rock Galactic's, enemies flat, studs invisible). B looked best by elimination; C unnavigable.
+  Lighting investigated and revamped first, then the stills again; the creator may pick different styles per floor.
+- **Baja's hour (agreed with notes):** only gameplay time counts; Easy 90 min, Normal 65, Hard 50 (a skilled run is
+  about 45 min at most). All jobs done and not way overtime: Baja sends you to assassinate Lucifer himself; the game
+  ends on that cliffhanger before the fight.
+- **Shadow** must hide you or otherwise give an advantage over fast movement; **fire kills shadow**; **darkness looks
+  and sounds dark** (a modifier on the current tune, or another treatment).
+- **Baja's voice:** the creator hears a version of Mara Sov's (Destiny 2): an original voice with those qualities, no
+  cloning of the real actress.
