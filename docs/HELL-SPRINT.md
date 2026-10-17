@@ -45,3 +45,11 @@ security. The art direction is confirmed before their 3-hour nap.
 ## Order
 Now: lanes 1, 2, 3, 5, 9 (no input needed) alongside rooms. When the research lands (about an hour): 6, 7, 8. When
 1-3 merge: 4. Target: merged and built by 02:30, judged and fixed by 03:00.
+
+## Queued (the creator, 2026-10-18 ~00:40)
+- **Theme-adherence review** once most layers are merged (effects, tutorials and beats, ending): an agent that does NOT
+  implement anything; it critically reviews the build against the event's advice (themes = 30%: core integration 15,
+  multi-theme synergy 10, atmospheric framing 5; Fire, Shadow, Time), finds the faults and ranks what to shore up
+  first. The creator's read: Time has plenty of seeds (Vesper's story, ours, the abilities), Fire is everywhere in the
+  setting, Shadow is weaker (mostly the abilities).
+- **The ending lane** (decision, escape, three endings) started 00:40, branch `hell-ending`.
