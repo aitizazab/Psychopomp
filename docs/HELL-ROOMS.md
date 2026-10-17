@@ -29,13 +29,19 @@ Units are metres. Ground is y 0. Lava sits in 1.2 m-deep basins (surface y -1.2)
 but standing in it for 1 s sinks you.
 
 1. **The Six Sigils** (72 x 182 m, a lava cavern). A stone ring walkway runs round the walls, with cover on its lava edge.
-   The sigils are 30-47 m apart, at heights 0, 3, 6, 0, -2 and 4. Each sigil is joined to the ring by a single bridge or
-   ramp, so the safe way to any sigil is the long way round the ring. Each leg tests a different skill:
-   - **A to B:** a wall-run along a 22 m wall standing in the lava.
-   - **B to C:** a rising chain of 5 collapsing platforms.
-   - **C to D:** a Shadow Step chain over two dark perches across a 40 m gulf.
-   - **D to E:** a platform with a beam lane (slide under it), then a drop into a walled pit.
-   - **E to F:** chained wall-runs up two tall walls, out of the pit onto a high ledge.
+   The sigils are 30-47 m apart, at heights 0, 3, 6, 0, -2 and 4. The safe way is stone: the ring, plus walkways
+   through the lava kept off the fast lines (2026-10-17, to cut the safe path from 931 m to 414 m): a bridge from the
+   start terrace to A, a south walkway to B's low landing and a ramp up onto B, B's north ramp and a walkway to a
+   crossing in front of C (C has an east ramp), an east spine past D's bridge, and a bridge and ramp into the pit for E.
+   Each leg tests a different skill, every one simulated (below):
+   - **A to B:** jump and double jump onto a 9 m wall standing in the lava, run it, run off its end onto B's low
+     landing (0.5 m), then up onto B (a ramp, or a hop and a mantle).
+   - **B to C:** a rising chain of 5 collapsing platforms (4 m), a double jump up onto C.
+   - **C to D:** run off C and jump down onto a dark perch, one Shadow Step to a second dark perch (you keep your speed),
+     a hop onto D. One charge: the old two-step chain needed two.
+   - **D to E:** a 2 m jump onto the beam platform, slide under the beam, jump the lava into the walled pit.
+   - **E to F:** into the corridor between the pit's west wall and a tall wall, wall-run its west face north, wall-jump
+     west over the pit wall onto a low block in the lava (0.5 m), then a jump, a double jump and a mantle onto F.
 
    The exit is past F.
 2. **The Soul Lantern** (44 x 60). Take the lantern by the entry and carry it to the altar across a lava chasm. While you
@@ -44,7 +50,8 @@ but standing in it for 1 s sinks you.
 3. **Break the Chains** (40 x 64). Three anchors hold the exit gate: on the west wall at 4.5 m, the east wall at 7.5 m and
    over the exit at 12 m. Each is warded, so a shot only bites from within 12 m. Fast: wall-run the walls that stand in
    the lava and shoot in mid-air; jump off the north deck for the third. Safe: ramps up to each anchor's balcony and to
-   the gallery. Dark pillars in the lava make a Shadow Step line.
+   the gallery. Dark pillars in the lava make a Shadow Step line; the middle one (5 x 6 m) is where the west wall's wall
+   jump lands, the stepping stone between the two walls.
 4. **Hold the Brand** (52 x 70). Charge from speed, not from standing (the creator, 2026-10-17). The brand is a glowing
    ring 20 m across on a 24 m island, round an 8 m lava pool: the track between them is a racetrack, with a wall-run
    wall on each long side and three stones (one on the ring's south edge, two at the pool's corners). Inside the ring
@@ -66,7 +73,8 @@ but standing in it for 1 s sinks you.
    before, it hits for 30 within 1.5 m, and a sidestep clears it. Imps come at the side walls every 3 s (3 waves, 2
    each). A sink here restarts the room, because the floor behind you is gone.
 6. **The Ooze Wells** (52 x 64). Three wells in a lava lake. Stand within 3.5 m of a well for 3 s to seal it, in any order.
-   An open well spawns an ooze every 7 s, at most 2 alive per well. Fast: collapsing stepping stones between the wells.
+   An open well spawns an ooze every 7 s, at most 2 alive per well. Fast: 4.5 m collapsing stepping stones a sprint hop
+   (6 m) apart between the wells; the piers of wells 1 and 3 run out to the row of stones, well 2's pier out to its well.
    Safe: the ring walkway and the piers.
 
 Each room has an entry vestibule and an exit corridor with a drop hole. Every room except The Collapse has an exit gate
@@ -117,7 +125,7 @@ Measured path lengths, base layouts:
 
 | Room | Safe (m) | Fast (m) | Notes |
 |---|---|---|---|
-| Sigils | 931 | 277 | |
+| Sigils | 414 | 276 | was 931: the crossings (2026-10-17) |
 | Lantern | 97 | 64 | |
 | Chains | 251 | 90 | |
 | Brand | 139 | 82 | with the charge at a sprint: safe 424, fast 177 (0.42x); racing line 55.8 m a lap, 1.7 laps |
@@ -228,6 +236,66 @@ plays with floor 1's handedness. Its difference is in the numbers and the enemy 
 | Lights | `HellRoomLayouts.LightSpacing`, `LightRadius` |
 | Enemies | `k.Spawn(role, position, yaw, wave, minFloor)` in each layout |
 
+## The traversal simulator (the fast lines, simulated)
+
+`Tests/Skyline/Hell/`:
+
+| File | What it holds |
+|---|---|
+| `HellTraversalSim.cs` | `HellTraversalWorld`: a room variant as the movement engine sees it. Every solid is a `BoxWorld` box or ramp, with gates open. Each lava basin is a solid box at the lava surface, as the Unity builder makes it. Each collapsing platform is a box with its own `CollapseCycle` at the floor's shake time; The Collapse's timeline tiles stay solid (`HellRoomTests` races the clock). Beams are always on, and a body in one fails the leg. The darkness is the room's dark zones and fire lights in a `DarknessField`. The Shadow Step uses `BlinkPlanner` and `BlinkRules` on rays against the same boxes, dark checked at the feet + 0.5 m like the Unity side; it has one charge (6 s), keeps your velocity and is refused while carrying. `HellLeg` is a scripted leg; `HellTraversal` runs it. |
+| `HellFastLines.cs` | The legs, room by room: every fast-line leg that needs a jump, a wall-run, a slide or a step (16 legs, all six rooms). |
+| `HellFastLineTests.cs` | One test per leg. It runs on all three floors (floor 2 mirrored, floor 3 turned), at full speed and at 90% (sprint speed and start speed x 0.9). Every press is tried 0.1 s early and 0.1 s late one at a time, and all presses 0.1 s late together; every run must succeed. |
+
+It drives the real `MoveSim`, the code the player runs, at 120 Hz. Its world is `BoxWorld`, not Unity's
+CharacterController, so positions are close but not exact.
+
+**A leg** starts standing at `from`, already moving toward `face` at a share of sprint speed (`StartSpeed(0)`: from
+a standstill). Then its beats run in order. A beat looks at a point (the view's yaw turns to it; the stick is held
+forward and sprint is held). It may press one thing as it starts, and it lasts until its condition (never before its
+own press has fired). After the last beat the player runs at the goal. The leg succeeds when the feet stand on ground
+within the goal's radius and half a metre of its height. It fails on lava, a beam, a fall or the timeout. Points and
+conditions are in the base layout's frame; the floor variants run through their transform.
+
+```csharp
+yield return new HellLeg(K, "A-B wall-run onto B", V(-18, 0, 33), V(-12, 0, 41))
+    .Run(V(-12, 0, 41), p => p.Pos.Z > 37.4f)                          // run to A's edge
+    .Jump(V(-9, 1, 42.6f), p => p.Falling)                             // jump, until the apex
+    .Jump(V(-6, 1, 42.6f), p => p.Wallrunning || p.BeatTime > 1.2f)    // double jump onto the wall
+    .Run(V(4, 1, 42.6f), p => p.Pos.X > -2f && p.Grounded)             // run the wall, off its end
+    .Run(V(15, 0.5f, 47.5f), p => p.Pos.Z > 46.3f)
+    .Jump(V(16, 3, 52), p => p.Grounded)
+    .Goal(V(16, 3, 52), 3.5f);
+```
+
+The beats are `Run`, `Jump`, `Hop`, `Slide` (presses crouch and holds it), `Step(at, look, until)` (a Shadow Step
+aimed at a point) and `Carrying()` (the lantern's 0.8x stick, no step). A `Hop` is a jump on landing: its timing slop
+is late only, because a press before the landing is a double jump. Early presses are timed from the on-time run; late
+ones from when the beat is actually reached, as a player reacting late. The `HellProbe` a condition reads has `Pos`,
+`Grounded`, `Falling`, `Wallrunning`, `BeatTime`, `HorizontalDistance(p)` and the `Sim`. `Stones(...)` scripts a run of
+stepping stones the way a player crosses them: on each stone, run on and jump from its far half.
+
+**Writing a leg that reads like a player:**
+- Look past where you land: looking at the landing spot swings the view round as you reach it and kills your speed.
+- Jump from position conditions (an edge, a distance) rather than from times, so a late press stays a late press.
+- A failure prints the run's log: presses, mode changes, platforms falling and where it ended.
+
+To add a leg, add a `yield return` to the room's method in `HellFastLines.cs`; the test picks it up. Run only these:
+`dotnet test core-tests/Skyline/Skyline.Tests.csproj --filter FullyQualifiedName~HellFastLine` (about 10 s).
+
+**What the simulation changed (2026-10-17):**
+
+| Room | Leg | What failed | The fix |
+|---|---|---|---|
+| Sigils | A to B | The 22 m wall can't be run in one wall-run (1.75 s); a low catch sank into the lava by x -4, and the wall jump pushed away from B. | The wall is 9 m (x -12..-3), running off its end onto a low landing (0.5 m) south of B, then a ramp or a hop and mantle onto B. |
+| Sigils | B to C | 3 m platforms: hops at 90% speed fell short, and the errors added up over five hops. | 4 m platforms, and a double jump onto C. |
+| Sigils | C to D | Two Shadow Steps in a row: there is one charge (6 s recharge). | A jump down onto a dark perch, one step to a second, a hop to D (D moved 4 m west to keep the step in range). |
+| Sigils | D to E | The double jump onto the beam platform landed in the beam. | The platform starts 2 m sooner (z 110): a plain jump, land, slide. |
+| Sigils | E to F | Two walls whose wall jumps pushed away from F; not enough height out of a 6 m climb. | One tall wall in the pit, run on its west face; the wall jump west lands on a low block in the lava (0.5 m) beside F, then up onto F. |
+| Chains | The two walls | The west wall's wall jump overshot the middle pillar (3 m) into the lava. | The pillar is 5 x 6 m, where the jump lands. |
+| Wells | Every stone run | Stones 4.3-4.5 m apart and 3 m wide: every sprint hop (6 m) overshot. | 4.5 m stones a sprint hop apart; the piers run out to the stones. |
+| Lantern, Brand, Collapse | All | Held as built. | None (the Brand and The Collapse are hell-rooms2's; simulated, not changed). |
+
+
 ## Checks
 
 `powershell -NoProfile -File tools/skyline/test.ps1` runs the pure tests and the Unity-side compile check. To run the
@@ -291,9 +359,15 @@ Rewind can bring one back). See `docs/HELL-INTEGRATION.md`.
 
 **Not checked in play:**
 - Nothing has run in Unity yet: no play test, no captures.
-- The fast lines are designed to the movement numbers (sprint 9.5, jump 1.25 + 1.0, slide height 1.0, Shadow Step 18 m)
-  but are not simulated. In particular, the Sigils' E-F chained wall-run up out of the pit and the A-B wall-run's
-  jump-off onto B (+3 m) may need the walls moved after a try.
+- Every room's fast line is simulated leg by leg in the movement engine ("The traversal simulator" below), with
+  margins: all three floors, full and 90% speed, each press 0.1 s early or late. That is `BoxWorld`, not Unity's
+  CharacterController, and scripted input, not hands. Worth a human try first, the tightest legs:
+  - the Sigils' C-D: landing on the first dark perch at a run and stepping straight away (you keep your speed, so a
+    late step runs you off the 4.5 m perch);
+  - the Sigils' E-F: the turn into the pit-wall corridor and the early wall kick (0.25 s after the catch) that clears
+    the pit wall;
+  - Break the Chains: the west wall's wall jump onto the middle pillar (jump off by about z 19.5);
+  - the Brand's dark pillars: step onto the first at a run, then two hops on landing (3 m pillars).
 - The Collapse and the Brand's racing line ARE simulated, in the pure movement engine on `BoxWorld` (not Unity's
   CharacterController), with scripted inputs. The margins are thin by design: slides and hops keep 0.26 s on floor 3's
   fast lane at the start (the first rows, while you accelerate from the drop); the safe lane leaves about 1 s. If the
@@ -306,8 +380,9 @@ Rewind can bring one back). See `docs/HELL-INTEGRATION.md`.
 - Debris only hurts the player (not bots), and hits whoever is under it on the landing step (no knockback).
 
 **Layout:**
-- The Sigils' safe path is very long: 931 m against a 277 m fast path, about 100 s of sprinting. If it plays as a slog,
-  add a crossing (the lint will keep the fast path at 0.8x or less).
+- The Sigils' safe path is now 414 m (about 44 s of sprinting) against a 276 m fast path (0.67x). The new walkways
+  are plain stone floors and ramps (one material); check they read as the safe way and don't pull the eye off the
+  fast line.
 - The Collapse's safe path is 0.795x away from failing the 0.8x length rule (156 m against 124 m): its end-floor detour
   keeps it there. Shortening the safe lane's winding breaks the lint; lengthening it before the tiles end breaks the
   "survivable at a sprint" test.

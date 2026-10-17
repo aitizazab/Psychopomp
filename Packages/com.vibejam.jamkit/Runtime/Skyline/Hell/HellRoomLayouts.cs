@@ -47,15 +47,15 @@ namespace JamKit.Skyline
 
         /// <summary>
         /// A 72 x 170 m lava cavern, built for Hell from scratch. A stone ring walkway runs round the walls (cover on its lava
-        /// edge); the sigils stand far apart (legs of 30 to 47 m) on islands, a pillar, a sunken pit and a high ledge, each
-        /// joined to the ring by ONE bridge or ramp, so the safe way to any sigil is the long way round the ring. Every straight
+        /// edge); the sigils stand far apart (legs of 30 to 47 m) on islands, a pillar, a sunken pit and a high ledge, joined to
+        /// the ring and to stone walkways kept off the fast lines (the safe path, 414 m; docs/HELL-ROOMS.md). Every straight
         /// line is blocked by something that needs a movement tool, a different one each leg:
         /// <list type="bullet">
-        /// <item>A (island, y 0) to B (island, y 3): a lava gulf with a 22 m runnable wall standing in it: wall-run.</item>
-        /// <item>B to C (pillar top, y 6): a rising chain of five collapsing platforms.</item>
-        /// <item>C to D (island, y 0): a 40 m gulf crossed by two dark perches: the Shadow Step chain.</item>
+        /// <item>A (island, y 0) to B (island, y 3): a lava gulf with a 9 m runnable wall standing in it: wall-run off its end onto B's landing.</item>
+        /// <item>B to C (pillar top, y 6): a rising chain of five collapsing platforms (4 m).</item>
+        /// <item>C to D (island, y 0): a 40 m gulf: jump down onto a dark perch, one Shadow Step to another, a hop.</item>
         /// <item>D to E (pit floor, y -2): a platform with a beam lane across it (slide), then a drop into the pit.</item>
-        /// <item>E to F (ledge, y 4): two tall runnable walls, pit to lava to ledge: chained wall-runs up and out.</item>
+        /// <item>E to F (ledge, y 4): a tall runnable wall in the pit: wall-run, wall-jump onto a low block, up to the ledge.</item>
         /// </list>
         /// </summary>
         static HellRoomDef SixSigils()

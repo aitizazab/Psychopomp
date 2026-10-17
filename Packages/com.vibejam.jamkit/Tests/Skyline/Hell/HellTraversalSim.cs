@@ -14,7 +14,8 @@ namespace JamKit.Tests.Skyline
     /// surface, as the Unity builder makes it; every collapsing platform a box with its own <see cref="CollapseCycle"/> at the
     /// room's shake time), the darkness (the room's dark zones and fire lights, <see cref="DarknessField"/>) and the Shadow Step's
     /// world (<see cref="IBlinkWorld"/> rays against the same boxes). Beams are not solid: a body crossing one fails the leg (a
-    /// beam is treated as always on).
+    /// beam is treated as always on). The Collapse's timeline tiles stay solid (they fall on the room clock, which
+    /// HellRoomTests races separately).
     /// </summary>
     public sealed class HellTraversalWorld : IBlinkWorld
     {
@@ -54,7 +55,9 @@ namespace JamKit.Tests.Skyline
                         break;
                     case HellHazardKind.Collapse:
                         var box = World.Add((b.min + b.max) * 0.5f, b.max - b.min, false);
-                        Platforms.Add((h, box, new CollapseCycle(room.collapseShakeSeconds, room.collapseReturnSeconds)));
+                        // The Collapse's timeline tiles fall on the room clock, not under you: they stay solid here (the race
+                        // against the clock is HellRoomTests' own simulation)
+                        if (!h.Timeline) Platforms.Add((h, box, new CollapseCycle(room.collapseShakeSeconds, room.collapseReturnSeconds)));
                         break;
                     case HellHazardKind.Beam:
                         Beams.Add(h);

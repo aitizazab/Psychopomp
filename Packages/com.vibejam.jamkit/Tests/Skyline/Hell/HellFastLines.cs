@@ -16,6 +16,8 @@ namespace JamKit.Tests.Skyline
             foreach (var l in Lantern()) yield return l;
             foreach (var l in Chains()) yield return l;
             foreach (var l in Wells()) yield return l;
+            foreach (var l in Brand()) yield return l;
+            foreach (var l in Collapse()) yield return l;
         }
 
         // ------------------------------------------------------------------ The Six Sigils
@@ -164,6 +166,43 @@ namespace JamKit.Tests.Skyline
             yield return Stones(new HellLeg(K, "stones, well 3 to well 2", V(16, 0, 24), V(10.5f, 0, 33.25f)).StartSpeed(0f)
                     .Run(V(10.5f, 0, 33.25f), p => p.Pos.Z > 27.4f).Jump(toW2[0], p => p.Grounded), V(10.5f, 0, 33.25f), toW2, 5.6f, 6.5f)
                 .Goal(V(1, 0, 52), 3f);
+        }
+
+        // ------------------------------------------------------------------ Hold the Brand (hell-rooms2's layout: simulated only)
+
+        public static IEnumerable<HellLeg> Brand()
+        {
+            const HellRoomKind K = HellRoomKind.HoldBrand;
+            // the stepping stones over the lake: 1-1.5 m gaps, sprinted straight over
+            yield return new HellLeg(K, "the stones in, at a sprint", V(0, 0, 4), V(0, 0, 30))
+                .Run(V(0, 0, 40), p => p.Pos.Z > 25f)
+                .Goal(V(0, 0, 29), 3f);
+            // the dark pillars: a Shadow Step onto the first at a run (you keep your speed), a hop to the second, a hop onto the island
+            yield return new HellLeg(K, "the dark pillars in", V(9.5f, 0, 2), V(9.5f, 0, 14.5f))
+                .Run(V(9.5f, 0, 14.5f), p => p.Pos.Z > 8.5f)
+                .Step(V(9.5f, 0.5f, 14.5f), V(8.5f, 0.5f, 26), p => p.Grounded && p.BeatTime > 0.02f)
+                .Hop(V(8.5f, 0.5f, 26), p => p.Grounded)
+                .Hop(V(8, 0, 34), p => p.Grounded)
+                .Goal(V(8, 0, 29), 3f);
+        }
+
+        // ------------------------------------------------------------------ The Collapse (hell-rooms2's layout: simulated only)
+
+        public static IEnumerable<HellLeg> Collapse()
+        {
+            const HellRoomKind K = HellRoomKind.Collapse;
+            yield return new HellLeg(K, "the 4 m lava gap", V(0, 0, 22), V(0, 0, 40))
+                .Run(V(0, 0, 50), p => p.Pos.Z > 29.2f)
+                .Jump(V(0, 0, 50), p => p.Grounded)
+                .Goal(V(0, 0, 38), 3f);
+            yield return new HellLeg(K, "the beam, slid under", V(0, 0, 38), V(0, 0, 60))
+                .Run(V(0, 0, 70), p => p.Pos.Z > 46f)
+                .Slide(V(0, 0, 70), p => p.Pos.Z > 51.5f)
+                .Goal(V(0, 0, 56), 4f);
+            yield return new HellLeg(K, "the 12 m gap, a Shadow Step", V(0, 0, 60), V(0, 0, 90))
+                .Run(V(0, 0, 100), p => p.Pos.Z > 68.8f)
+                .Step(V(0, 0, 85), V(0, 0, 100), p => p.Grounded && p.BeatTime > 0.02f)
+                .Goal(V(0, 0, 90), 4f);
         }
     }
 }
