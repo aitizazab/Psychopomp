@@ -121,7 +121,10 @@ namespace JamKit.Skyline
         };
 
         // Small words on the screens (draft).
-        public const string Start = "START", Settings = "SETTINGS", Quit = "QUIT", Continue = "CONTINUE";
+        public const string Start = "START", Chapters = "CHAPTERS", Settings = "SETTINGS", Quit = "QUIT", Continue = "CONTINUE", Back = "BACK";
+
+        /// <summary>The chapter menu (HellFlow chapters 0-3).</summary>
+        public static readonly string[] ChapterNames = { "FLOOR 1  THE EMBER GATE", "FLOOR 2  THE MOLTEN WORKS", "FLOOR 3  THE BLACK GLASS", "VESPER" };
         public const string SkipHint = "ENTER / A  next      ESC / B  skip";
         public const string MenuHint = "ENTER / A  select      ↑ ↓ / D-PAD  move";
         public const string StatsTitle = "THE DESCENT";

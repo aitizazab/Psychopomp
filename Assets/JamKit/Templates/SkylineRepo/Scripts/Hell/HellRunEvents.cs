@@ -63,7 +63,8 @@ namespace JamKit.SkylineRepo
         public static event Action<Vector3, Vector3> ShadowStepUsed;
         /// <summary>The jobs lane's job events (job id). The run's stats count them; the jobs lane calls the Raise* methods.</summary>
         public static event Action<string> JobOffered, JobDone, JobFailed;
-        /// <summary>A start from the title: 0 the full game (with the opening), 1-2 a floor's chapter, 3 Vesper.</summary>
+        /// <summary>A start from the title: -1 the full game (with the opening), 0-2 a floor's chapter, 3 Vesper
+        /// (<see cref="HellFlow.Chapter"/>). A chapter's skill picks are granted before it, through <see cref="FloorCleared"/>.</summary>
         public static event Action<int> ChapterStarted;
 
         /// <summary>True between <see cref="FloorCleared"/> and <see cref="ContinueAfterPick"/>.</summary>

@@ -38,6 +38,7 @@ namespace JamKit.SkylineRepo
         HellFastPathTracker _fast;
         HellAbilities _stepSource;
         bool _skipScreens;
+        int _chapter = -1, _chapterPicks, _chapterPicked;
         float _pickWait;
 
         static long Key(int floor, HellRoomKind kind) => floor * 100L + (int)kind;
@@ -117,7 +118,8 @@ namespace JamKit.SkylineRepo
             for (int i = 0; i + 1 < args.Length; i++)
                 if (args[i] == "-hellSeed" && ulong.TryParse(args[i + 1], out var parsed)) s = parsed;
             if (s == 0) s = Rng.TimeSeed();
-            var run = new HellRun(s);
+            // floor 1 is the curated opening deck (a judge's first minutes; the Soul Lantern pinned); -hellRandomDeck deals it
+            var run = new HellRun(HellDeck.ForRun(s, !SkylineRunArgs.Has("-hellRandomDeck")));
             // subscribed before the flow's own handlers: the room is live before the floor card shows
             run.RoomEntered += OnRoomEntered;
             run.FloorCleared += f => Debug.Log("HELL_RUN floor " + f + " cleared");
@@ -196,14 +198,42 @@ namespace JamKit.SkylineRepo
             switch (screen)
             {
                 case HellScreens.Screen.Title:
-                    if (choice == 0) Flow.StartGame();
-                    else if (choice == 2) Flow.Quit();
+                    if (choice == HellScreens.ChoiceStart) { Flow.StartGame(); HellRunEvents.RaiseChapterStarted(HellFlow.FullGame); }
+                    else if (choice == HellScreens.ChoiceQuit) Flow.Quit();
+                    else if (choice >= HellScreens.ChoiceChapter) BeginChapter(choice - HellScreens.ChoiceChapter);
                     break;
                 case HellScreens.Screen.Opening: Flow.OpeningDone(); break;
                 case HellScreens.Screen.FloorCard: Flow.FloorIntroDone(); break;
                 case HellScreens.Screen.Credits: Flow.CreditsDone(); break;
                 case HellScreens.Screen.Stats: Flow.StatsDone(); break;
             }
+        }
+
+        /// <summary>A chapter from the title: first the skill picks the skipped floors would have given (one per floor
+        /// cleared before it, through the normal pick: <see cref="HellRunEvents.FloorCleared"/>), then the chapter.</summary>
+        void BeginChapter(int chapter)
+        {
+            _chapter = chapter;
+            _chapterPicks = Mathf.Min(chapter, HellRoomVariants.FloorCount - 1);
+            _chapterPicked = 0;
+            Debug.Log("HELL_FLOW chapter " + chapter + " (" + _chapterPicks + " picks first)");
+            if (Screens != null) Screens.Hide();
+            TickChapter();
+        }
+
+        void TickChapter()
+        {
+            if (_chapter < 0 || Flow.Stage != HellFlowStage.Title || HellRunEvents.WaitingForPick) return;
+            if (_chapterPicked < _chapterPicks)
+            {
+                int f = _chapterPicked++;
+                if (HellRunEvents.RaiseFloorCleared(f)) return;     // the pick is open: wait for it to close
+                _chapterPicked = _chapterPicks;                     // nobody picks: no skills to grant
+            }
+            int c = _chapter;
+            _chapter = -1;
+            Flow.StartChapter(c);
+            HellRunEvents.RaiseChapterStarted(c);
         }
 
         void OnBossDefeated()
@@ -287,6 +317,7 @@ namespace JamKit.SkylineRepo
             if (!_hud.Built && SkylineHud.Instance != null && SkylineHud.Instance.Safe != null) _hud.Build(SkylineHud.Instance.Safe);
             _hud.Tick();
             HookSteps();
+            if (_chapter >= 0 && Flow != null) TickChapter();
             if (Run == null || player == null || Flow == null) return;
             bool held = SkylineDeviceInput.Paused || SkylinePauseMenu.IsOpen || (Screens != null && Screens.Visible);
             if (!held && Run.Phase != HellRunPhase.AwaitingPick) Flow.Tick(Time.unscaledDeltaTime);

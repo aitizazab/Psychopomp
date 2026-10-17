@@ -429,6 +429,8 @@ namespace JamKit.SkylineRepo
                         v => Mathf.RoundToInt(v) + " deg");
                     AddToggle("Invert Y", () => o.invertY, v => o.invertY = v);
                     AddToggle("Aim assist (pad)", () => o.aimAssist, v => o.aimAssist = v);
+                    AddChoice("Frame rate cap", SkylineOptions.FrameCapNames, () => o.frameCap, v => { o.frameCap = v; SkylineSettings.ApplyDisplay(); });
+                    AddToggle("VSync", () => o.vsync, v => { o.vsync = v; SkylineSettings.ApplyDisplay(); });
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
                 case Page.Subtitles:

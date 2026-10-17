@@ -283,6 +283,69 @@ namespace JamKit.Tests.Skyline
             Assert.That(fast.Visited, Is.EqualTo(0));
         }
 
+        // ------------------------------------------------------------------ chapters and the opening deck
+
+        [Test]
+        public void ChaptersStartAtTheirFloorOrAtTheBoss()
+        {
+            for (int ch = 0; ch < 3; ch++)
+            {
+                var stages = new List<string>();
+                var flow = NewFlow(stages);
+                Assert.That(flow.StartChapter(ch), Is.True);
+                Assert.That(flow.Chapter, Is.EqualTo(ch));
+                Assert.That(flow.Stage, Is.EqualTo(HellFlowStage.FloorIntro), "no opening");
+                Assert.That(flow.IntroFloor, Is.EqualTo(ch));
+                Assert.That(flow.Run.Floor, Is.EqualTo(ch));
+                Assert.That(stages.Contains("Opening"), Is.False);
+            }
+            var boss = NewFlow();
+            bool asked = false;
+            boss.BossHook = () => { asked = true; return true; };
+            Assert.That(boss.StartChapter(HellFlow.VesperChapter), Is.True);
+            Assert.That(asked, Is.True);
+            Assert.That(boss.Stage, Is.EqualTo(HellFlowStage.Boss));
+            Assert.That(NewFlow().StartChapter(4), Is.False);
+            var started = NewFlow();
+            started.StartGame();
+            Assert.That(started.StartChapter(1), Is.False, "only from the title");
+            Assert.That(started.Chapter, Is.EqualTo(HellFlow.FullGame));
+        }
+
+        [Test]
+        public void FloorOneIsTheCuratedDeckWithTheLanternAndARandomDeckPinsTheLantern()
+        {
+            for (ulong seed = 1; seed < 60; seed++)
+            {
+                var curated = HellDeck.ForRun(seed, true);
+                Assert.That(curated[0], Is.EqualTo(HellDeck.Opening));
+                Assert.That(curated[1], Is.EqualTo(HellDeck.Deal(seed)[1]), "floors 2 and 3 still come from the seed");
+                var random = HellDeck.ForRun(seed, false);
+                Assert.That(random[0], Does.Contain(HellRoomKind.SoulLantern));
+                Assert.That(random[0].Distinct().Count(), Is.EqualTo(4));
+            }
+            Assert.That(HellDeck.Opening.Distinct().Count(), Is.EqualTo(4));
+            Assert.That(HellDeck.Opening, Does.Contain(HellRoomKind.SoulLantern));
+        }
+
+        [Test]
+        public void TheFrameCapAndVsyncAreSavedAndUncappedByDefault()
+        {
+            var o = new SkylineOptions();
+            Assert.That(o.TargetFrameRate, Is.EqualTo(-1));
+            Assert.That(o.vsync, Is.False);
+            o.frameCap = 4;
+            Assert.That(o.TargetFrameRate, Is.EqualTo(120));
+            var back = SkylineOptions.Deserialize(o.Serialize());
+            Assert.That(back.frameCap, Is.EqualTo(4));
+            back.vsync = true;
+            Assert.That(SkylineOptions.Deserialize(back.Serialize()).vsync, Is.True);
+            Assert.That(back.TargetFrameRate, Is.EqualTo(-1), "vsync paces the frames");
+            back.frameCap = 99;
+            back.Clamp();
+            Assert.That(back.frameCap, Is.EqualTo(0));
+        }
+
         // ------------------------------------------------------------------ the words
 
         [Test]
