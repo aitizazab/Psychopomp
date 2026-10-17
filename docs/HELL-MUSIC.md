@@ -68,4 +68,40 @@ hidden the player is; on the current tune apply `DarkHush.MusicDrums(depth)` to 
 Death's lounge waltz (51 s) and Vesper's waltz (55 s) as layered builds, and four rhythm-guitar sounds to pick from.
 Files and scripts: `FableAnimationTests/audio/hell-music/` (`scripts/melodies.py`, `inrun.py`, `themes.py`,
 `guitar_tones.py`, `page.py`; shared `hell_lib.py`). Every render measured with the ears tool and levelled to -18 LUFS.
-Waiting on the creator before anything else is made.
+
+## Round 2 (2026-10-18 03:30-05:00): the creator's picks, and everything built for the game
+
+**The creator on round 1:** "you used the same basic piano for almost everything ... Revamp each with a new instrument
+base, layering and effects according to what the sound actually needs. The themes need to incorporate into the scene ...
+And they need to loop." **Picks:** the player gets **both** "The Vow" (A: the melody, the emotional line) and "The Riff"
+(C: the combat engine); Baja (the God of Death) gets **"The Pocket Watch"** (C) on the lounge waltz she liked ("exactly
+like her blase attitude"; the "elevator-music type intermission carry"); Vesper gets **"The Bride"** (A). In-run set:
+"almost perfect"; fixed: Fast didn't differ from Still, Flying's choir too quiet; rhythm guitar sound a stays, sounds b-d
+used elsewhere.
+
+**In the game** (`HellDescent-music` worktree, branch `hell-music`):
+`Assets/JamKit/Templates/SkylineRepo/Resources/SkylineAudio/hell-music/`, OGG Vorbis q6, 48 kHz, with the manifest
+**`hell-music-manifest.json`** (cue ids, kinds, files, bpm, bars, loop_samples, layer roles, mixing rules, status per cue).
+Unity makes the metas.
+- **`inrun/`** (19 stems): `{quiet,normal,danger}_{still,fast,flying}_{bed,drums}` + `dark_drone`. 135 BPM, 16 bars,
+  **1365333 samples**, each OGG checked to decode to exactly that. Speed is additive (fast = still + fast stems). Pre-levelled:
+  Quiet -23/-21.5/-20.5, Normal -18/-16/-15.5, Danger -17/-15.5/-15 LUFS (still/fast/flying); peaks under -2.4 dBFS.
+  Normal Fast: 16th hats + tambourine, a tight split double kick, the gallop on sound b, the Riff on sound c (centroid
+  420 -> 730 Hz). Flying: crash every bar, china, eighth snare, open high choir (gain up), fast strings, twin lead.
+  Danger Fast is the Riff doubled heavy (sound a) with low tremolo strings and full-time snare. Quiet's speed layers stay
+  soft (shaker and muted guitar; ride, floor tom and Skyline's approved 3+3+2 flutes). Dark modifier: every `*_drums` stem
+  and `dark_drone` (HELL-SHADOW.md section 3).
+- **`baja/`**: `baja_hold` (pause menu loop, phone-line filtered: you're on hold), `baja_gift` (skill pick loop: choir,
+  harp, the watch ticking, music box + celesta), `baja_stats` (the full lounge waltz loop: stats, ending cards, the
+  opening's "idea"), the opening's parts (`opening_sister` loop: the Vow on piano; `opening_hall` loop: ticks, pizzicato,
+  celesta; `opening_wait` and `opening_fall` stingers), `job_brief` / `job_done` / `job_failed`, `cliffhanger`.
+- **`vesper/`**: the boss as a 150 BPM metal waltz on her tune, 24 bars on one clock (`boss_p1_bed/_drums`,
+  `boss_p2_bed/_drums` with a harp waltz and a ticking clock, `boss_p3_bed`: no drums; bass, low choir, heartbeat, her
+  tune on cello; `boss_kneel`), the history parts (`history_daughter`, `_bargain`, `_bride`, `_boredom`, `_centuries`,
+  `_stand`), the decision (`decision_hold` loop, `decision_spare`, `decision_kill`).
+- **`title/`** (`title` loop, `floor_card_1..3`, `credits`) and **`endings/`** (`ending_kill`, `ending_spare_kept`,
+  `ending_spare_cost`).
+
+**Scripts:** `FableAnimationTests/audio/hell-music/scripts/` (`inrun2.py` + `export_inrun.py`, `baja.py`, `vesper.py`,
+`finale.py`, shared `piece.py` and `hell_lib.py` with loop-safe reverb, delay, drive, compression and a phone filter).
+Page: `FableAnimationTests/art/review/2026-10-18/hell-music.html` (round 2, layered builds, all at -18 LUFS).
