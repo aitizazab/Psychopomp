@@ -64,6 +64,7 @@ namespace JamKit.Skyline
         {
             if (floor < 0 || floor >= FloorCount) throw new ArgumentOutOfRangeException(nameof(floor));
             var b = HellRoomLayouts.Build(kind);
+            HellJobPockets.Append(b, floor);   // the God of Death's job pocket, if this room has one on this floor (docs/HELL-JOBS.md)
             var t = Floors[floor];
             b.floor = floor;
             b.lavaDps = t.lavaDps;
