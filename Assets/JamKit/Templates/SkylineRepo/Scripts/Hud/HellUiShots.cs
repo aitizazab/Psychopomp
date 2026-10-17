@@ -10,7 +10,8 @@ namespace JamKit.SkylineRepo
     /// every UI state on screen in turn, saves a PNG of each into the folder, logs <c>HELL_UI_SHOT name path</c> and quits.
     /// <list type="bullet">
     /// <item>With <c>-hellSkipTitle</c> (the HUD run): play (objective line and room clock, the hourglass, the abilities and
-    /// three owned skills, a hint card, a subtitle, a banner), job (+ the briefing card), low health (the cracked vessel, no
+    /// three owned skills, a hint card, a subtitle, a banner), job (+ the briefing card), the job's lingering line (job-line)
+    /// and its near-the-pocket reminder (job-near), low health (the cracked vessel, no
     /// Ward), the ability wheel, the boss (Vesper's bar, her hint, a banner), the decision (prompt, ring, the escape line,
     /// with the hint card under it), a beat hold (letterbox and subtitle), the clean picture, the skill pick.</item>
     /// <item>Without it (the screens run): the title, an opening card, a floor card, the credits, the stats, the pause menu.</item>
@@ -106,7 +107,18 @@ namespace JamKit.SkylineRepo
             yield return Shot("play");
 
             var jobs = run.GetComponent<HellJobDirector>();
-            if (jobs != null) { jobs.ShowBriefingForShot(0); yield return Shot("job-card"); }
+            if (jobs != null)
+            {
+                jobs.ShowBriefingForShot(0);
+                yield return Shot("job-card");
+                // the Overdue Soul's instruction lingering under the objective line, then the near-the-pocket reminder
+                yield return new WaitForSecondsRealtime(HellJobDirector.CardSeconds + 0.2f);
+                jobs.ShowJobLineForShot(1);
+                yield return Shot("job-line");
+                jobs.ShowJobLineForShot(1, true);
+                yield return Shot("job-near");
+                jobs.ShowJobLineForShot(-1);
+            }
 
             if (player != null && player.Armor != null)
             {

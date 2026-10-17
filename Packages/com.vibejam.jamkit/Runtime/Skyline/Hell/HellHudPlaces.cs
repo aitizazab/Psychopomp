@@ -78,7 +78,13 @@ namespace JamKit.Skyline
         // ---- the corners: health bottom left, ammo and abilities bottom right, the hour top right, favours top left
         public static readonly HellHudBox Vessel = new HellHudBox("vessel", HellHAlign.Left, HellVAlign.Bottom, Margin - 12f, Margin - 6f, 420f, 92f);
         public static readonly HellHudBox Ammo = new HellHudBox("ammo", HellHAlign.Right, HellVAlign.Bottom, Margin, Margin, 340f, 150f);
-        public static readonly HellHudBox Abilities = new HellHudBox("abilities", HellHAlign.Right, HellVAlign.Bottom, Margin, 200f, 330f, 132f);
+        /// <summary>The ability tiles (Nightfall, Time Dilation, Shadow Step, Rewind; 60 x 88 each), small, LEFT of the ammo
+        /// counter and gun icon, bottom-aligned with it (the creator, 2026-10-18: "smaller, to the left of the gun ammo counter
+        /// and icon, instead of above it"). Under the subtitles' bottom edge, so the two never meet.</summary>
+        public const float AbilityTileW = 60f, AbilityGap = 14f;
+        public static readonly HellHudBox Abilities = new HellHudBox("abilities", HellHAlign.Right, HellVAlign.Bottom, Margin + 340f + AbilityGap, Margin, 4f * AbilityTileW, 88f);
+        /// <summary>A chip per owned floor skill, in a row over the ammo counter (where the tiles used to be).</summary>
+        public static readonly HellHudBox SkillChips = new HellHudBox("skill-chips", HellHAlign.Right, HellVAlign.Bottom, Margin, Margin + 150f + 8f, 330f, 26f);
         public static readonly HellHudBox Hourglass = new HellHudBox("hourglass", HellHAlign.Right, HellVAlign.Top, Margin, 30f, 130f, 170f);
         public static readonly HellHudBox JobTracker = new HellHudBox("job-tracker", HellHAlign.Left, HellVAlign.Top, Margin, 34f, 480f, 60f);
         public static readonly HellHudBox JobCard = new HellHudBox("job-card", HellHAlign.Left, HellVAlign.Top, Margin, 108f, 480f, 200f);
@@ -86,6 +92,9 @@ namespace JamKit.Skyline
         // ---- top centre: the room's objective, its clock under it, the boss bar under that
         public static readonly HellHudBox Objective = new HellHudBox("objective", HellHAlign.Centre, HellVAlign.Top, 0f, 32f, 760f, 48f);
         public static readonly HellHudBox RoomClock = new HellHudBox("room-clock", HellHAlign.Centre, HellVAlign.Top, 0f, 82f, 200f, 40f);
+        /// <summary>The active job's one-line instruction ("FAVOUR: ..."), under the objective line and its clock, for as long
+        /// as the job is live (two lines at most). The boss floor has no jobs, so it never meets Vesper's bar.</summary>
+        public static readonly HellHudBox JobLine = new HellHudBox("job-line", HellHAlign.Centre, HellVAlign.Top, 0f, 124f, 760f, 62f);
         public static readonly HellHudBox VesperBar = new HellHudBox("vesper-bar", HellHAlign.Centre, HellVAlign.Top, 0f, 124f, 660f, 96f);
 
         // ---- the middle band: banners above, the crosshair and its rings, the decision prompt and the hint card below
@@ -127,23 +136,23 @@ namespace JamKit.Skyline
                 case HellHudState.Play:
                 case HellHudState.Job:
                 case HellHudState.Escape:
-                    l.AddRange(new[] { Vessel, Ammo, Abilities, Hourglass, Objective, RoomClock, Crosshair, Banner, Hint, Subtitles });
+                    l.AddRange(new[] { Vessel, Ammo, Abilities, SkillChips, Hourglass, Objective, RoomClock, Crosshair, Banner, Hint, Subtitles });
                     if (s != HellHudState.Escape) l.Add(JobTracker);
-                    if (s == HellHudState.Job) l.Add(JobCard);
+                    if (s == HellHudState.Job) { l.Add(JobCard); l.Add(JobLine); }
                     break;
                 case HellHudState.BeatHold:
                     // the bars cover the corners; the subtitles, the banner and the crosshair must stay clear of them
                     l.AddRange(new[] { LetterTop(panelH), LetterBottom(panelH), Subtitles, Banner, Crosshair });
                     break;
                 case HellHudState.Boss:
-                    l.AddRange(new[] { Vessel, Ammo, Abilities, Hourglass, Objective, RoomClock, VesperBar, Crosshair, Banner, Hint, Subtitles });
+                    l.AddRange(new[] { Vessel, Ammo, Abilities, SkillChips, Hourglass, Objective, RoomClock, VesperBar, Crosshair, Banner, Hint, Subtitles });
                     break;
                 case HellHudState.Decision:
-                    l.AddRange(new[] { Vessel, Ammo, Abilities, Hourglass, Objective, Crosshair, Prompt, Hint, Subtitles });
+                    l.AddRange(new[] { Vessel, Ammo, Abilities, SkillChips, Hourglass, Objective, Crosshair, Prompt, Hint, Subtitles });
                     break;
                 case HellHudState.Wheel:
                     // banners and cards in the middle hide while the wheel is open (HellAbilityWheel.IsOpen)
-                    l.AddRange(new[] { Vessel, Ammo, Abilities, Hourglass, Objective, RoomClock, JobTracker, JobCard, VesperBar, Subtitles, Wheel });
+                    l.AddRange(new[] { Vessel, Ammo, Abilities, SkillChips, Hourglass, Objective, RoomClock, JobTracker, JobCard, VesperBar, Subtitles, Wheel });
                     break;
             }
             return l;
@@ -201,6 +210,40 @@ namespace JamKit.Skyline
             if (float.IsNaN(healthShare)) return 0;
             float lost = 1f - Math.Max(0f, Math.Min(1f, healthShare));
             return Math.Min(MaxCracks, (int)Math.Floor(lost * 6f + 1e-4f));
+        }
+    }
+}
+
+namespace JamKit.Skyline
+{
+    /// <summary>The active job's lingering instruction under the objective line (docs/HELL-JOBS.md, "The HUD"; the creator,
+    /// 2026-10-18: "I missed the message, busy shooting"). Made once per offer, never per frame.</summary>
+    public static class HellJobLineText
+    {
+        public const string Prefix = "FAVOUR:  ";
+        public static string Of(string objective) => string.IsNullOrEmpty(objective) ? "" : Prefix + objective;
+    }
+
+    /// <summary>The small ability icons' numbers (docs/HELL-UI.md, "The abilities"): the Time Dilation fuel gauge's start
+    /// mark and the Shadow Step charge pips.</summary>
+    public static class HellAbilityIcons
+    {
+        /// <summary>Time Dilation needs this share of its fuel to start (the fuel-gauge lane, 2026-10-18); the gauge marks it.</summary>
+        public const float DilationStartShare = 0.25f;
+
+        public static bool CanStartDilation(float fuel01) => fuel01 >= DilationStartShare;
+
+        /// <summary>Pip <paramref name="i"/>'s fill: full for each charge held, the next one filling by
+        /// <paramref name="fraction"/>, the rest empty.</summary>
+        public static float Pip(int i, int charges, float fraction) =>
+            i < charges ? 1f : i == charges ? Math.Max(0f, Math.Min(1f, fraction)) : 0f;
+
+        /// <summary>Every pip's fill (for tests; the HUD calls <see cref="Pip"/>).</summary>
+        public static float[] Pips(int charges, int max, float fraction)
+        {
+            var a = new float[Math.Max(0, max)];
+            for (int i = 0; i < a.Length; i++) a[i] = Pip(i, charges, fraction);
+            return a;
         }
     }
 }

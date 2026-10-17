@@ -17,12 +17,21 @@ namespace JamKit.SkylineRepo
     public sealed class HellJobDirector : MonoBehaviour
     {
         public const float CardSeconds = 7f, ResultSeconds = 5f;
+        /// <summary>Coming this close to the pocket's door shows the job's instruction again (a card and a pulse of the line);
+        /// it re-arms once you are <see cref="NearRearmMetres"/> further away.</summary>
+        public const float NearMetres = 14f, NearRearmMetres = 10f, RemindSeconds = 4f, PulseSeconds = 1.6f;
+        static readonly Color LineColour = new Color(0.85f, 0.7f, 1f);
 
         HellRunDirector _run;
         HellJobSite _site;
         HellRoom _siteRoom;
         bool _hudBuilt;
-        VisualElement _cardBox, _markerBox, _trackBox, _trackBar;
+        VisualElement _cardBox, _markerBox, _trackBox, _trackBar, _lineBox;
+        KeylinedLabel _jobLine;
+        // the job's lingering instruction under the objective line (docs/HELL-JOBS.md, "The HUD"): made once per offer
+        string _lineText = "", _lineShown, _shotLine;
+        bool _nearShown;
+        float _pulseUntil, _pulseShown = -1f;
         KeylinedLabel _cardHead, _cardLine, _cardTask, _tracker, _trackCount, _marker;
         float _cardUntil, _resultUntil, _barShown = -1f;
         // the HUD's texts are cached by value, so a frame never builds a string (docs/HELL-UI.md)
@@ -108,6 +117,8 @@ namespace JamKit.SkylineRepo
             _site.Bind(room, def, pocket, room.Player != null ? room.Player : _run.player);
             _site.Raised += OnJobEvent;
             HellJobs.RaiseOffered(def);
+            _lineText = HellJobLineText.Of(def.objective);
+            _nearShown = false;
             ShowCard("BAJA", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
             Debug.Log("HELL_JOB offered " + def.id + " in " + room.Def.name);
         }
@@ -202,6 +213,38 @@ namespace JamKit.SkylineRepo
                 _trackBar.MarkDirtyRepaint();
             }
             UpdateMarker(job);
+            UpdateJobLine(live, now);
+        }
+
+        /// <summary>The job's instruction stays under the objective line while the job is live, and goes when it is done or
+        /// failed (or the room is left). It pulses when you come near the pocket.</summary>
+        void UpdateJobLine(bool live, float now)
+        {
+            string text = _shotLine ?? (live ? _lineText : "");
+            if (!ReferenceEquals(text, _lineShown))
+            {
+                _lineShown = text;
+                _jobLine.SetText(text);
+                var disp = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+                if (_lineBox.style.display != disp) _lineBox.style.display = disp;
+            }
+            float pulse = now < _pulseUntil ? 0.5f + 0.5f * Mathf.Cos((_pulseUntil - now) * 9f) : 0f;
+            if (pulse != _pulseShown)
+            {
+                _pulseShown = pulse;
+                _jobLine.SetColor(Color.Lerp(LineColour, HellHudStyle.EmberHot, pulse));
+            }
+        }
+
+        /// <summary>Near the pocket: the job's name and instruction on the card again, and the line pulses.</summary>
+        void Remind(HellJobDef def)
+        {
+            if (!_hudBuilt || def == null) return;
+            _cardHead.SetText(def.name.ToUpperInvariant());
+            _cardLine.SetText("");
+            _cardTask.SetText(def.objective);
+            _resultUntil = Mathf.Max(_resultUntil, Time.unscaledTime + RemindSeconds);
+            _pulseUntil = Time.unscaledTime + PulseSeconds;
         }
 
         void DrawTrackBar(MeshGenerationContext ctx)
@@ -246,6 +289,8 @@ namespace JamKit.SkylineRepo
                     _markerBox.style.left = x - 60f;
                     _markerBox.style.top = y - 20f;
                     int metres = Mathf.RoundToInt(Vector3.Distance(feet, door));
+                    if (!_nearShown && metres <= NearMetres) { _nearShown = true; Remind(job.def); }
+                    else if (_nearShown && metres > NearMetres + NearRearmMetres) _nearShown = false;
                     if (metres != _markerMetres)
                     {
                         _markerMetres = metres;
@@ -305,6 +350,15 @@ namespace JamKit.SkylineRepo
             _trackBar.style.display = DisplayStyle.None;
             _trackBox.Add(_trackBar);
 
+            _lineBox = SkylineHudStyle.Layer(safe, "hell-job-line");
+            HellHudStyle.Place(_lineBox, HellHudPlaces.JobLine);
+            _lineBox.style.alignItems = Align.Center;
+            _jobLine = HellHudStyle.Label(24f, HellFaces.Heading, LineColour, 2f, 1f);
+            _jobLine.SetWrap(true, TextAnchor.UpperCenter);
+            _jobLine.style.maxWidth = HellHudPlaces.JobLine.w;
+            _lineBox.Add(_jobLine);
+            _lineBox.style.display = DisplayStyle.None;
+
             _markerBox = SkylineHudStyle.Layer(safe, "hell-job-marker");
             _markerBox.style.width = 120f;
             _markerBox.style.alignItems = Align.Center;
@@ -331,6 +385,17 @@ namespace JamKit.SkylineRepo
             if (all == null || all.Length == 0) return;
             var def = all[Mathf.Clamp(index, 0, all.Length - 1)];
             ShowCard("BAJA", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
+        }
+
+        /// <summary>For the UI stills: catalogue job <paramref name="index"/>'s instruction under the objective line (and, with
+        /// <paramref name="remind"/>, the near-the-pocket card and pulse); a negative index clears it. Touches no job state.</summary>
+        public void ShowJobLineForShot(int index, bool remind = false)
+        {
+            var all = HellJobCatalog.All;
+            if (index < 0 || all == null || all.Length == 0) { _shotLine = null; return; }
+            var def = all[Mathf.Clamp(index, 0, all.Length - 1)];
+            _shotLine = HellJobLineText.Of(def.objective);
+            if (remind) Remind(def);
         }
 
         void ShowResult(string head, string line, string reward)

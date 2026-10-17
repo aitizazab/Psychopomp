@@ -122,6 +122,11 @@ cage, a path through a pocket).
 
 - **The briefing card** (left, under the tracker, 7 s): "THE GOD OF DEATH", her line in quotes, then the job's name and
   what to do.
+- **The job's line** (2026-10-18, the creator missed the card while shooting): "FAVOUR:  <what to do>" (the job's
+  `objective`) stays under the room's objective line and clock (`HellHudPlaces.JobLine`, violet Metal Mania 24 px, two
+  lines at most) **while the job is live**, and goes when it is done, failed or the room is left. **Coming within 14 m of
+  the pocket's door** shows it again: the card with the job's name and instruction for 4 s and the line pulses ember
+  (`HellJobDirector.NearMetres`; re-arms 10 m further out).
 - **The tracker** (left, always): "FAVOUR: <job> ||||....  2/3 DONE" (the bar is the flee, the reaping, the filing or the
   hold), or "FAVOURS 2/3" between jobs.
 - **The result card** (5 s): "DONE: <JOB>" with her reaction and the reward, or "FAILED: <JOB>" with hers and why.
