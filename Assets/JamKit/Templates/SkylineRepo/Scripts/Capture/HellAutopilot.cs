@@ -150,6 +150,8 @@ namespace JamKit.SkylineRepo
             catch (Exception e) { Debug.LogWarning("HELL_AUTO could not set the input background behaviour: " + e.Message); }
             Keys.Setup();
             if (_rewindCases) _cases = new List<string> { "room-first-second", "lantern-carry", "during-collapse", "mid-shadow-step", "across-death", "during-pick" };
+            // take the player's hands now, before the run director's Start: a scripted player tells the flow to skip its screens
+            Bind();
             Debug.Log("HELL_AUTO start mode " + _report.mode + " seed " + _report.seed + " stuck " + _stuckSeconds + " s, skip after " + (_noSkip ? "never" : _skipAfter + " s"));
         }
 
@@ -387,8 +389,13 @@ namespace JamKit.SkylineRepo
             {
                 // falling down a drop or the shaft, waiting: hands off, eyes ahead
                 _calmPitch = 10f;
-                if (run.Phase == HellRunPhase.NotStarted || run.Phase == HellRunPhase.Finished) TickScreens();
-                if (run.Phase == HellRunPhase.Finished && _toCredits) TickScreens();
+                if (run.Phase == HellRunPhase.NotStarted) TickScreens();
+                if (run.Phase == HellRunPhase.Finished && _toCredits)
+                {
+                    // after the rooms (the boss, the ending, the credits): fight what is there, press on through the screens
+                    if (Time.timeScale < 0.01f) TickScreens();
+                    else TickFreeFight();
+                }
                 return;
             }
             if (director.Current != _room) BindRoom(director.Current);
@@ -1064,6 +1071,18 @@ namespace JamKit.SkylineRepo
             _nextScreenPress = Time.unscaledTime + 1.5f;
             if (director != null && director.Run != null && director.Run.Phase == HellRunPhase.Finished && !_toCredits) return;   // Enter would reload the scene
             Keys.Tap(Key.Enter);
+        }
+
+        /// <summary>Past the rooms (a boss fight the plan knows nothing of): stand, strafe and shoot the nearest bot in sight,
+        /// look round when there is none. It never walks off: the arena's ground is not in the room data.</summary>
+        void TickFreeFight()
+        {
+            PickTarget(false);
+            if (_player == null) return;
+            StrafeAround(_player.transform.position, 0.1f);
+            if (_target == null) LookAround();
+            else TickAmmo(true);
+            _action = "free fight";
         }
 
         // ------------------------------------------------------------------ the hands' frame
