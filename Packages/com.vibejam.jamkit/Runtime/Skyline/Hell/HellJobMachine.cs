@@ -28,7 +28,7 @@ namespace JamKit.Skyline
         Undone = 8,
         /// <summary>Free: a chain was re-forged.</summary>
         Reforged = 16,
-        /// <summary>Hold: an enemy is due.</summary>
+        /// <summary>Hold: an enemy is due (the first as soon as you step on the seal, then every spawnEvery s).</summary>
         SpawnDue = 32,
         /// <summary>Burst: the target hops to its next perch.</summary>
         Hopped = 64,
@@ -193,7 +193,7 @@ namespace JamKit.Skyline
                     if (_s.progress > 0f)
                     {
                         _s.spawnClock += dt;
-                        if (_s.spawnClock >= def.spawnEvery && _s.spawned < def.spawnCap)
+                        if ((_s.spawned == 0 || _s.spawnClock >= def.spawnEvery) && _s.spawned < def.spawnCap)
                         {
                             _s.spawnClock = 0f;
                             _s.spawned++;
