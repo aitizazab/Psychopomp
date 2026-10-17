@@ -207,6 +207,7 @@ namespace JamKit.SkylineRepo
                 if (g.on) shown++;
             }
             ClearTracks();
+            ClearKitEffects();
             _playing = true;
             _playT = 0f;
             _echoLeft = 0f;
@@ -214,6 +215,15 @@ namespace JamKit.SkylineRepo
             HellFx.Flash(Color.Lerp(HellFxPalette.Rewind, Color.white, 0.5f), 0.35f, 0.14f);
             HellFx.FovKick(-0.08f, 0.08f, scrubSeconds);
             Debug.Log("HELL_FX rewind scrub: " + shown + " ghosts over " + seconds.ToString("0.#") + " s");
+        }
+
+        /// <summary>The kit's and the enemies' own short-lived effects (death flames, smoke puffs, sparks) from the abandoned
+        /// future: switched off, which is how their pools free them (once per Rewind; never per frame).</summary>
+        static void ClearKitEffects()
+        {
+            foreach (var f in FindObjectsByType<HellFlame>(FindObjectsSortMode.None)) f.gameObject.SetActive(false);
+            foreach (var p in FindObjectsByType<SkylineSmokePuff>(FindObjectsSortMode.None)) p.gameObject.SetActive(false);
+            foreach (var s in FindObjectsByType<SkylineSpark>(FindObjectsSortMode.None)) s.gameObject.SetActive(false);
         }
 
         void TickScrub(float udt)
