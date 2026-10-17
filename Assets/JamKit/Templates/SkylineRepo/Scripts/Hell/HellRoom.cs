@@ -254,6 +254,7 @@ namespace JamKit.SkylineRepo
                 _doneOpened = true;
                 if (_exitGate != null) _exitGate.SetActive(false);
                 Debug.Log("HELL_ROOM objective done " + Def.name + " at " + Clock.ToString("0.0") + " s");
+                HellRunEvents.RaiseRoomObjectiveDone(floor, kind.ToString(), Clock);
             }
 
             bool onHazard = Lava != null && Lava.Touching;

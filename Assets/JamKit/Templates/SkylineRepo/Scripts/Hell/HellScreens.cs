@@ -22,8 +22,11 @@ namespace JamKit.SkylineRepo
     {
         public enum Screen { None, Title, Opening, FloorCard, Credits, Stats }
 
-        /// <summary>A screen finished: (which, the title's choice: 0 Start, 2 Quit; -1 otherwise). Settings is handled here.</summary>
+        /// <summary>A screen finished: (which, the title's choice: <see cref="ChoiceStart"/>, <see cref="ChoiceQuit"/>, or
+        /// <see cref="ChoiceChapter"/> + chapter 0-3; -1 otherwise). Settings and the chapter menu are handled here.</summary>
         public event Action<Screen, int> Done;
+
+        public const int ChoiceStart = 0, ChoiceQuit = 2, ChoiceChapter = 10;
 
         public Screen Showing { get; private set; }
         public bool Visible => Showing != Screen.None;
@@ -46,6 +49,9 @@ namespace JamKit.SkylineRepo
         readonly List<Vector4> _emberState = new List<Vector4>();      // x, y (0..1), speed, phase
         readonly List<KeylinedLabel> _menu = new List<KeylinedLabel>();
         readonly List<KeylinedLabel> _titleMenu = new List<KeylinedLabel>();
+        readonly List<KeylinedLabel> _chapterMenu = new List<KeylinedLabel>();
+        VisualElement _mainBox, _chapterBox;
+        bool _chaptersOpen;
         KeylinedLabel _cardSpeaker, _cardText, _floorNumber, _floorName, _floorTagline;
         Label _hint;
         int _sel;
@@ -146,16 +152,44 @@ namespace JamKit.SkylineRepo
             rule.style.marginBottom = 70f;
             rule.style.backgroundColor = new Color(1f, 0.42f, 0.13f, 0.55f);
             _title.Add(rule);
-            foreach (var word in new[] { HellFlowText.Start, HellFlowText.Settings, HellFlowText.Quit })
-            {
-                var item = new KeylinedLabel(54f, 3.5f, Display);
-                item.SetText(word);
-                item.style.marginTop = 6f;
-                item.style.marginBottom = 6f;
-                foreach (var c in item.Children()) c.style.letterSpacing = 8f;
-                _title.Add(item);
-                _titleMenu.Add(item);
-            }
+            _mainBox = MenuBox(_title);
+            foreach (var word in new[] { HellFlowText.Start, HellFlowText.Chapters, HellFlowText.Settings, HellFlowText.Quit })
+                _titleMenu.Add(MenuItem(_mainBox, word, 54f));
+            _chapterBox = MenuBox(_title);
+            foreach (var word in HellFlowText.ChapterNames) _chapterMenu.Add(MenuItem(_chapterBox, word, 44f));
+            _chapterMenu.Add(MenuItem(_chapterBox, HellFlowText.Back, 40f));
+            _chapterBox.style.display = DisplayStyle.None;
+        }
+
+        static VisualElement MenuBox(VisualElement parent)
+        {
+            var b = new VisualElement { pickingMode = PickingMode.Ignore };
+            b.style.alignItems = Align.Center;
+            parent.Add(b);
+            return b;
+        }
+
+        static KeylinedLabel MenuItem(VisualElement box, string word, float size)
+        {
+            var item = new KeylinedLabel(size, 3.5f, Display);
+            item.SetText(word);
+            item.style.marginTop = 6f;
+            item.style.marginBottom = 6f;
+            foreach (var c in item.Children()) c.style.letterSpacing = 8f;
+            box.Add(item);
+            return item;
+        }
+
+        void OpenChapters(bool open)
+        {
+            _chaptersOpen = open;
+            _mainBox.style.display = open ? DisplayStyle.None : DisplayStyle.Flex;
+            _chapterBox.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+            _menu.Clear();
+            _menu.AddRange(open ? _chapterMenu : _titleMenu);
+            _sel = open ? 0 : 1;
+            _hint.text = open ? HellFlowText.MenuHint + "      ESC / B  back" : HellFlowText.MenuHint;
+            SyncMenu();
         }
 
         void BuildCard()
@@ -213,9 +247,9 @@ namespace JamKit.SkylineRepo
         public void ShowTitle()
         {
             Show(Screen.Title);
-            _sel = 0;
             _title.style.display = DisplayStyle.Flex;
-            _hint.text = HellFlowText.MenuHint;
+            OpenChapters(false);
+            _sel = 0;
             SyncMenu();
         }
 
@@ -354,11 +388,6 @@ namespace JamKit.SkylineRepo
             _title.style.display = _card.style.display = _credits.style.display = _stats.style.display = DisplayStyle.None;
             _cardSpeaker.style.display = _cardText.style.display = DisplayStyle.Flex;
             _floorNumber.style.display = _floorName.style.display = _floorTagline.style.display = DisplayStyle.None;
-            if (s == Screen.Title)
-            {
-                _menu.Clear();
-                _menu.AddRange(_titleMenu);
-            }
             Hold();
             // Escape skips a card; on the title it opens the pause menu (the settings)
             SkylinePauseMenu.Blocked = s != Screen.Title;
@@ -484,17 +513,25 @@ namespace JamKit.SkylineRepo
             var mouse = Mouse.current;
             bool click = mouse != null && mouse.leftButton.wasPressedThisFrame && hovered >= 0;
             if (ConfirmPressed() || click) Activate(_sel);
+            else if (_chaptersOpen && SkipPressed()) OpenChapters(false);
         }
 
         void Activate(int i)
         {
+            if (_chaptersOpen)
+            {
+                if (i < HellFlowText.ChapterNames.Length) Finish(Screen.Title, ChoiceChapter + i);
+                else OpenChapters(false);
+                return;
+            }
             switch (i)
             {
-                case 0: Finish(Screen.Title, 0); break;
-                case 1:
+                case 0: Finish(Screen.Title, ChoiceStart); break;
+                case 1: OpenChapters(true); break;
+                case 2:
                     if (!SkylinePauseMenu.OpenMenu()) Debug.LogWarning("HELL_FLOW no pause menu in this scene: Settings unavailable");
                     break;
-                case 2: Finish(Screen.Title, 2); break;
+                case 3: Finish(Screen.Title, ChoiceQuit); break;
             }
         }
 

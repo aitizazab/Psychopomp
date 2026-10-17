@@ -33,6 +33,18 @@ namespace JamKit.Skyline
         public SubtitleMode subtitleMode = SubtitleMode.Dialogue;
         /// <summary>The subtitle text size.</summary>
         public SubtitleSize subtitleSize = SubtitleSize.Medium;
+        /// <summary>The frame cap, an index into <see cref="FrameCaps"/> (0: uncapped, the default: the creator's standard is 120+
+        /// fps). Ignored while <see cref="vsync"/> is on.</summary>
+        public int frameCap;
+        /// <summary>Vertical sync (off by default: it caps at the monitor's rate and adds latency).</summary>
+        public bool vsync;
+
+        /// <summary>The frame caps the menu offers (0 = uncapped) and their names.</summary>
+        public static readonly int[] FrameCaps = { 0, 240, 165, 144, 120, 60 };
+        public static readonly string[] FrameCapNames = { "Uncapped", "240", "165", "144", "120", "60" };
+
+        /// <summary>The target frame rate to set (-1: none, uncapped or vsync).</summary>
+        public int TargetFrameRate => vsync || frameCap <= 0 || frameCap >= FrameCaps.Length ? -1 : FrameCaps[frameCap];
 
         public SkylineOptions Clone() => (SkylineOptions)MemberwiseClone();
 
@@ -48,6 +60,7 @@ namespace JamKit.Skyline
             fieldOfView = Range(fieldOfView, MinFieldOfView, MaxFieldOfView, DefaultFieldOfView);
             if (!Enum.IsDefined(typeof(SubtitleMode), subtitleMode)) subtitleMode = SubtitleMode.Dialogue;
             if (!Enum.IsDefined(typeof(SubtitleSize), subtitleSize)) subtitleSize = SubtitleSize.Medium;
+            if (frameCap < 0 || frameCap >= FrameCaps.Length) frameCap = 0;
         }
 
         static float Unit(float v, float fallback) => Range(v, 0f, 1f, fallback);
@@ -73,6 +86,8 @@ namespace JamKit.Skyline
             sb.Append("subtitleSize=").Append((int)subtitleSize).Append('\n');
             sb.Append("invertY=").Append(invertY ? "1" : "0").Append('\n');
             sb.Append("aimAssist=").Append(aimAssist ? "1" : "0").Append('\n');
+            sb.Append("frameCap=").Append(frameCap).Append('\n');
+            sb.Append("vsync=").Append(vsync ? "1" : "0").Append('\n');
             return sb.ToString();
         }
 
@@ -107,6 +122,8 @@ namespace JamKit.Skyline
                         case "subtitleSize": if (isNumber) o.subtitleSize = (SubtitleSize)(int)f; break;
                         case "invertY": o.invertY = value == "1"; break;
                         case "aimAssist": o.aimAssist = value != "0"; break;
+                        case "frameCap": if (isNumber) o.frameCap = (int)f; break;
+                        case "vsync": o.vsync = value == "1"; break;
                     }
                 }
             }

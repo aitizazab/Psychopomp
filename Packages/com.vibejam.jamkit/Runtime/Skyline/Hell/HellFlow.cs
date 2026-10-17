@@ -72,6 +72,11 @@ namespace JamKit.Skyline
         public HellFlowStage Stage { get; private set; } = HellFlowStage.Title;
         public HellRun Run { get; private set; }
         public HellRunStats Stats { get; private set; }
+        /// <summary>How this run began: <see cref="FullGame"/> (Start: the opening, then floor 1), 0-2 a floor's chapter, or
+        /// <see cref="VesperChapter"/>.</summary>
+        public int Chapter { get; private set; } = FullGame;
+        public const int FullGame = -1, VesperChapter = 3, Chapters = 4;
+
         /// <summary>The floor whose intro card is showing (or last showed).</summary>
         public int IntroFloor { get; private set; } = -1;
 
@@ -96,14 +101,32 @@ namespace JamKit.Skyline
         public bool StartGame()
         {
             if (Stage != HellFlowStage.Title) return false;
+            NewRun(FullGame);
+            Go(HellFlowStage.Opening);
+            return true;
+        }
+
+        /// <summary>Title: a chapter start (judges play a few minutes). 0-2: that floor's first room, without the opening;
+        /// <see cref="VesperChapter"/>: straight to the boss hook. (The caller grants the floor picks first.)</summary>
+        public bool StartChapter(int chapter)
+        {
+            if (Stage != HellFlowStage.Title || chapter < 0 || chapter >= Chapters) return false;
+            NewRun(chapter);
+            Go(HellFlowStage.Playing);
+            if (chapter == VesperChapter) Run.SkipToEnd();     // raises Finished: the boss hook
+            else Run.StartAt(chapter);                          // raises RoomEntered(chapter, 0): the floor card
+            return true;
+        }
+
+        void NewRun(int chapter)
+        {
+            Chapter = chapter;
             Run = _makeRun();
             Run.RoomEntered += OnRoomEntered;
             Run.Finished += OnRunFinished;
             Stats = new HellRunStats();
             HellRunStats.Current = Stats;
             IntroFloor = -1;
-            Go(HellFlowStage.Opening);
-            return true;
         }
 
         public bool Quit()

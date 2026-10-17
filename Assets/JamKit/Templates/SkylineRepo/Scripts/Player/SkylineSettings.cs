@@ -49,6 +49,7 @@ namespace JamKit.SkylineRepo
         {
             Options.Clamp();
             ApplyMaster();
+            ApplyDisplay();
             if (!SkylineRunArgs.Demo)
             {
                 try
@@ -88,6 +89,18 @@ namespace JamKit.SkylineRepo
         /// <summary>The factor the main camera's field of view is scaled by for the player's field-of-view option (1 at the
         /// default): the movement camera sets the view afresh every frame from its own base, and the viewmodel multiplies it.</summary>
         public static float FovScale => Options.fieldOfView / SkylineOptions.DefaultFieldOfView;
+
+        /// <summary>The frame cap and vsync onto the engine (not in the scripted runs or batch mode: the perf probe and the
+        /// capture set their own).</summary>
+        public static void ApplyDisplay()
+        {
+            if (SkylineRunArgs.Demo || Application.isBatchMode) return;
+            QualitySettings.vSyncCount = Options.vsync ? 1 : 0;
+            Application.targetFrameRate = Options.TargetFrameRate;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void ApplyDisplayAtStart() => ApplyDisplay();
 
         /// <summary>The master volume onto the listener (every frame is cheap: it only writes on a change).</summary>
         public static void ApplyMaster()

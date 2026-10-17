@@ -10,6 +10,25 @@ namespace JamKit.Skyline
         // Its own PCG stream, so nothing else seeded from the run's seed shifts the deal.
         const ulong DeckStream = 0x6A09E667F3BCC909UL;
 
+        /// <summary>Floor 1's fixed deck (docs/HELL-FLOW.md, "Chapters and the opening deck"): a judge's first minutes. A
+        /// short fight-and-hold room first, then the Soul Lantern (Vesper's floor-1 beat lives in it), the chains, and the
+        /// Collapse to end on a run. The Six Sigils (a long room) waits for floors 2 and 3.</summary>
+        public static readonly HellRoomKind[] Opening =
+        {
+            HellRoomKind.HoldBrand, HellRoomKind.SoulLantern, HellRoomKind.BreakChains, HellRoomKind.Collapse,
+        };
+
+        /// <summary>The run's deck: <paramref name="curatedOpening"/> puts <see cref="Opening"/> on floor 1 and deals floors 2
+        /// and 3 from the seed; without it the whole deck is dealt, with the Soul Lantern pinned into floor 1 (it replaces the
+        /// second room when the deal left it out).</summary>
+        public static HellRoomKind[][] ForRun(ulong seed, bool curatedOpening)
+        {
+            var d = Deal(seed);
+            if (curatedOpening) d[0] = (HellRoomKind[])Opening.Clone();
+            else if (Array.IndexOf(d[0], HellRoomKind.SoulLantern) < 0) d[0][1] = HellRoomKind.SoulLantern;
+            return d;
+        }
+
         /// <summary>For each of the <see cref="HellRoomVariants.FloorCount"/> floors, the 4 room kinds dealt from the 6, in order.</summary>
         public static HellRoomKind[][] Deal(ulong seed)
         {
@@ -80,6 +99,27 @@ namespace JamKit.Skyline
             Phase = HellRunPhase.InRoom;
             Floor = 0; Room = 0;
             RoomEntered?.Invoke(Floor, Room);
+            return true;
+        }
+
+        /// <summary>A chapter start: the run begins in <paramref name="floor"/>'s first room (0-based).</summary>
+        public bool StartAt(int floor)
+        {
+            if (Phase != HellRunPhase.NotStarted || floor < 0 || floor >= Deck.Length) return false;
+            Phase = HellRunPhase.InRoom;
+            Floor = floor; Room = 0;
+            RoomEntered?.Invoke(Floor, Room);
+            return true;
+        }
+
+        /// <summary>A chapter start at the boss: the rooms are skipped and the run is finished at once.</summary>
+        public bool SkipToEnd()
+        {
+            if (Phase != HellRunPhase.NotStarted) return false;
+            Floor = Deck.Length - 1;
+            Room = HellDeck.RoomsPerFloor - 1;
+            Phase = HellRunPhase.Finished;
+            Finished?.Invoke();
             return true;
         }
 

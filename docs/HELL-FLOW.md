@@ -8,7 +8,7 @@ the pure tests and the Unity-side compile check pass. The play checks are at the
 
 | Stage | What shows | Moves on when |
 |---|---|---|
-| Title | "HELL DESCENT" (working name), START / SETTINGS / QUIT | Start: the opening. Settings opens the kit's pause menu (Audio, Controls, Look, Subtitles; Resume comes back). Quit closes the game |
+| Title | "HELL DESCENT" (working name), START / CHAPTERS / SETTINGS / QUIT | Start: the opening. Chapters: a chapter start (below). Settings opens the kit's pause menu (Audio, Controls, Look, Subtitles; Resume comes back). Quit closes the game |
 | Opening | The God of Death's premise: 6 text cards over black and ember | The last card, or a skip |
 | FloorIntro | The floor's card: "FLOOR ONE / THE EMBER GATE" and a tagline, 2.8 s | Its time, or any press |
 | Playing | The rooms, the shafts, the skill picks | The last floor's shaft |
@@ -31,6 +31,26 @@ While a screen shows, the game holds still: the time scale is 0, the player's in
 straight into the first room, show the floor names as HUD banners, and stop on the stats, which are written to the log
 (`HELL_STATS ...`).
 
+## Chapters and the opening deck (for the judges, who play a few minutes)
+
+**CHAPTERS** on the title lists FLOOR 1, FLOOR 2, FLOOR 3, VESPER and BACK. All are open from the start.
+- **A chapter skips the opening.** Floor N starts at floor N's first room, with its card.
+- **Vesper** goes straight to the boss hook. With no boss merged, the credits roll.
+- **Skills first:** a chapter first opens the normal skill pick once per floor it skips (Floor 2: one pick; Floor 3 and
+  Vesper: two). This goes through `HellRunEvents.FloorCleared(0..)`, so a `FloorCleared` listener sees those floors
+  "cleared" before a chapter starts. `HellRunEvents.ChapterStarted` tells a listener which chapter it was (-1 means the
+  full game).
+
+**Floor 1 is a fixed deck** (`HellDeck.Opening`), whatever the seed: Hold the Brand, the Soul Lantern (Vesper's floor-1
+beat lives in it), Break the Chains, the Collapse. The Six Sigils (long) waits for floors 2 and 3, which are still
+dealt from the seed. With `-hellRandomDeck`, floor 1 is dealt too, with the Soul Lantern pinned into it.
+
+## Frame rate
+
+The pause menu's **Look** page has **Frame rate cap** (Uncapped, the default; 240, 165, 144, 120, 60) and **VSync**
+(off by default). They are saved with the other options (`SkylineOptions.frameCap`, `vsync`) and applied at start and on
+every change (`SkylineSettings.ApplyDisplay`). Scripted runs and batch mode are left alone.
+
 ## Where things are
 
 | File | What it holds |
@@ -41,7 +61,7 @@ straight into the first room, show the floor names as HUD banners, and stop on t
 | `Scripts/Hell/HellScreens.cs` | The screens (UI Toolkit). The director makes them at run time on the HUD's panel settings, so the scene builder needs no change |
 | `Scripts/Hell/HellRunDirector.cs` | Drives the flow and the rooms. Feeds the stats. Rewindable for the stats' world counters |
 | `Scripts/Hell/HellRunEvents.cs` | The contracts (below) |
-| `Tests/Skyline/Hell/HellFlowTests.cs` | 29 tests: the flow, the hooks, deaths and time, the Rewind boundary, the stats, fast paths in all 18 rooms, the words |
+| `Tests/Skyline/Hell/HellFlowTests.cs` | 32 tests: the flow, the hooks, chapters, the opening deck, the frame cap, deaths and time, the Rewind boundary, the stats, fast paths in all 18 rooms, the words |
 
 ## The words: placeholders for the creator
 
@@ -64,22 +84,44 @@ Sound credits are a `[to fill]` line.
 
 ## Contracts for the other lanes (all in `HellRunEvents` unless named)
 
+All the events below landed together in commit `6c3ba2b0`, so the other lanes only listen.
+
+| Event | Arguments | When |
+|---|---|---|
+| `FloorStarted` | `int floor` | A floor's card shows |
+| `RoomEntered` | `floor, room, kind` | A room is entered |
+| `RoomObjectiveDone` | `floor, kind, seconds` | A room's objective is done (a Rewind can undo it; it fires again when redone) |
+| `PlayerDied` | `floor, where` | A death, in any stage. `where` is the room's kind, `shaft`, `boss` or `ending` |
+| `RoomRestarted` | | A room restarts |
+| `RewindUsed` | | A Rewind is used |
+| `ShadowStepUsed` | `from, to` | A Shadow Step is taken |
+| `JobOffered`, `JobDone`, `JobFailed` | `string id` | A job is offered, done or failed |
+| `ChapterStarted` | `int chapter` | A run starts from the title (-1 is the full game) |
+| `StageChanged` | `from, to` | The flow's stage changes |
+| `RewindBoundary` | | The Rewind's history clears |
+| `FinalBossRequested` | `Action onDefeated` | After floor 3's shaft (see Boss) |
+| `EndingRequested` | | After the boss is beaten (see Ending) |
+| `EndingReached` | `string id` | The ending is reached |
+| `RunStarted`, `RunFinished`, `FloorCleared` | | As before |
+
 **Jobs (lane 2):**
 - `HellRunEvents.Stats` is the same object as `HellRunStats.Current`. It is null before the first Start, so guard with `?.`.
-- Record a job with `RecordJobOffered()` and `RecordJobDone()`.
-- Read the counts with `JobsOffered`, `JobsDone` and `JobsShare` (0..1).
+- Call `HellRunEvents.RaiseJobOffered(id)`, `RaiseJobDone(id)` and `RaiseJobFailed(id)`. They count into the stats and
+  fire the job events. In `HellJobs.RaiseOffered`, `RaiseDone` and `RaiseFailed` these are the one-line TODOs.
+- Job counts are **not** rewound: the jobs ledger settles each job once.
+- Read the counts with `JobsOffered`, `JobsDone`, `JobsFailed` and `JobsShare` (0..1).
 - Other recorders: `RecordKill()`, `RecordShadowStep()`, `RecordRewind()`, `RecordDeath()`, `RecordFastPath(bool taken)`.
   The director already records kills (`SkylineBot.Wrecked`), Shadow Steps (`HellAbilities.Stepped`), Rewinds
   (`HellRewind.Rewound`), deaths and fast paths (at each room's drop). Don't record those twice.
-- **Rewind-safe:** kills, jobs offered and jobs done are saved and restored with the Rewind (the director is an
-  `IHellRewindable`). A job done and then rewound away is undone; done again, it counts once. Deaths, Rewinds, Shadow
-  Steps, fast paths and the times are never rewound.
+- **Rewind-safe:** kills are saved and restored with the Rewind (the director is an `IHellRewindable`). Nothing else in
+  the stats is rewound.
 - Other events to hook: `RoomEntered(floor, room, kind)` and `RoomRestarted`.
 
 **Boss (lane 3):**
-- Subscribe to `HellRunEvents.FinalBossRequested`; unsubscribe in `OnDestroy`, because the scene reloads at the title.
-- It fires after floor 3's shaft. Its handler moves the player into the arena and starts the fight, i.e.
-  `Begin(onDefeated: HellRunEvents.BossDefeated)`.
+- `HellRunEvents.FinalBossRequested` is an `Action<Action>`. It fires after floor 3's shaft, or at the Vesper chapter,
+  with `onDefeated` = `HellRunEvents.BossDefeated`.
+- `HellVesperFight`'s reflection hook already accepts that signature: `RequestFinalBoss(onDefeated)`.
+- It subscribes once, statically, so it survives the reload at the title.
 - Call `HellRunEvents.RaiseRewindBoundary()` after moving the player.
 - A player death during the Boss or Ending stage is yours to handle (`player.Wrecked`). The director only counts it.
 - With no subscriber, the run goes straight to the ending.

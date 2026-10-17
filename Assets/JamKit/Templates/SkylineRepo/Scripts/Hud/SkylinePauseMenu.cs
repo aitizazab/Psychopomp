@@ -434,6 +434,8 @@ namespace JamKit.SkylineRepo
                         v => Mathf.RoundToInt(v) + " deg");
                     AddToggle("Invert Y", () => o.invertY, v => o.invertY = v);
                     AddToggle("Aim assist (pad)", () => o.aimAssist, v => o.aimAssist = v);
+                    AddChoice("Frame rate cap", SkylineOptions.FrameCapNames, () => o.frameCap, v => { o.frameCap = v; SkylineSettings.ApplyDisplay(); });
+                    AddToggle("VSync", () => o.vsync, v => { o.vsync = v; SkylineSettings.ApplyDisplay(); });
                     // the clean picture for recording (HellCleanPicture, docs/HELL-CAPTURE.md; this session only)
                     AddChoice("HUD", HudLayoutNames, () => (int)HellCleanPicture.Hud, v => HellCleanPicture.Hud = (HellHudLayout)v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));

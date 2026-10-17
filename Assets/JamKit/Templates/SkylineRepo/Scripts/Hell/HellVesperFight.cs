@@ -88,7 +88,7 @@ namespace JamKit.SkylineRepo
         }
 
         // the run's boss stage: her defeat hands back to the run director (then the ending)
-        static void OnFinalBossRequested() => RequestFinalBoss(HellRunEvents.BossDefeated);
+        static void OnFinalBossRequested(Action onDefeated) => RequestFinalBoss(onDefeated ?? HellRunEvents.BossDefeated);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
