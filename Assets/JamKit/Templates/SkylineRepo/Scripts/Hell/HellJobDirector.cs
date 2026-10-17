@@ -89,7 +89,7 @@ namespace JamKit.SkylineRepo
             _site.Bind(room, def, pocket, room.Player != null ? room.Player : _run.player);
             _site.Raised += OnJobEvent;
             HellJobs.RaiseOffered(def);
-            ShowCard("THE GOD OF DEATH", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
+            ShowCard("BAJA", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
             Debug.Log("HELL_JOB offered " + def.id + " in " + room.Def.name);
         }
 

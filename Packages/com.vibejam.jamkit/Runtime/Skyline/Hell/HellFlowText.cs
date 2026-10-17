@@ -53,7 +53,7 @@ namespace JamKit.Skyline
         public const string Title = "HELL DESCENT";
         public const bool TitlePlaceholder = true;
 
-        public const string GodOfDeath = "THE GOD OF DEATH";
+        public const string GodOfDeath = "BAJA";
 
         /// <summary>The God of Death's premise (HELL-DESIGN.md, "The creator's story pitch" and answers). PLACEHOLDER LINES.</summary>
         public static readonly HellCard[] Opening =
@@ -133,7 +133,7 @@ namespace JamKit.Skyline
         /// errands on the way down? The answer decides the spare ending (docs/HELL-ENDING.md). PLACEHOLDER WORDS: the creator
         /// rewrites them (and her name isn't decided).</summary>
         public const string ErrandsTitle = "ON THE WAY DOWN",
-            ErrandsBody = "Did you run the God of Death's errands through the floors, even if it meant reaching your sister later?",
+            ErrandsBody = "Did you run Baja's errands through the floors, even if it meant reaching your sister later?",
             ErrandsYes = "YES, I DID HER FAVOURS",
             ErrandsNo = "NO, I WENT STRAIGHT FOR MY SISTER";
         public const bool ErrandsPlaceholder = true;

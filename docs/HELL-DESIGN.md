@@ -111,3 +111,13 @@ Between rooms: a short corridor or drop. End of floor: a shaft down to the next 
 ## Build order today
 Rooms framework + 6 layouts (agent 1), abilities (agent 2), enemies + hazards (agent 3), in parallel; then the main
 session merges, runs Unity, and the creator plays. Art and the trailer in the evening.
+
+## The creator's calls, 2026-10-18 ~01:30
+- **The God of Death is named Baja.** The jobs are Baja's errands. (Earlier "not Skyline's Baja" stands: same name,
+  no link required; a later link is possible.) In-game speaker names now read BAJA.
+- **Time, the newer idea (replaces "the sister's clock" in HELL-THEME-REVIEW fix 4):** Baja sets up an escape for you.
+  Spending too long in Hell closes it, leaving you and your sister to suffer eternal damnation. The fix must be redesigned
+  around this before it is built (pitch in the session; waiting on the creator).
+- **Trailer theme cards: not explicit.** A card saying "Shadow" over the Shadow abilities is too on the nose. Better
+  implicit wording, e.g. "Make the denizens of Hell suffer a new nightmare" on a shadowy stylised card, cutting to your
+  abilities; even that may read as too obvious, and any such claim must be backed up in gameplay.

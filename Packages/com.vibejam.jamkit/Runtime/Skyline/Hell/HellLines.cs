@@ -25,7 +25,7 @@ namespace JamKit.Skyline
         {
             switch (id)
             {
-                case Death: return "DEATH";
+                case Death: return "BAJA";
                 case Vesper: return "VESPER";
                 default: return (id ?? "").ToUpperInvariant();
             }

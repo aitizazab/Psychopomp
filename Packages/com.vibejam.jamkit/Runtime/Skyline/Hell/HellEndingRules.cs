@@ -86,7 +86,7 @@ namespace JamKit.Skyline
         {
             switch (speaker)
             {
-                case God: return "DEATH";
+                case God: return "BAJA";
                 case Vesper: return "VESPER";
                 case You: return "YOU";
                 default: return "";
