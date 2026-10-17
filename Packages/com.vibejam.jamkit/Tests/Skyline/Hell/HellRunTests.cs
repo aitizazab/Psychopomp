@@ -136,21 +136,93 @@ namespace JamKit.Tests.Skyline
             var r = HellRoomLayouts.Build(HellRoomKind.HoldBrand);
             var o = (BrandHold)HellObjective.For(r);
             var c = r.stops[0].position;
-            var outside = c + new Vector3(10, 0, 0);
-            Assert.That(o.Tick(0.1f, outside), Is.EqualTo(0), "no waves before it is touched");
-            Assert.That(o.Tick(0.1f, c), Is.EqualTo(1), "the first wave at once");
+            var inside = c + new Vector3(-6.6f, 0, -5f);                 // behind the south-west stone
+            var outside = c + new Vector3(10.5f, 0, 0);
+            Assert.That(o.Radius, Is.EqualTo(HellBrandTuning.RingRadius));
+            Assert.That(o.Tick(0.1f, outside, 0f), Is.EqualTo(0), "no waves before it is touched");
+            Assert.That(o.Circle.ActiveCircle, Is.EqualTo(-1), "the HUD ring hides outside");
+            Assert.That(o.Tick(0.1f, inside, 0f), Is.EqualTo(1), "the first wave at once");
+            Assert.That(o.Circle.ActiveCircle, Is.EqualTo(0), "the HUD ring shows inside");
+            Assert.That(o.Progress, Is.EqualTo(0.1f / HellBrandTuning.SlowSeconds).Within(1e-5), "standing: the slow rate");
+            Assert.That(o.Circle.Sheet[0].meter.Progress, Is.EqualTo(o.Progress).Within(1e-4), "the HUD ring shows the charge");
             int waves = 1;
-            for (int i = 0; i < 40; i++) waves += o.Tick(0.1f, outside);     // 4 s outside: paused, waves keep coming
-            Assert.That(o.Progress, Is.EqualTo(0.01f).Within(1e-4));
+            for (int i = 0; i < 40; i++) waves += o.Tick(0.1f, outside, 9.5f);     // 4 s outside: paused, waves keep coming
+            Assert.That(o.Progress, Is.EqualTo(0.1f / HellBrandTuning.SlowSeconds).Within(1e-5), "outside, even at a sprint, it pauses");
+            Assert.That(waves, Is.EqualTo(1));
             var snap = o.Snapshot();
-            for (int i = 0; i < 200 && !o.Done; i++) waves += o.Tick(0.1f, c);
+            for (int i = 0; i < 400 && !o.Done; i++) waves += o.Tick(0.1f, inside, 0f);
             Assert.That(o.Done, Is.True);
+            Assert.That(o.Circle.Sheet[0].Towed, Is.True, "the HUD's meter completes with it");
             Assert.That(waves, Is.EqualTo(o.WavesReleased));
-            Assert.That(waves, Is.GreaterThanOrEqualTo(2));
+            Assert.That(waves, Is.GreaterThanOrEqualTo(6), "30 s of standing: a wave every 5 s");
             o.Restore(snap);
             Assert.That(o.Done, Is.False);
-            Assert.That(o.Progress, Is.EqualTo(0.01f).Within(1e-3));
+            Assert.That(o.Progress, Is.EqualTo(0.1f / HellBrandTuning.SlowSeconds).Within(1e-4));
+            Assert.That(o.WavesReleased, Is.EqualTo(1));
+            Assert.That(o.Circle.Sheet[0].Towed, Is.False);
             Assert.That(o.Circle.Sheet.Count, Is.EqualTo(1), "one circle for the HUD");
+        }
+
+        [TestCase(0f, 30f)]          // standing, crouching behind a stone
+        [TestCase(3f, 30f)]          // crouch-walking
+        [TestCase(9.5f, 10f)]        // a sprint
+        [TestCase(8.64f, 10f)]       // a wall-run
+        [TestCase(13f, 10f)]         // a boosted slide
+        public void TheBrandChargesFromSpeed(float speed, float seconds)
+        {
+            var r = HellRoomLayouts.Build(HellRoomKind.HoldBrand);
+            var o = (BrandHold)HellObjective.For(r);
+            var inside = r.hold.loop[0];
+            float t = 0f;
+            int waves = 0;
+            while (!o.Done && t < 60f) { waves += o.Tick(0.02f, inside, speed); t += 0.02f; }
+            Assert.That(t, Is.EqualTo(seconds).Within(0.05f));
+            Assert.That(waves, Is.EqualTo(1 + (int)((seconds - 0.02f) / HellBrandTuning.WaveEvery)), "the waves come on the clock, not the charge");
+        }
+
+        [Test]
+        public void TheBrandsRateGrowsWithSpeedAndTheGlowFollows()
+        {
+            Assert.That(HellBrandTuning.Multiplier(0f), Is.EqualTo(1f));
+            Assert.That(HellBrandTuning.Multiplier(5f), Is.InRange(1.5f, 2f), "a walk is in between");
+            Assert.That(HellBrandTuning.Multiplier(HellBrandTuning.FullSpeed), Is.EqualTo(HellBrandTuning.FastRate));
+            Assert.That(HellBrandTuning.FastSeconds, Is.EqualTo(10f).Within(1e-4));
+            for (float v = 0f; v < 15f; v += 0.5f)
+                Assert.That(HellBrandTuning.Rate(v + 0.5f), Is.GreaterThanOrEqualTo(HellBrandTuning.Rate(v)));
+            var r = HellRoomLayouts.Build(HellRoomKind.HoldBrand);
+            var o = (BrandHold)HellObjective.For(r);
+            o.Tick(0.1f, r.hold.loop[0], 9.5f);
+            Assert.That(o.RateShare, Is.EqualTo(1f));
+            Assert.That(o.RateMultiplier, Is.EqualTo(3f));
+            Assert.That(o.Line, Does.Contain("x3.0"));
+            o.Tick(0.1f, r.hold.loop[0], 0f);
+            Assert.That(o.RateShare, Is.EqualTo(0f));
+            o.Tick(0.1f, r.hold.center + new Vector3(0, 0, 10.5f), 9.5f);
+            Assert.That(o.RateShare, Is.EqualTo(0f), "outside the ring: no glow");
+            Assert.That(o.InCircle(r.hold.center + new Vector3(9f, 3.5f, 0)), Is.True, "a wall-run's height counts");
+        }
+
+        [Test]
+        public void TheCollapseCallsImpsAtTheWallsOnTheClock()
+        {
+            var r = HellRoomLayouts.Build(HellRoomKind.Collapse);
+            var o = (CollapseEscape)HellObjective.For(r);
+            Assert.That(o.WaveCount, Is.EqualTo(3));
+            Assert.That(o.WaveEvery, Is.EqualTo(HellRoomLayouts.CollapseWaveEvery));
+            int waves = 0;
+            for (int i = 0; i < 50 * 20; i++) waves += o.TickWaves(0.02f);
+            Assert.That(waves, Is.EqualTo(3), "each wave once");
+            var snap = o.Snapshot();
+            o.Reset();
+            Assert.That(o.TickWaves(2.9f), Is.EqualTo(0));
+            Assert.That(o.TickWaves(0.2f), Is.EqualTo(1), "the first at 3 s");
+            o.Restore(snap);
+            Assert.That(o.WavesReleased, Is.EqualTo(3));
+            foreach (var s in r.spawns.Where(s => s.wave > 0))
+            {
+                Assert.That(s.role, Is.EqualTo(HellEnemyRole.Imp));
+                Assert.That(System.Math.Abs(s.position.X), Is.GreaterThan(r.bounds.max.X - 3f), "at the walls");
+            }
         }
 
         [Test]

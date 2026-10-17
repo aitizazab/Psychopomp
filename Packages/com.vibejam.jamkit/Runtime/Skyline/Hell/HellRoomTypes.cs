@@ -75,6 +75,27 @@ namespace JamKit.Skyline
         public float radius;
     }
 
+    /// <summary>Hold the Brand's ring (docs/HELL-ROOMS.md, "Hold the Brand"): a wide circle round a lava pool that charges
+    /// faster the faster you move inside it (<see cref="HellBrandTuning"/>). <see cref="loop"/> is the racing line round the
+    /// pool (closed: its last point is its first), which the lint checks lies inside the ring on solid ground.</summary>
+    public sealed class HellHoldRing
+    {
+        public Vector3 center;
+        public float radius = HellBrandTuning.RingRadius, halfHeight = HellBrandTuning.RingHalfHeight;
+        public List<Vector3> loop = new List<Vector3>();
+    }
+
+    /// <summary>One piece of falling debris (The Collapse): it lands at room second <see cref="time"/> on
+    /// <see cref="position"/> (a floor point) and hits a body within <see cref="radius"/>; its shadow glows on the floor for
+    /// <see cref="HellDebris.TelegraphSeconds"/> before. Pure data: where everything is follows from the room clock, so the
+    /// Rewind of the clock rewinds the debris.</summary>
+    public struct HellDebrisDrop
+    {
+        public float time;
+        public Vector3 position;
+        public float radius;
+    }
+
     /// <summary>The objective's numbers for one room (a floor's variant may change them).</summary>
     public sealed class HellObjectiveTuning
     {
@@ -147,6 +168,10 @@ namespace JamKit.Skyline
         public float lavaDps = 12f, lavaSinkDamage = 35f, lavaSinkSeconds = 1.0f;
 
         public HellObjectiveTuning tuning = new HellObjectiveTuning();
+        /// <summary>Hold the Brand's ring (null in the other rooms).</summary>
+        public HellHoldRing hold;
+        /// <summary>The Collapse's falling debris, in landing order (empty elsewhere).</summary>
+        public List<HellDebrisDrop> debris = new List<HellDebrisDrop>();
 
         /// <summary>The two routes the lint checks, from <see cref="entry"/> to <see cref="exit"/> through the stops.</summary>
         public List<Vector3> safePath = new List<Vector3>();
@@ -258,6 +283,12 @@ namespace JamKit.Skyline
             foreach (var l in r.lights) o.lights.Add(new HellLight { position = Point(l.position), radius = l.radius });
             foreach (var p in r.safePath) o.safePath.Add(Point(p));
             foreach (var p in r.fastPath) o.fastPath.Add(Point(p));
+            if (r.hold != null)
+            {
+                o.hold = new HellHoldRing { center = Point(r.hold.center), radius = r.hold.radius, halfHeight = r.hold.halfHeight };
+                foreach (var p in r.hold.loop) o.hold.loop.Add(Point(p));
+            }
+            foreach (var d in r.debris) o.debris.Add(new HellDebrisDrop { time = d.time, position = Point(d.position), radius = d.radius });
             return o;
         }
     }

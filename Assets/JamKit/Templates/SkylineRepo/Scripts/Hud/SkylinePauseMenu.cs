@@ -20,7 +20,8 @@ namespace JamKit.SkylineRepo
     /// rest are SkylineMix's user gains).</item>
     /// <item><b>Controls:</b> the actions with their keyboard-and-mouse and pad bindings; pick one and press a button to rebind
     /// it (Escape or Start cancels); a control another action already uses swaps the two; "Reset to defaults".</item>
-    /// <item><b>Look:</b> mouse sensitivity, pad sensitivity, invert Y, aim assist.</item>
+    /// <item><b>Look:</b> mouse sensitivity, pad sensitivity, invert Y, aim assist, and the HUD layout (Full, or Clean: nothing
+    /// on screen, for recording; <see cref="HellCleanPicture"/>). Audio also has "Voice lines" (on, off, only).</item>
     /// <item><b>Subtitles:</b> Off / Dialogue / Dialogue + bot barks, and the size Small / Medium / Large
     /// (<see cref="SkylineSettings.SubtitleMode"/>, <see cref="SkylineSettings.SubtitleSize"/>; they act at once).</item>
     /// <item><b>Quit to desktop</b> (asks twice).</item>
@@ -50,6 +51,20 @@ namespace JamKit.SkylineRepo
 
         /// <summary>The menu is open (everything else holds still).</summary>
         public static bool IsOpen { get; private set; }
+
+        /// <summary>While true the Pause binding doesn't open the menu (a Hell screen uses Escape / B / Start to skip;
+        /// docs/HELL-FLOW.md). <see cref="OpenMenu"/> still opens it.</summary>
+        public static bool Blocked;
+
+        static SkylinePauseMenu _instance;
+
+        /// <summary>Opens the menu from code (the Hell title's Settings). False when there is no menu in this scene.</summary>
+        public static bool OpenMenu()
+        {
+            if (_instance == null || _instance._overlay == null) return false;
+            if (!IsOpen) _instance.Open();
+            return true;
+        }
 
         enum Page { Main, Audio, Controls, Look, Subtitles }
         enum Kind { Button, Slider, Toggle, Binding, Choice }
@@ -100,6 +115,7 @@ namespace JamKit.SkylineRepo
         static void Boot()
         {
             IsOpen = false;                       // statics survive when Enter Play Mode skips the domain reload
+            Blocked = false;
             SkylineDeviceInput.Paused = false;
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -108,7 +124,9 @@ namespace JamKit.SkylineRepo
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (!scene.IsValid() || !scene.name.StartsWith("Skyline", StringComparison.Ordinal)) return;
+            if (!scene.IsValid()) return;
+            // the Skyline scenes and the Hell event game (HellDescent: its title's Settings open this menu)
+            if (!scene.name.StartsWith("Skyline", StringComparison.Ordinal) && !scene.name.StartsWith("Hell", StringComparison.Ordinal)) return;
             // The scripted runs (the capture, the demo, the perf probe) never get a menu: the game must not pause under them.
             if (SkylineRunArgs.Demo) return;
             if (FindAnyObjectByType<SkylinePauseMenu>() != null) return;
@@ -150,6 +168,7 @@ namespace JamKit.SkylineRepo
                 enabled = false;
                 return;
             }
+            _instance = this;
             Build(root);
             BuildSounds();
             _overlay.style.display = DisplayStyle.None;
@@ -157,6 +176,7 @@ namespace JamKit.SkylineRepo
 
         void OnDestroy()
         {
+            if (_instance == this) _instance = null;
             if (IsOpen) ForceClose();
             if (_dirtyOptions) SkylineSettings.Commit();
         }
@@ -356,6 +376,8 @@ namespace JamKit.SkylineRepo
 
         static readonly string[] SubtitleModeNames = { "Off", "Dialogue", "Dialogue + bot barks" };
         static readonly string[] SubtitleSizeNames = { "Small", "Medium", "Large" };
+        static readonly string[] HudLayoutNames = { "Full", "Clean (nothing on screen)" };
+        static readonly string[] VoiceModeNames = { "On", "Off", "Only the voices" };
 
         void ShowPage(Page page)
         {
@@ -388,6 +410,8 @@ namespace JamKit.SkylineRepo
                     AddSlider("Music", 0f, 1f, 0.05f, () => o.music, v => o.music = v);
                     AddSlider("Effects", 0f, 1f, 0.05f, () => o.effects, v => o.effects = v);
                     AddSlider("Voices", 0f, 1f, 0.05f, () => o.voices, v => o.voices = v);
+                    // the clean-picture switch's sound half (HellCleanPicture; this session only)
+                    AddChoice("Voice lines", VoiceModeNames, () => (int)HellCleanPicture.Voices, v => HellCleanPicture.Voices = (HellVoiceMode)v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
                 case Page.Controls:
@@ -410,6 +434,8 @@ namespace JamKit.SkylineRepo
                         v => Mathf.RoundToInt(v) + " deg");
                     AddToggle("Invert Y", () => o.invertY, v => o.invertY = v);
                     AddToggle("Aim assist (pad)", () => o.aimAssist, v => o.aimAssist = v);
+                    // the clean picture for recording (HellCleanPicture, docs/HELL-CAPTURE.md; this session only)
+                    AddChoice("HUD", HudLayoutNames, () => (int)HellCleanPicture.Hud, v => HellCleanPicture.Hud = (HellHudLayout)v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));
                     break;
                 case Page.Subtitles:
@@ -536,7 +562,7 @@ namespace JamKit.SkylineRepo
 
         bool CanOpen()
         {
-            if (SkylineRunArgs.Demo || _player == null) return false;
+            if (SkylineRunArgs.Demo || _player == null || Blocked) return false;
             return _player.ScriptedInput == null;
         }
 

@@ -267,16 +267,28 @@ namespace JamKit.SkylineRepo.EditorTools
                         }
                         break;
                     case HellRoomKind.HoldBrand:
-                        var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                        disc.name = "Brand Circle";
-                        Object.DestroyImmediate(disc.GetComponent<Collider>());
-                        disc.AddComponent<SkylineNoCollider>();
-                        disc.transform.SetParent(stop, false);
-                        disc.transform.localPosition = new Vector3(0f, 0.03f, 0f);
-                        float dd = FloorRules.CircleRadius * 2f;
-                        disc.transform.localScale = new Vector3(dd, 0.005f, dd);
-                        disc.GetComponent<Renderer>().sharedMaterial = m.brand;
-                        NoShadow(disc);
+                        // the brand ring: a glowing band 20 m across round the lava pool (HellRoom pulses it faster the
+                        // faster you charge it), made of short segments so the track and the pool stay visible inside it
+                        var ringRoot = new GameObject("Brand Circle").transform;
+                        ringRoot.SetParent(stop, false);
+                        float rr = d.hold != null ? d.hold.radius : HellBrandTuning.RingRadius;
+                        const int segs = 48;
+                        float segLen = 2f * Mathf.PI * rr / segs * 1.04f;
+                        for (int k = 0; k < segs; k++)
+                        {
+                            float a = (k + 0.5f) * 360f / segs;
+                            var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            seg.name = "Brand Segment";
+                            Object.DestroyImmediate(seg.GetComponent<Collider>());
+                            seg.AddComponent<SkylineNoCollider>();
+                            seg.transform.SetParent(ringRoot, false);
+                            var dir = Quaternion.Euler(0f, a, 0f) * Vector3.forward;
+                            seg.transform.position = at + dir * rr + Vector3.up * 0.04f;
+                            seg.transform.rotation = Quaternion.LookRotation(Vector3.Cross(Vector3.up, dir), Vector3.up);
+                            seg.transform.localScale = new Vector3(0.45f, 0.06f, segLen);
+                            seg.GetComponent<Renderer>().sharedMaterial = m.brand;
+                            NoShadow(seg);
+                        }
                         break;
                     case HellRoomKind.Collapse:
                         NoShadow(Box(stop, "Exit Glow", at + new Vector3(-2f, 0f, -0.3f), at + new Vector3(2f, 0.06f, 0.3f), m.lantern, false, null, true));

@@ -144,6 +144,58 @@ namespace JamKit.Skyline
             feet.Y < beam.max.Y && feet.Y + height > beam.min.Y;
     }
 
+    /// <summary>
+    /// The Collapse's falling debris (pure; the drops are <see cref="HellRoomDef.debris"/>, made by
+    /// <see cref="HellRoomLayouts.CollapseDebris"/>). Everything follows from the room clock: a drop's shadow glows on the floor
+    /// from <see cref="TelegraphSeconds"/> before it lands (<see cref="Telegraph"/>), the rock falls in the last
+    /// <see cref="FallSeconds"/> of that, it hits a body within its radius on the step it lands (<see cref="Lands"/>), and its
+    /// rubble shows for <see cref="RubbleSeconds"/>. A Rewind of the room clock rewinds it all.
+    /// </summary>
+    public static class HellDebris
+    {
+        /// <summary>The shadow's warning before the hit, the rock's visible fall, the rubble's life.</summary>
+        public const float TelegraphSeconds = 1f, FallSeconds = 0.45f, RubbleSeconds = 0.6f;
+        /// <summary>The hit, its radius, and the height the rock falls from.</summary>
+        public const float Damage = 30f, Radius = 1.5f, DropHeight = 12f;
+        /// <summary>Seconds between drops in a lane (seeded between these).</summary>
+        public const float MinGap = 1.3f, MaxGap = 2.1f;
+        /// <summary>How far ahead of the lane's front a drop lands (seeded between these): where a runner on pace is.</summary>
+        public const float MinLead = 7f, MaxLead = 24f;
+        /// <summary>The most a drop lands to either side of the lane's running line.</summary>
+        public const float SideJitter = 0.7f;
+
+        /// <summary>0..1 through the shadow's warning (0 before it, 1 at the landing); -1 when not telegraphing.</summary>
+        public static float Telegraph(HellDebrisDrop d, float clock)
+        {
+            float t = clock - (d.time - TelegraphSeconds);
+            if (t < 0f || clock >= d.time) return -1f;
+            return t / TelegraphSeconds;
+        }
+
+        /// <summary>The drop landed in (<paramref name="before"/>, <paramref name="now"/>] (the room's step).</summary>
+        public static bool Lands(HellDebrisDrop d, float before, float now) => d.time > before && d.time <= now;
+
+        /// <summary>A body with its feet here is hit by the landing (within the radius across, and on the drop's floor).</summary>
+        public static bool Hits(HellDebrisDrop d, Vector3 feet)
+        {
+            float dx = feet.X - d.position.X, dz = feet.Z - d.position.Z;
+            return dx * dx + dz * dz <= d.radius * d.radius && feet.Y > d.position.Y - 1f && feet.Y < d.position.Y + 2f;
+        }
+
+        /// <summary>The rock's height above the floor at <paramref name="clock"/> (falling in the last <see cref="FallSeconds"/>),
+        /// or -1 when it is not in the air.</summary>
+        public static float RockHeight(HellDebrisDrop d, float clock)
+        {
+            float left = d.time - clock;
+            if (left < 0f || left > FallSeconds) return -1f;
+            float k = left / FallSeconds;
+            return DropHeight * k * k;
+        }
+
+        /// <summary>The rubble shows for a moment after the landing.</summary>
+        public static bool Rubble(HellDebrisDrop d, float clock) => clock >= d.time && clock < d.time + RubbleSeconds;
+    }
+
     /// <summary>The last safe spot (pure): where the feet last stood on solid, non-hazard ground for <see cref="Settle"/> seconds.
     /// A sink in lava respawns you here.</summary>
     public sealed class SafeSpot

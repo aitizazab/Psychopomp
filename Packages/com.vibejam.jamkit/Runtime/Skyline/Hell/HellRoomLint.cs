@@ -10,6 +10,10 @@ namespace JamKit.Skyline
         public List<string> problems = new List<string>();
         public float safeLength, fastLength, straightLength;
         public int fastHazardCrossings;
+        /// <summary>Hold the Brand: seconds each way charges (safe: the slow rate behind a stone; fast: laps at full speed), the
+        /// racing line's lap, the laps a full-speed charge takes, and each path's cost in metres at a sprint (length plus the
+        /// charge time run at sprint speed).</summary>
+        public float holdSafeSeconds, holdFastSeconds, holdLapLength, holdLaps, safeCost, fastCost;
         public bool Ok => problems.Count == 0;
     }
 
@@ -38,6 +42,11 @@ namespace JamKit.Skyline
         public const float MinRoomWidth = 40f, MinRoomLength = 60f;
         /// <summary>An obstacle a leg's straight line may cross instead of a hazard: a solid this much taller than the higher end (no hop).</summary>
         public const float ObstacleRise = 2.5f;
+        /// <summary>Hold rooms: the ring is at least this wide, its racing line at least this long a lap, and the safe charge
+        /// spot within this of a stone (cover at least <see cref="CoverMinHeight"/> tall).</summary>
+        public const float MinHoldDiameter = 18f, MinHoldLap = 40f, CoverReach = 1.6f, CoverMinHeight = 1f;
+        /// <summary>Sprint speed (the movement engine's): turns a hold's seconds into metres for the fast-versus-safe rule.</summary>
+        public static readonly float SprintSpeed = new JamKit.Movement.MoveDef().sprintSpeed;
 
         public static HellLintResult Check(HellRoomDef r)
         {
@@ -56,6 +65,7 @@ namespace JamKit.Skyline
             foreach (var s in r.stops) straight.Add(s.position);
             straight.Add(r.exit);
             res.straightLength = Length(straight);
+            if (r.hold != null) CheckHold(r, res, p);
             if (res.fastLength > MaxFastShare * res.safeLength)
                 p.Add(r.name + ": the fast path (" + F(res.fastLength) + " m) is not clearly shorter than the safe path (" + F(res.safeLength) + " m)");
             if (res.fastLength > MaxFastDetour * res.straightLength)
@@ -67,6 +77,7 @@ namespace JamKit.Skyline
             if (res.fastHazardCrossings == 0) p.Add(r.name + ": the fast path crosses no hazard");
 
             CheckScale(r, p);
+            CheckFloating(r, p);
             CheckSafeGround(r, p);
             CheckSafeNav(r, p);
 
@@ -80,6 +91,107 @@ namespace JamKit.Skyline
                 foreach (var d in r.darkZones)
                     if (DistanceToBox(l.position, d) < l.radius) p.Add(r.name + ": a fire light at " + V(l.position) + " reaches a dark zone");
             return res;
+        }
+
+        /// <summary>
+        /// Hold the Brand's ring (charge from speed): the ring is wide (<see cref="MinHoldDiameter"/>) and holds a lava pool
+        /// (its middle is over lava) and a runnable wall; its racing line (<see cref="HellHoldRing.loop"/>) is closed, at least
+        /// <see cref="MinHoldLap"/> m a lap, and every sample of it is inside the ring on solid ground, never over a hazard nor
+        /// inside a solid. The fast path enters the ring; the safe path stops inside it within <see cref="CoverReach"/> of a
+        /// stone (the slow charge behind cover). Then the fast-versus-safe rule is measured as time: each path's cost is its
+        /// length plus its charge time run at sprint speed (safe: <see cref="HellBrandTuning.SlowSeconds"/>, fast:
+        /// <see cref="HellBrandTuning.FastSeconds"/>, which a sprint covers as laps of the racing line), and the fast cost must be
+        /// at most <see cref="MaxFastShare"/> of the safe cost. The plain length rule still applies to the paths in and out.
+        /// </summary>
+        static void CheckHold(HellRoomDef r, HellLintResult res, List<string> p)
+        {
+            var h = r.hold;
+            if (2f * h.radius < MinHoldDiameter - 0.01f) p.Add(r.name + ": the ring is " + F(2f * h.radius) + " m across, under " + F(MinHoldDiameter));
+            bool pool = false;
+            foreach (var z in r.hazards)
+                if (z.kind == HellHazardKind.Lava && InXZ(z.box, h.center)) pool = true;
+            if (!pool) p.Add(r.name + ": the ring has no lava pool in its middle");
+            bool wall = false;
+            foreach (var o in r.solids)
+                if (o.runnable && o.role == "wall" && FlatDistance((o.box.min + o.box.max) * 0.5f, h.center) < h.radius) wall = true;
+            if (!wall) p.Add(r.name + ": the ring has no wall to run");
+
+            var loop = h.loop;
+            if (loop.Count < 4) { p.Add(r.name + ": the ring has no racing line"); return; }
+            if (Vector3.Distance(loop[0], loop[loop.Count - 1]) > EndTolerance) p.Add(r.name + ": the racing line is not closed");
+            res.holdLapLength = Length(loop);
+            if (res.holdLapLength < MinHoldLap) p.Add(r.name + ": the racing line is " + F(res.holdLapLength) + " m a lap, under " + F(MinHoldLap));
+            int bad = 0;
+            foreach (var s in Samples(loop))
+            {
+                if (bad >= 5) break;
+                string why = null;
+                if (FlatDistance(s, h.center) > h.radius || Math.Abs(s.Y - h.center.Y) > h.halfHeight) why = "outside the ring";
+                else
+                {
+                    foreach (var z in r.hazards)
+                        if (z.kind != HellHazardKind.Beam && !z.Timeline && InXZ(z.box, s) && Ground(r, s, false) <= z.box.max.Y + 0.01f) why = "over hazard " + z.id;
+                    if (why == null)
+                    {
+                        float g = Ground(r, s, true);
+                        string solid = InsideBlocking(r, s + new Vector3(0, 0.9f, 0));
+                        if (float.IsNegativeInfinity(g) || Math.Abs(g - s.Y) > GroundTolerance) why = "not on ground";
+                        else if (solid != null) why = "inside " + solid;
+                    }
+                }
+                if (why != null) { p.Add(r.name + ": the racing line at " + V(s) + " is " + why); bad++; }
+            }
+
+            bool fastIn = false;
+            foreach (var s in Samples(r.fastPath)) if (FlatDistance(s, h.center) <= h.radius) fastIn = true;
+            if (!fastIn) p.Add(r.name + ": the fast path never enters the ring");
+            bool covered = false;
+            foreach (var s in r.safePath)
+            {
+                if (FlatDistance(s, h.center) > h.radius) continue;
+                foreach (var o in r.solids)
+                    if (o.role == "cover" && o.box.max.Y - s.Y >= CoverMinHeight && FlatDistanceToBox(s, o.box) <= CoverReach) covered = true;
+            }
+            if (!covered) p.Add(r.name + ": the safe path has no stone to charge behind inside the ring");
+
+            res.holdSafeSeconds = HellBrandTuning.SlowSeconds;
+            res.holdFastSeconds = HellBrandTuning.FastSeconds;
+            res.holdLaps = res.holdLapLength > 0f ? res.holdFastSeconds * SprintSpeed / res.holdLapLength : 0f;
+            if (res.holdLaps < 1f) p.Add(r.name + ": a full-speed charge is under one lap of the racing line (" + F(res.holdLaps) + ")");
+            res.safeCost = res.safeLength + res.holdSafeSeconds * SprintSpeed;
+            res.fastCost = res.fastLength + res.holdFastSeconds * SprintSpeed;
+            if (res.fastCost > MaxFastShare * res.safeCost)
+                p.Add(r.name + ": the fast way (" + F(res.fastCost) + " m at a sprint, charge included) is not clearly quicker than the safe way (" + F(res.safeCost) + ")");
+        }
+
+        /// <summary>A solid standing on a falling tile floats when the tile falls (The Collapse's fins did): any solid over a
+        /// timeline tile's footprint must reach down past the tile, to the lava bed.</summary>
+        static void CheckFloating(HellRoomDef r, List<string> p)
+        {
+            foreach (var h in r.hazards)
+            {
+                if (!h.Timeline) continue;
+                foreach (var o in r.solids)
+                {
+                    var b = o.box;
+                    bool overlap = b.min.X < h.box.max.X - 0.01f && b.max.X > h.box.min.X + 0.01f && b.min.Z < h.box.max.Z - 0.01f && b.max.Z > h.box.min.Z + 0.01f;
+                    if (overlap && b.min.Y > h.box.min.Y - 0.01f && b.max.Y > h.box.max.Y + 0.01f)
+                        p.Add(r.name + ": " + o.id + " stands on the falling tile " + h.id + " (it would float)");
+                }
+            }
+        }
+
+        static float FlatDistance(Vector3 a, Vector3 b)
+        {
+            float dx = a.X - b.X, dz = a.Z - b.Z;
+            return (float)Math.Sqrt(dx * dx + dz * dz);
+        }
+
+        static float FlatDistanceToBox(Vector3 p, CoverBox b)
+        {
+            float dx = Math.Max(Math.Max(b.min.X - p.X, 0f), p.X - b.max.X);
+            float dz = Math.Max(Math.Max(b.min.Z - p.Z, 0f), p.Z - b.max.Z);
+            return (float)Math.Sqrt(dx * dx + dz * dz);
         }
 
         /// <summary>The room is big enough, its legs long enough, and every leg's straight line (stop to stop; entry to the stop

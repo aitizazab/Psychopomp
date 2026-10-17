@@ -78,12 +78,19 @@ namespace JamKit.SkylineRepo
             transform.position = at;
         }
 
-        public object Snapshot() => _cycle != null ? _cycle.S : default(CollapseCycle.State);
+        readonly HellSnapPool<HellSnapBox<CollapseCycle.State>> _snaps = new HellSnapPool<HellSnapBox<CollapseCycle.State>>();
+
+        public object Snapshot()
+        {
+            var b = _snaps.Next();
+            b.value = _cycle != null ? _cycle.S : default(CollapseCycle.State);
+            return b;
+        }
 
         public void Restore(object snapshot)
         {
             if (_cycle == null) return;
-            _cycle.S = (CollapseCycle.State)snapshot;
+            _cycle.S = HellSnapBox<CollapseCycle.State>.From(snapshot);
             Apply();
         }
     }

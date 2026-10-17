@@ -11,8 +11,8 @@ namespace JamKit.SkylineRepo
     /// the clock starts, wave 0 spawns, the darkness registers, the bots' flight area and walk graph are set. Each fixed step
     /// it feeds the objective the player's feet, spawns the objective's enemies (the brand's waves, the wells' oozes), keeps
     /// the last safe spot, handles a sink in lava (respawn at the safe spot; in The Collapse the room restarts) and opens the
-    /// exit gate when the objective is done. <see cref="Restart"/> after a death. Rewindable: the clock, the objective and the
-    /// gate (the hazards and the bots are rewindables of their own).
+    /// exit gate when the objective is done. <see cref="Restart"/> after a death. Rewindable: the clock, the objective, the
+    /// spawn counter and the gate (the hazards and the bots are rewindables of their own).
     /// </summary>
     public sealed class HellRoom : MonoBehaviour, IHellRewindable
     {
@@ -42,14 +42,30 @@ namespace JamKit.SkylineRepo
         SafeSpot _safe;
         bool _beamsMade, _lightsDone, _registered, _doneOpened;
         int _maxWave, _spawned;
-        Material _lit, _unlit, _sealed;
+        Material _lit, _unlit, _sealed, _debrisShadow, _debrisRock;
+        // Hold the Brand: the ring's glowing pieces (the builder's "Brand Circle"), their colour, the pulse's phase
+        readonly List<Renderer> _brandRing = new List<Renderer>();
+        MaterialPropertyBlock _brandBlock;
+        Color _brandColour = new Color(1.1f, 0.55f, 2.4f);
+        float _brandPhase;
+        // The Collapse: one shadow (the 1 s telegraph on the floor) and one rock per debris drop, made at run time
+        readonly List<Transform> _debrisShadows = new List<Transform>();
+        readonly List<Transform> _debrisRocks = new List<Transform>();
 
-        struct Snap
+        /// <summary>The brand ring's pulse: this many pulses a second at a standstill, plus this many more at full speed.</summary>
+        public const float BrandPulseSlowHz = 0.6f, BrandPulseFastHz = 3.4f;
+
+        // pooled (no garbage per step; docs/HELL-INTEGRATION.md): the room's clock, the objective, and the spawn counter (the
+        // bots' seeds), so a Rewind past a spawn spawns the same bot again
+        sealed class Snap
         {
             public float clock;
             public object objective;
             public bool running;
+            public int spawned;
         }
+
+        readonly HellSnapPool<Snap> _snaps = new HellSnapPool<Snap>();
 
         void Awake()
         {
@@ -80,6 +96,15 @@ namespace JamKit.SkylineRepo
             _lit = MakeUnlit(new Color(2.4f, 0.9f, 3.2f));
             _unlit = MakeUnlit(new Color(0.35f, 0.12f, 0.45f));
             _sealed = MakeUnlit(new Color(0.08f, 0.07f, 0.09f));
+            var ring = Find(transform, "Brand Circle");
+            if (ring != null)
+            {
+                ring.GetComponentsInChildren(true, _brandRing);
+                if (_brandRing.Count > 0 && _brandRing[0].sharedMaterial != null && _brandRing[0].sharedMaterial.HasProperty("_BaseColor"))
+                    _brandColour = _brandRing[0].sharedMaterial.GetColor("_BaseColor");
+                _brandBlock = new MaterialPropertyBlock();
+            }
+            if (Def.debris.Count > 0) MakeDebrisViews();
         }
 
         void OnEnable() { HellRewindRegistry.Register(this); }
@@ -127,7 +152,11 @@ namespace JamKit.SkylineRepo
                 foreach (var bd in _dark) HellDarkness.UnregisterZone(bd);
                 _registered = false;
             }
-            if (Objective is BrandHold && SkylineHud.Instance != null) SkylineHud.Instance.Objective.Bind(null, null);
+            if (Objective is BrandHold && SkylineHud.Instance != null)
+            {
+                SkylineHud.Instance.Objective.Bind(null, null);
+                SkylineHud.Instance.Objective.RingRate = 0f;
+            }
             if (_bots != null) _bots.gameObject.SetActive(false);
             CarryLantern(false);
         }
@@ -179,12 +208,25 @@ namespace JamKit.SkylineRepo
                     if (ch.HasValue) { CarryLantern(ch.Value == LanternState.Carried); SyncViews(); }
                     break;
                 case BrandHold brand:
-                    int n = brand.Tick(dt, feet);
+                    // charge from speed: the faster you move inside the ring, the faster it charges (HellBrandTuning)
+                    float speed = sim != null ? sim.HorizontalSpeed : 0f;
+                    int n = brand.Tick(dt, feet, speed);
                     for (int w = brand.WavesReleased - n + 1; w <= brand.WavesReleased; w++)
                         SpawnWave(_maxWave <= 0 ? 0 : ((w - 1) % _maxWave) + 1);
+                    if (SkylineHud.Instance != null) SkylineHud.Instance.Objective.RingRate = brand.RateShare;
                     break;
                 case CollapseEscape escape:
                     escape.Tick(feet);
+                    // the wall imps, on the clock (each wave once)
+                    int due = escape.TickWaves(dt);
+                    for (int w = escape.WavesReleased - due + 1; w <= escape.WavesReleased; w++) SpawnWave(w);
+                    // the debris lands on the room clock: a hit within its radius on the step it lands
+                    foreach (var d in Def.debris)
+                        if (HellDebris.Lands(d, Clock - dt, Clock) && HellDebris.Hits(d, feet))
+                        {
+                            _player.TakeAttack(HellDebris.Damage, "debris", U(d.position) + Vector3.up * 3f);
+                            Debug.Log("HELL_ROOM debris hit at " + U(d.position));
+                        }
                     break;
                 case OozeWells wells:
                     for (int i = 0; i < _wellBots.Count; i++)
@@ -219,6 +261,91 @@ namespace JamKit.SkylineRepo
             _safe.Tick(dt, feet, _player.Yaw, grounded && !onHazard);
 
             if (feet.Y < Def.bounds.min.Y - 3f) Sank("fell");
+        }
+
+        void Update()
+        {
+            if (_brandRing.Count > 0 && Objective is BrandHold brand) TickBrandGlow(brand);
+            if (_debrisShadows.Count > 0) TickDebrisViews();
+        }
+
+        /// <summary>The brand ring's glow pulses faster the faster you charge it (the charge rate's cue; the HUD ring does the
+        /// same), dims while you are outside it, and burns steady once it is set.</summary>
+        void TickBrandGlow(BrandHold brand)
+        {
+            float k;
+            if (brand.Done) k = 1.3f;
+            else
+            {
+                float hz = BrandPulseSlowHz + BrandPulseFastHz * brand.RateShare;
+                _brandPhase = (_brandPhase + Time.deltaTime * hz) % 1f;
+                float pulse = 0.5f + 0.5f * Mathf.Sin(_brandPhase * Mathf.PI * 2f);
+                k = brand.Inside && Running ? 0.55f + 0.75f * pulse : 0.35f + 0.15f * pulse;
+            }
+            _brandBlock.SetColor("_BaseColor", _brandColour * k);
+            _brandBlock.SetColor("_EmissionColor", _brandColour * k);
+            foreach (var r in _brandRing) if (r != null) r.SetPropertyBlock(_brandBlock);
+        }
+
+        void MakeDebrisViews()
+        {
+            _debrisShadow = MakeUnlit(new Color(2.6f, 0.7f, 0.15f));
+            _debrisRock = MakeUnlit(new Color(0.16f, 0.1f, 0.08f));
+            var root = new GameObject("Debris").transform;
+            root.SetParent(transform, false);
+            foreach (var d in Def.debris)
+            {
+                var shadow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                shadow.name = "Debris Shadow";
+                Destroy(shadow.GetComponent<Collider>());
+                shadow.transform.SetParent(root, false);
+                shadow.transform.position = U(d.position) + Vector3.up * 0.04f;
+                shadow.transform.localScale = new Vector3(d.radius * 2f, 0.01f, d.radius * 2f);
+                var sr = shadow.GetComponent<Renderer>();
+                sr.sharedMaterial = _debrisShadow;
+                sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                shadow.SetActive(false);
+                _debrisShadows.Add(shadow.transform);
+                var rock = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                rock.name = "Debris Rock";
+                Destroy(rock.GetComponent<Collider>());
+                rock.transform.SetParent(root, false);
+                rock.transform.localScale = Vector3.one * (d.radius * 1.1f);
+                rock.transform.rotation = Quaternion.Euler(23f, 41f * _debrisRocks.Count, 17f);
+                rock.GetComponent<Renderer>().sharedMaterial = _debrisRock;
+                rock.SetActive(false);
+                _debrisRocks.Add(rock.transform);
+            }
+        }
+
+        /// <summary>The debris as the room clock has it (so a Rewind of the clock shows it rewound): the shadow grows and burns
+        /// brighter over its 1 s warning, the rock falls in its last moments, the rubble lies a moment and goes.</summary>
+        void TickDebrisViews()
+        {
+            for (int i = 0; i < Def.debris.Count && i < _debrisShadows.Count; i++)
+            {
+                var d = Def.debris[i];
+                float tel = Running ? HellDebris.Telegraph(d, Clock) : -1f;
+                var s = _debrisShadows[i];
+                bool showShadow = tel >= 0f;
+                if (s.gameObject.activeSelf != showShadow) s.gameObject.SetActive(showShadow);
+                if (showShadow)
+                {
+                    float w = d.radius * 2f * (0.55f + 0.45f * tel);
+                    s.localScale = new Vector3(w, 0.01f, w);
+                }
+                var rock = _debrisRocks[i];
+                float h = Running ? HellDebris.RockHeight(d, Clock) : -1f;
+                bool rubble = Running && HellDebris.Rubble(d, Clock);
+                bool showRock = h >= 0f || rubble;
+                if (rock.gameObject.activeSelf != showRock) rock.gameObject.SetActive(showRock);
+                if (showRock)
+                {
+                    float y = h >= 0f ? h + d.radius * 0.55f : d.radius * 0.25f;
+                    rock.position = U(d.position) + Vector3.up * y;
+                    rock.localScale = h >= 0f ? Vector3.one * (d.radius * 1.1f) : new Vector3(d.radius * 1.6f, d.radius * 0.4f, d.radius * 1.6f);
+                }
+            }
         }
 
         /// <summary>A sink in lava (or a fall out of the room): back to the last safe spot; the lantern goes home. In The
@@ -331,13 +458,22 @@ namespace JamKit.SkylineRepo
 
         // ------------------------------------------------------------------ rewind
 
-        public object Snapshot() => new Snap { clock = Clock, objective = Objective.Snapshot(), running = Running };
+        public object Snapshot()
+        {
+            var s = _snaps.Next();
+            s.clock = Clock;
+            s.objective = Objective.Snapshot();
+            s.running = Running;
+            s.spawned = _spawned;
+            return s;
+        }
 
         public void Restore(object snapshot)
         {
             var s = (Snap)snapshot;
             Clock = s.clock;
             Running = s.running;
+            _spawned = s.spawned;
             Objective.Restore(s.objective);
             _doneOpened = Objective.Done;
             if (Objective is LanternCarry l) CarryLantern(l.Carrying);

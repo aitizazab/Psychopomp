@@ -30,6 +30,15 @@ namespace JamKit.SkylineRepo
         }
     }
 
+    /// <summary>A pooled box for a value-type snapshot (<c>HellSnapPool&lt;HellSnapBox&lt;S&gt;&gt;</c>): no boxing per step.</summary>
+    public sealed class HellSnapBox<T> where T : struct
+    {
+        public T value;
+
+        /// <summary>The value in a snapshot that is a box, or the boxed value itself (older snapshots).</summary>
+        public static T From(object snapshot) => snapshot is HellSnapBox<T> b ? b.value : (T)snapshot;
+    }
+
     /// <summary>
     /// The Rewind (docs/HELL-ABILITIES.md): every fixed step, a snapshot of every <see cref="IHellRewindable"/> in
     /// <see cref="HellRewindRegistry.All"/> goes into a ring a little over <see cref="seconds"/> long (game time); a rewind
@@ -82,10 +91,11 @@ namespace JamKit.SkylineRepo
             if (Instance == this) Instance = null;
         }
 
-        void OnEnable() => HellRunEvents.RoomRestarted += ClearHistory;
-        void OnDisable() => HellRunEvents.RoomRestarted -= ClearHistory;
+        void OnEnable() => HellRunEvents.RewindBoundary += ClearHistory;
+        void OnDisable() => HellRunEvents.RewindBoundary -= ClearHistory;
 
-        /// <summary>Forgets every recorded frame (a room restarted after a death: a rewind never reaches back past it).</summary>
+        /// <summary>Forgets every recorded frame (<see cref="HellRunEvents.RewindBoundary"/>: a room entered or restarted, a shaft, a
+        /// screen; a rewind never reaches back past one, so it clamps to the room's start).</summary>
         public void ClearHistory()
         {
             if (_ring != null) _ring.Clear();
