@@ -186,23 +186,62 @@ namespace JamKit.Tests.Skyline
                 .Goal(V(8, 0, 29), 3f);
         }
 
-        // ------------------------------------------------------------------ The Collapse (hell-rooms2's layout: simulated only)
+        // ------------------------------------------------------------------ The Collapse (rooms3: the run-up hall, then the bridge)
 
         public static IEnumerable<HellLeg> Collapse()
         {
             const HellRoomKind K = HellRoomKind.Collapse;
-            yield return new HellLeg(K, "the 4 m lava gap", V(0, 0, 22), V(0, 0, 40))
-                .Run(V(0, 0, 50), p => p.Pos.Z > 29.2f)
-                .Jump(V(0, 0, 50), p => p.Grounded)
-                .Goal(V(0, 0, 38), 3f);
-            yield return new HellLeg(K, "the beam, slid under", V(0, 0, 38), V(0, 0, 60))
-                .Run(V(0, 0, 70), p => p.Pos.Z > 46f)
-                .Slide(V(0, 0, 70), p => p.Pos.Z > 51.5f)
-                .Goal(V(0, 0, 56), 4f);
-            yield return new HellLeg(K, "the 12 m gap, a Shadow Step", V(0, 0, 60), V(0, 0, 90))
-                .Run(V(0, 0, 100), p => p.Pos.Z > 68.8f)
-                .Step(V(0, 0, 85), V(0, 0, 100), p => p.Grounded && p.BeatTime > 0.02f)
-                .Goal(V(0, 0, 90), 4f);
+            // the speed route: up the hall's stalactites, kicking from one row to the other, out onto the bridge
+            yield return Kicks(new HellLeg(K, "the stalactite kicks", V(0.6f, 0, 14), V(0.6f, 0, 30)))
+                .Goal(V(0, 0, 60), 5f, 6f);
+            yield return new HellLeg(K, "the 4 m lava gap", V(0, 0, 64), V(0, 0, 90))
+                .Run(V(0, 0, 100), p => p.Pos.Z > 75.2f)
+                .Jump(V(0, 0, 100), p => p.Grounded)
+                .Goal(V(0, 0, 86), 4f);
         }
+
+        /// <summary>The kicks: run the line beside the east row, jump up into its first stalactite, then kick across to the other
+        /// row and back (each kick within the wall-kick window keeps the speed and adds along the wall), and drop out of the
+        /// last one running.</summary>
+        static HellLeg Kicks(HellLeg leg)
+        {
+            const float far = 90f;
+            return leg
+                .Run(V(0.6f, 0, 60), p => p.Pos.Z > 27f)
+                .Jump(V(1.4f, 1.5f, 38), p => p.Wallrunning || p.Pos.Z > 50f)
+                .Jump(V(-1.4f, 2, far), p => (p.Wallrunning && p.Pos.X < 0) || p.Pos.Z > 50f)
+                .Jump(V(1.4f, 2, far), p => (p.Wallrunning && p.Pos.X > 0) || p.Pos.Z > 50f)
+                .Jump(V(-1.4f, 2, far), p => (p.Wallrunning && p.Pos.X < 0) || p.Pos.Z > 50f)
+                .Jump(V(0, 0, far), p => p.Grounded);
+        }
+
+        /// <summary>The whole speed route on the room clock: dropped in at the entry, the kicks, the bridge's central lane and
+        /// its gap, to the end floor.</summary>
+        public static HellLeg CollapseSpeedRoute() =>
+            Bridge(Kicks(new HellLeg(HellRoomKind.Collapse, "the speed route", V(0.6f, 4, -4), V(0.6f, 0, 20)).StartSpeed(0f)));
+
+        /// <summary>The normal route into the fast lane: a sprint straight below the stalactites, then the central lane.</summary>
+        public static HellLeg CollapseNormalRouteFastLane() =>
+            Bridge(new HellLeg(HellRoomKind.Collapse, "a sprint below, then the fast lane", V(0, 4, -4), V(0, 0, 20)).StartSpeed(0f)
+                .Run(V(0, 0, 130), p => p.Pos.Z > 50f));
+
+        /// <summary>The normal route with the ground's own speed tools: a slide below the stalactites, a hop out of it and hops on
+        /// every landing, then the central lane.</summary>
+        public static HellLeg CollapseSlideHopFastLane() =>
+            Bridge(new HellLeg(HellRoomKind.Collapse, "a slide and hops below, then the fast lane", V(0, 4, -4), V(0, 0, 20)).StartSpeed(0f)
+                .Run(V(0, 0, 130), p => p.Pos.Z > 6f)
+                .Slide(V(0, 0, 130), p => p.Pos.Z > 12f)
+                .Jump(V(0, 0, 130), p => p.Grounded)
+                .Hop(V(0, 0, 130), p => p.Grounded && p.BeatTime > 0.1f)
+                .Hop(V(0, 0, 130), p => p.Grounded && p.BeatTime > 0.1f)
+                .Hop(V(0, 0, 130), p => p.Grounded && p.BeatTime > 0.1f)
+                .Run(V(0, 0, 130), p => p.Pos.Z > 50f));
+
+        static HellLeg Bridge(HellLeg leg) => leg
+            .Slide(V(0, 0, 130), p => p.Pos.Z > 75.2f || p.Sim.HorizontalSpeed < 9f)
+            .Run(V(0, 0, 130), p => p.Pos.Z > 75.2f)
+            .Jump(V(0, 0, 130), p => p.Grounded)
+            .Run(V(0, 0, 130), p => p.Pos.Z > HellRoomLayouts.CollapseEndZ + 0.5f)
+            .Goal(V(0, 0, 116), 4f, 20f);
     }
 }

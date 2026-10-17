@@ -130,16 +130,17 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
-        public void TheCollapseFallsFromTheEntryAndSlowerOnTheSafeLane()
+        public void TheCollapseFallsFromTheBridgeStartAndSlowerOnTheSafeLane()
         {
-            Assert.That(HellRoomLayouts.CollapseTileSeconds(40f, false), Is.GreaterThan(HellRoomLayouts.CollapseTileSeconds(20f, false)));
+            Assert.That(HellRoomLayouts.CollapseTileSeconds(90f, false), Is.GreaterThan(HellRoomLayouts.CollapseTileSeconds(70f, false)));
             Assert.That(HellRoomLayouts.CollapseTileSeconds(60f, true), Is.GreaterThan(HellRoomLayouts.CollapseTileSeconds(60f, false)));
+            Assert.That(HellRoomLayouts.CollapseTileSeconds(HellRoomLayouts.CollapseStartZ, false), Is.EqualTo(HellRoomLayouts.CollapseFastDelay), "the bridge starts falling at its start, after the delay");
             var r = HellRoomLayouts.Build(HellRoomKind.Collapse);
-            Assert.That(r.hazards.Count(h => h.Timeline), Is.GreaterThan(40));
+            Assert.That(r.hazards.Count(h => h.Timeline), Is.GreaterThan(25));
             Assert.That(r.exitGateId, Is.Empty);
             Assert.That(HellRoomLayouts.CollapseFastLaneSpeed, Is.GreaterThan(new MoveDef().sprintSpeed), "the fast lane's front outruns a sprint");
             Assert.That(HellRoomLayouts.CollapseSafeLaneSpeed, Is.LessThan(new MoveDef().sprintSpeed));
-            Assert.That(HellRoomLayouts.CollapseFrontZ(HellRoomLayouts.CollapseTileSeconds(40f, false), false), Is.EqualTo(40f).Within(1e-3));
+            Assert.That(HellRoomLayouts.CollapseFrontZ(HellRoomLayouts.CollapseTileSeconds(80f, false), false), Is.EqualTo(80f).Within(1e-3));
         }
 
         // ------------------------------------------------------------------ The Collapse, run in the movement engine
@@ -172,84 +173,85 @@ namespace JamKit.Tests.Skyline
         /// <summary>The run director drops you in from this high above the vestibule (HellRunDirector).</summary>
         const float HellRunDropHeight = 4f;
 
-        /// <summary>Runs the fast lane in the movement engine on a flat strip from the entry (x -3..3), with the given policy and
-        /// a Shadow Step across the 12 m gap (instant, momentum kept: credited to every runner), until the feet reach the exit
-        /// floor or stand on a fallen tile. Returns the z reached; <paramref name="survived"/> is false when the floor went.</summary>
-        static float RunFastLane(int floor, System.Func<MoveSim, MoveInput> policy, out float seconds, out bool survived, float fastDelay = float.NaN)
+        /// <summary>One run of The Collapse on the room clock in the traversal simulator (the room's real solids; the bridge's
+        /// tiles fall on their timeline, and the floorless lava under them ends the run), from the drop at the entry.</summary>
+        sealed class CollapseRace
         {
+            public HellLegResult result;
+            /// <summary>The smallest lead (s) the runner had on the ground over a bridge tile (before it fell); the speed when
+            /// reaching the bridge (z 56) and the most speed seen.</summary>
+            public float minLead = float.PositiveInfinity, bridgeSpeed = -1f, maxSpeed;
+        }
+
+        /// <summary>Where the speed out of the run-up hall is measured: past the stalactites, before the bridge.</summary>
+        const float HallEndZ = 48f;
+
+        static CollapseRace Race(HellLeg leg, int floor)
+        {
+            var race = new CollapseRace();
+            var b = HellRoomLayouts.Build(HellRoomKind.Collapse);
+            leg.OnTheClock(p =>
+            {
+                var v = p.Sim.HorizontalSpeed;
+                if (v > race.maxSpeed) race.maxSpeed = v;
+                if (race.bridgeSpeed < 0f && p.Pos.Z >= HallEndZ) race.bridgeSpeed = v;
+                if (!p.Grounded) return;
+                float falls = FallsAt(b, p.Pos, floor);
+                if (!float.IsPositiveInfinity(falls)) race.minLead = System.Math.Min(race.minLead, falls - p.Time);
+            });
+            race.result = HellTraversal.Run(leg, floor, 1f, null);
+            return race;
+        }
+
+        static string Describe(CollapseRace r) => (r.result.ok ? "made it" : "lost: " + r.result.why) + " in " + r.result.seconds.ToString("0.00")
+            + " s, at the bridge " + r.bridgeSpeed.ToString("0.0") + " m/s, top " + r.maxSpeed.ToString("0.0") + " m/s, smallest lead "
+            + r.minLead.ToString("0.00") + " s";
+
+        static IEnumerable<int> VariantFloors => new[] { 0, 1, 2 };
+
+        [TestCaseSource(nameof(VariantFloors))]
+        public void TheSpeedRouteKicksUpToSpeedAndOutrunsTheFastLane(int floor)
+        {
+            var r = Race(HellFastLines.CollapseSpeedRoute(), floor);
+            TestContext.WriteLine("floor " + floor + ": the kick route " + Describe(r));
+            Assert.That(r.result.ok, Is.True, Describe(r) + "\n" + string.Join("\n", r.result.log));
+            Assert.That(r.bridgeSpeed, Is.GreaterThan(new MoveDef().sprintSpeed + 3f), "the kicks build speed well past a sprint");
+            Assert.That(r.minLead, Is.GreaterThan(0.2f), "a lead on the fast front all the way");
+        }
+
+        [TestCaseSource(nameof(VariantFloors))]
+        public void TheNormalRouteCannotMakeTheFastLane(int floor)
+        {
+            var r = Race(HellFastLines.CollapseNormalRouteFastLane(), floor);
+            TestContext.WriteLine("floor " + floor + ": a sprint below the stalactites, then the fast lane: " + Describe(r));
+            Assert.That(r.result.ok, Is.False, "a sprint (no kicks) makes the fast lane: " + Describe(r));
+            Assert.That(r.bridgeSpeed, Is.LessThanOrEqualTo(new MoveDef().sprintSpeed + 0.1f), "running below the stalactites gains no speed");
+        }
+
+        [TestCaseSource(nameof(VariantFloors))]
+        public void ASlideAndHopBelowTheStalactitesCannotMakeTheFastLaneEither(int floor)
+        {
+            var r = Race(HellFastLines.CollapseSlideHopFastLane(), floor);
+            TestContext.WriteLine("floor " + floor + ": a slide and hops below, then the fast lane: " + Describe(r));
+            Assert.That(r.result.ok, Is.False, "a slide-hop (no kicks) makes the fast lane: " + Describe(r));
+        }
+
+        [Test]
+        public void BothRoutesThroughTheHallAreTheSameLength()
+        {
+            // the kick line and the run below it cover the same ground: the normal route is not slower by distance, only by speed
+            var a = new Vector3(0.6f, 0, 8f);
+            var c = new Vector3(0.6f, 0, HellRoomLayouts.CollapseStartZ);
             var r = HellRoomLayouts.Build(HellRoomKind.Collapse);
-            var w = new BoxWorld();
-            w.Floor(-3f, 3f, -8f, 120f, 0f);
-            var sim = Dropped(w, r);
-            LastFastLead = float.PositiveInfinity;
-            bool stepped = false;
-            float t = 0f;
-            survived = true;
-            while (t < 30f)
+            var stal = r.solids.Where(s => s.id.StartsWith("stalactite")).ToList();
+            Assert.That(stal.Count, Is.EqualTo(HellRoomLayouts.CollapseStalactiteCount * 2));
+            foreach (var s in stal)
             {
-                var input = policy(sim);
-                sim.Step(input, MoveTestKit.H);
-                t += MoveTestKit.H;
-                var p = sim.Position;
-                if (!stepped && p.Z >= HellRoomLayouts.CollapseFastGaps[1][0] - 2f)
-                {
-                    stepped = true;
-                    sim.Teleport(new Vector3(p.X, p.Y, HellRoomLayouts.CollapseFastGaps[1][1] + 1f), 0f, sim.Velocity);
-                    p = sim.Position;
-                }
-                if (p.Z >= HellRoomLayouts.CollapseEndZ) break;
-                float falls = FallsAt(r, p, floor, fastDelay);
-                if (sim.Grounded && !float.IsPositiveInfinity(falls)) LastFastLead = System.Math.Min(LastFastLead, falls - t);
-                if (sim.Grounded && t >= falls) { survived = false; break; }
+                Assert.That(s.box.min.Y, Is.GreaterThan(new MoveDef().standHeight + 0.2f), "a runner passes below " + s.id);
+                Assert.That(s.runnable, Is.True, s.id + " can be kicked off");
+                Assert.That(s.box.min.Z > a.Z && s.box.max.Z < c.Z, Is.True, s.id + " is in the run-up hall");
             }
-            seconds = t;
-            return sim.Position.Z;
-        }
-
-        /// <summary>The smallest lead (seconds before the tile under the feet fell) of the last fast-lane run, on the ground.</summary>
-        static float LastFastLead;
-
-        static MoveInput SprintOnly(MoveSim sim) => MoveTestKit.Forward();
-
-        /// <summary>A skilled runner: slide whenever the boost is ready, hop out of every slide, bunny-hop while faster than a
-        /// sprint (the jump on the landing step), otherwise sprint.</summary>
-        static MoveInput SlideHop(MoveSim sim)
-        {
-            var i = MoveTestKit.Forward();
-            float v = sim.HorizontalSpeed;
-            if (sim.Mode == MoveMode.Slide)
-            {
-                if (sim.SlideTime > 0.12f) { i.jumpPressed = true; i.jumpHeld = true; }
-                else i.crouchHeld = true;
-            }
-            else if (sim.Grounded && v >= sim.def.slideMinSpeed && sim.SlideBoostCooldown <= 0f)
-            {
-                i.crouchPressed = true;
-                i.crouchHeld = true;
-            }
-            else if (sim.Grounded && v > sim.def.sprintSpeed + 0.2f)
-            {
-                i.jumpPressed = true;
-                i.jumpHeld = true;
-            }
-            return i;
-        }
-
-        [TestCaseSource(nameof(CollapseFloors))]
-        public void ASprintAloneLosesTheFastLane(int floor)
-        {
-            float z = RunFastLane(floor, SprintOnly, out float t, out bool survived);
-            TestContext.WriteLine("floor " + floor + ": a sprint lost the floor at z " + z + " after " + t + " s");
-            Assert.That(survived, Is.False, "a plain sprint stays ahead of the fast lane's front");
-        }
-
-        [TestCaseSource(nameof(CollapseFloors))]
-        public void SlidesAndHopsWinTheFastLane(int floor)
-        {
-            float z = RunFastLane(floor, SlideHop, out float t, out bool survived);
-            TestContext.WriteLine("floor " + floor + ": slides and hops reached z " + z + " in " + t + " s, smallest lead " + LastFastLead + " s");
-            Assert.That(survived, Is.True, "slides and hops lose the fast lane at z " + z + " after " + t + " s");
-            Assert.That(LastFastLead, Is.GreaterThan(0.2f), "the hops keep a lead on the front (smallest " + LastFastLead + " s)");
+            Assert.That(r.hazards.Where(h => h.Timeline).All(h => h.box.min.Z >= HellRoomLayouts.CollapseStartZ - 1e-3f), Is.True, "the hall never falls");
         }
 
         /// <summary>Runs the safe lane in the movement engine through the room's real solids (the floors, the fins, the tiles as
@@ -305,6 +307,62 @@ namespace JamKit.Tests.Skyline
                 Assert.That(RunSafeLane(floor, 2f, out _, out _), Is.False, "floor " + floor + ": a 2 s fumble survives");
         }
 
+        /// <summary>The creator's bug (2026-10-18): on the safe lane the tiles fell ("the textures fell down") and the player didn't
+        /// drop into the lava. The lava basins had a collider at their surface (lava you wade out of, 1.2 m down), so a fallen
+        /// tile left you standing on the glowing lava for its 1 s sink time, and every hop reset that clock. The Collapse's
+        /// bridge lava is now floorless: you fall into it and sink at once (HellRoom: LavaContact.SunkIn).</summary>
+        [TestCase(0)]
+        [TestCase(2)]
+        public void AFallenSafeTileDropsYouIntoTheLava(int floor)
+        {
+            var room = HellRoomVariants.Build(HellRoomKind.Collapse, floor);
+            Assert.That(room.lavaFloor, Is.False, "the bridge's lava has no floor");
+            var tune = HellRoomVariants.Floors[floor];
+            var w = new HellTraversalWorld(room, tune.mirror, tune.quarterTurns, timeline: true);
+            // standing still on a safe-lane tile, mid-bridge
+            var spot = w.ToWorld(new Vector3(HellRoomLayouts.CollapseSafeLineEast, 0f, HellRoomLayouts.CollapseStartZ + 7.5f));
+            var tile = room.hazards.First(h => h.Timeline && h.id.StartsWith("tile-safe") && HellRoomLint.Contains(new CoverBox { min = h.box.min - new Vector3(0, 1, 0), max = h.box.max + new Vector3(0, 1, 0) }, spot));
+            var sim = MoveTestKit.Standing(w.World, spot);
+            float fell = tile.timelineSeconds + room.collapseShakeSeconds, sunkAt = -1f;
+            for (float t = 0f; t < fell + 2f; t += MoveTestKit.H)
+            {
+                sim.Step(new MoveInput(), MoveTestKit.H);
+                w.TickPlatforms(sim, MoveTestKit.H, null, t);
+                if (t < fell - 0.05f) Assert.That(sim.Grounded, Is.True, "standing on the tile before it falls");
+                if (LavaContact.SunkIn(room, sim.Position)) { sunkAt = t; break; }
+            }
+            Assert.That(sunkAt, Is.GreaterThan(0f), "the player never sank: still at " + sim.Position);
+            Assert.That(sunkAt - fell, Is.LessThan(0.6f), "sunk within a moment of the tile falling (" + (sunkAt - fell) + " s)");
+            // and every other room keeps lava you can wade out of (a floor at its surface, never SunkIn)
+            foreach (var r in HellRoomVariants.All())
+                if (r.kind != HellRoomKind.Collapse)
+                {
+                    Assert.That(r.lavaFloor, Is.True, r.name);
+                    Assert.That(LavaContact.SunkIn(r, r.entry - new Vector3(0, 5, 0)), Is.False, r.name);
+                }
+        }
+
+        [Test]
+        public void SpeedIsCarriedThroughADrop()
+        {
+            var m = new HellMomentum();
+            // a sprint into the drop hole, then a bump on its far wall and the fall
+            for (int i = 0; i < 120; i++) m.Tick(1f / 120f, 13f);
+            for (int i = 0; i < 108; i++) m.Tick(1f / 120f, 0.5f);
+            var v = m.Arrive(90f);   // the next room faces +x
+            Assert.That(v.X, Is.EqualTo(13f - 0.9f * HellMomentum.FadePerSecond).Within(0.05f), "rotated into the entry direction, faded a little over the fall");
+            Assert.That(System.Math.Abs(v.Z), Is.LessThan(1e-3f));
+            Assert.That(m.Arrive(0f), Is.EqualTo(Vector3.Zero), "used up on arrival");
+            for (int i = 0; i < 60; i++) m.Tick(1f / 120f, 30f);
+            Assert.That(m.Arrive(0f).Z, Is.EqualTo(HellMomentum.MaxSpeed), "capped so the landing stays on the entry floor");
+            m.Tick(0.1f, 9f);
+            m.Reset();
+            Assert.That(m.Arrive(0f), Is.EqualTo(Vector3.Zero), "a death carries nothing");
+            // the capped arrival from the drop height lands on every room's entry floor (z 0..8 at least), not in its lava
+            float g = new MoveDef().gravity, fall = (float)System.Math.Sqrt(2.0 * HellWorld.DropInHeight / g);
+            Assert.That(-4f + HellMomentum.MaxSpeed * fall, Is.LessThan(8f));
+        }
+
         [Test]
         public void TheFinsStandOnTheLavaBedNotOnTheirTiles()
         {
@@ -331,7 +389,7 @@ namespace JamKit.Tests.Skyline
                 var other = HellRoomLayouts.CollapseDebris(b, 8UL, Scale(floor));
                 Assert.That(a.Select(d => d.time), Is.EqualTo(again.Select(d => d.time)), "seeded");
                 Assert.That(a.Select(d => d.position), Is.Not.EqualTo(other.Select(d => d.position)), "another seed, other drops");
-                Assert.That(a.Count(d => d.position.X > -3f), Is.GreaterThanOrEqualTo(4), "the fast lane gets debris");
+                Assert.That(a.Count(d => d.position.X > -3f), Is.GreaterThanOrEqualTo(3), "the fast lane gets debris");
                 Assert.That(a.Count(d => d.position.X < -8f), Is.GreaterThanOrEqualTo(4), "the safe lane gets debris");
                 for (int i = 1; i < a.Count; i++) Assert.That(a[i].time, Is.GreaterThanOrEqualTo(a[i - 1].time), "in landing order");
                 foreach (var d in a)
@@ -347,7 +405,7 @@ namespace JamKit.Tests.Skyline
                         Assert.That(HellRoomLint.DistanceToBox(new Vector3(d.position.X, f.box.min.Y + 0.1f, d.position.Z), f.box), Is.GreaterThan(0.5f), "not on a fin");
                 }
             }
-            Assert.That(HellRoomVariants.Build(HellRoomKind.Collapse, 0).debris.Count, Is.GreaterThan(8), "the variants carry their debris");
+            Assert.That(HellRoomVariants.Build(HellRoomKind.Collapse, 0).debris.Count, Is.GreaterThan(4), "the variants carry their debris");
         }
 
         [Test]

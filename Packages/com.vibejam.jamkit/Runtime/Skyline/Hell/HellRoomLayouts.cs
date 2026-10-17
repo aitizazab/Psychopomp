@@ -22,6 +22,11 @@ namespace JamKit.Skyline
         public const float FlareSeconds = 1.2f;
         /// <summary>The exit corridor's length before its drop hole, the hole's length, and how far the drop falls.</summary>
         public const float CorridorLength = 8f, HoleLength = 4f, DropDepth = 12f;
+        /// <summary>The open rim (docs/HELL-ROOMS.md, "Open edges"): a parapet's top, how near the safe path brings one, the tall
+        /// wall kept at a job pocket's door and behind a chain anchor.</summary>
+        public const float ParapetHeight = 1.0f, RimGuard = 3.5f, PocketWall = 24f, AnchorWall = 8f;
+        /// <summary>The lava sea far below the rooms (the builder's abyss under the open rims).</summary>
+        public const float AbyssSeaY = -40f;
 
         public static readonly HellRoomKind[] Kinds =
         {
@@ -355,44 +360,71 @@ namespace JamKit.Skyline
 
         // ------------------------------------------------------------------ 5. The Collapse
 
-        /// <summary>The Collapse's walls between the safe lane's winding: their z (the near face), and the gap each leaves.</summary>
-        public const float CollapseBaffleFirstZ = 18f, CollapseBaffleSpacing = 12f;
-        public const int CollapseBaffleCount = 8;
-        /// <summary>The safe lane's running line through the baffles' gaps (alternating).</summary>
-        public const float CollapseSafeLineEast = -11f, CollapseSafeLineWest = -17f;
-        /// <summary>The fast lane's lava gaps (z ranges): a 4 m jump and the 12 m Shadow Step gap.</summary>
-        public static readonly float[][] CollapseFastGaps = { new[] { 30f, 34f }, new[] { 70f, 82f } };
+        /// <summary>The run-up hall's hanging stalactites (the speed route: wall-kick from one to the next): each is a thin
+        /// rock slab along z, its face this far either side of the centre line, hanging from the hall's rock roof down to
+        /// <see cref="CollapseStalactiteBottom"/> (a runner, 1.7 m, passes below), the first starting at
+        /// <see cref="CollapseStalactiteFirstZ"/>, one every <see cref="CollapseStalactiteSpacing"/> m, alternating sides.</summary>
+        public const float CollapseStalactiteHalfGap = 1.5f, CollapseStalactiteBottom = 2.1f, CollapseStalactiteLength = 7.5f;
+        public const float CollapseStalactiteFirstZ = 30f, CollapseStalactiteSpacing = 8f, CollapseStalactiteStagger = 2f, CollapseRoofY = 12f;
+        public const int CollapseStalactiteCount = 2;   // per side
+        /// <summary>The safe lane's fins on the bridge: their z (the near face), the gap each leaves, and the running line
+        /// through the gaps (alternating east and west).</summary>
+        public const float CollapseBaffleFirstZ = 60f, CollapseBaffleSpacing = 9f;
+        public const int CollapseBaffleCount = 6;
+        public const float CollapseSafeLineEast = -9.5f, CollapseSafeLineWest = -18.5f;
+        /// <summary>The fast lane's lava gap on the bridge (z range): a 4 m jump.</summary>
+        public static readonly float[][] CollapseFastGaps = { new[] { 76f, 80f } };
 
-        /// <summary>Reach the exit before the floor falls away behind you. The floor tiles fall on the room clock, row by row from
-        /// the entry. The central lane is straight (a lava gap to jump, a beam to slide under, a 12 m gap for the Shadow Step)
-        /// and its front comes at 10.5 m/s: a sprint (9.5) alone loses it, slides and hops win. The west lane is solid stone
-        /// that winds between stone fins (standing on the lava bed, so they stay when the tiles fall), and its front comes at
-        /// 8 m/s after 1.5 s: survivable at a sprint, with no room for mistakes. Debris falls on both lanes on a seeded timer
-        /// (its shadow glows 1 s before), and imps come at the walls every few seconds.</summary>
+        /// <summary>
+        /// Reach the exit before the bridge falls away behind you (the creator, 2026-10-18: "only half of the room"). The first
+        /// half is a stone run-up hall with two ways through, the same length: hanging stalactites over its middle that you can
+        /// wall-kick between (each kick adds speed along the wall and keeps the entry speed: MoveDef.wallSpeedGrace and
+        /// wallJumpAlong), or just run below them (no speed gained). The second half is the collapsing bridge, its tiles falling
+        /// on the room clock row by row from the hall's end: the central lane is straight (one 4 m lava gap) and its front comes
+        /// at 10.5 m/s soon after you could arrive, so only the kick route's speed outruns it; the west lane winds between stone
+        /// fins (standing on the lava bed) and its front comes at 5.5 m/s along the room: survivable at a sprint, with no room
+        /// for a fumble. Debris falls on both lanes on a seeded timer (its shadow glows 1 s before), and imps come at the walls
+        /// every few seconds. The bridge's lava has no floor: a fallen tile drops you in (a sink restarts the room).
+        /// </summary>
         static HellRoomDef Collapse()
         {
             var k = new Kit(HellRoomKind.Collapse, "The Collapse");
             const float W = 20f, L = 120f;
             k.Shell(-W, W, L, -2.5f, WallHeight, 0f, 0f);
             k.Floor(-W, 0, W, 8);
-            k.Floor(-W, 112, W, L);
-            k.Lava(-W, 8, W, 112);
-            // the central lane's tiles (gaps at 30-34 and 70-82)
-            float[][] segs = { new[] { 8f, 30f }, new[] { 34f, 70f }, new[] { 82f, 112f } };
+            // the run-up hall (stone, never falls): the stalactites hang over its middle from a rock roof
+            k.Floor(-W, 8, W, CollapseStartZ);
+            float roofZ0 = CollapseStalactiteFirstZ - 2f, roofZ1 = CollapseStalactiteFirstZ + CollapseStalactiteStagger + CollapseStalactiteSpacing * (CollapseStalactiteCount - 1) + CollapseStalactiteLength + 2f;
+            k.Add("roof", "wall", -6f, CollapseRoofY, roofZ0, 6f, CollapseRoofY + 1.5f, roofZ1);
+            for (int i = 0; i < CollapseStalactiteCount; i++)
+            {
+                for (int side = 0; side < 2; side++)
+                {
+                    float z = CollapseStalactiteFirstZ + CollapseStalactiteSpacing * i + side * CollapseStalactiteStagger;
+                    float x = side == 0 ? CollapseStalactiteHalfGap : -CollapseStalactiteHalfGap - 0.6f;
+                    k.Wall(x, z, x + 0.6f, z + CollapseStalactiteLength, CollapseStalactiteBottom, CollapseRoofY, true, "stalactite");
+                }
+            }
+            k.Dark(-6f, 0f, roofZ0, 6f, CollapseStalactiteBottom, roofZ1);   // the hall's shade under the roof
+            // the bridge: lava under it all (no floor: a fallen tile drops you in), the end floor beyond
+            k.Floor(-W, CollapseEndZ, W, L);
+            k.Lava(-W, CollapseStartZ, W, CollapseEndZ);
+            k.r.lavaFloor = false;
+            k.r.lavaSinkSeconds = 0.25f;
+            // the central lane's tiles (the gap at 76-80)
+            float[][] segs = { new[] { CollapseStartZ, CollapseFastGaps[0][0] }, new[] { CollapseFastGaps[0][1], CollapseEndZ } };
             foreach (var s in segs)
                 for (float z = s[0]; z < s[1] - 0.01f; z += 4f)
                     k.Tile(-3, z, 3, Math.Min(z + 4f, s[1]), false);
-            k.Beam(-3, 49.8f, 3, 50.2f, 0f, 2.5f, 0.5f, 0f);
-            k.Dark(-3f, 0f, 82f, 3f, 3f, 90f);       // the landing past the 12 m gap
-            // the west lane's tiles and its winding fins (on the lava bed: they stand when their tiles fall)
-            for (float z = 8; z < 112 - 0.01f; z += 4f) k.Tile(-W, z, -8, Math.Min(z + 4f, 112f), true);
-            var safe = new List<Vector3> { k.r.entry, V(0, 0, 2), V(CollapseSafeLineEast, 0, 9) };
+            // the west lane's tiles (3 m rows) and its winding fins (on the lava bed: they stand when their tiles fall)
+            for (float z = CollapseStartZ; z < CollapseEndZ - 0.01f; z += 3f) k.Tile(-W, z, -8, Math.Min(z + 3f, CollapseEndZ), true);
+            var safe = new List<Vector3> { k.r.entry, V(0, 0, 2), V(CollapseSafeLineEast, 0, 10), V(CollapseSafeLineEast, 0, CollapseStartZ) };
             for (int i = 0; i < CollapseBaffleCount; i++)
             {
                 float z = CollapseBaffleFirstZ + CollapseBaffleSpacing * i;
                 bool even = i % 2 == 0;
-                if (even) k.Wall(-W, z, -12f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
-                else k.Wall(-16f, z, -8f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
+                if (even) k.Wall(-W, z, -11f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
+                else k.Wall(-17f, z, -8f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
                 safe.Add(V(even ? CollapseSafeLineEast : CollapseSafeLineWest, 0, z + 0.3f));
             }
             // off the tiles, the safe way rounds a wall on the end floor (the long way to the exit; the front no longer matters here)
@@ -402,19 +434,20 @@ namespace JamKit.Skyline
             safe.Add(V(-4, 0, 118.5f));
             safe.Add(k.r.exit);
             k.r.safePath.AddRange(safe);
-            k.r.fastPath.AddRange(new[] { k.r.entry, V(0, 0, 32), V(0, 0, 50), V(0, 0.5f, 76), k.r.exit });
+            // the fast line: up the hall kicking between the stalactites (HellFastLines.Collapse), down the central lane
+            k.r.fastPath.AddRange(new[] { k.r.entry, V(0.6f, 0, 26), V(0, 2, 40), V(0, 0, 56), V(0, 0, 78), k.r.exit });
             k.Stop("exit", V(0, 0, L - 2f), 2.5f);
             k.r.exitGateId = "";
             k.Spawn(HellEnemyRole.Imp, V(-12, 6, 40));
-            k.Spawn(HellEnemyRole.Imp, V(6, 6, 60));
-            k.Spawn(HellEnemyRole.Imp, V(-12, 6, 90), minFloor: 2);
+            k.Spawn(HellEnemyRole.Imp, V(8, 6, 66));
+            k.Spawn(HellEnemyRole.Imp, V(-12, 6, 92), minFloor: 2);
             k.Spawn(HellEnemyRole.Scythe, V(0, 0, 116), 180f, minFloor: 2);
             k.Spawn(HellEnemyRole.Ooze, V(12, 0, 116), minFloor: 3);
-            // imps at the walls on the clock (every CollapseWaveEvery s), ahead of a runner on pace
-            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 50), 270f, wave: 1);
-            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 55), 90f, wave: 1);
-            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 80), 270f, wave: 2);
-            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 85), 90f, wave: 2);
+            // imps at the walls on the clock (every CollapseWaveEvery s), over the bridge ahead of a runner on pace
+            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 62), 270f, wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 66), 90f, wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 84), 270f, wave: 2);
+            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 88), 90f, wave: 2);
             k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 104), 270f, wave: 3);
             k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 108), 90f, wave: 3);
             k.r.tuning.seconds = CollapseWaveEvery;
@@ -423,13 +456,13 @@ namespace JamKit.Skyline
             return k.Done();
         }
 
-        /// <summary>The Collapse's numbers (docs/HELL-ROOMS.md, "Tuning"): each lane's front speed (m/s) and its delay (s): the
-        /// front sets off from the entry (<see cref="CollapseFrontOriginZ"/>, where you land) this long after the room starts,
-        /// and a row starts to shake when the front reaches its near edge. The tiles run from <see cref="CollapseStartZ"/> to
-        /// <see cref="CollapseEndZ"/>. The wall imps' wave interval.</summary>
-        public const float CollapseFastLaneSpeed = 10.5f, CollapseFastDelay = 0.5f;
-        public const float CollapseSafeLaneSpeed = 8f, CollapseSafeDelay = 1.5f;
-        public const float CollapseFrontOriginZ = -4f, CollapseStartZ = 8f, CollapseEndZ = 112f, CollapseWaveEvery = 3f;
+        /// <summary>The Collapse's numbers (docs/HELL-ROOMS.md, "Tuning"): each lane's front speed (m/s, along the room) and its
+        /// delay (s): the front sets off from the bridge's start (<see cref="CollapseFrontOriginZ"/>, the hall's end) this long
+        /// after the room starts, and a row starts to shake when the front reaches its near edge. The tiles run from
+        /// <see cref="CollapseStartZ"/> to <see cref="CollapseEndZ"/>. The wall imps' wave interval.</summary>
+        public const float CollapseFastLaneSpeed = 13f, CollapseFastDelay = 5.0f;
+        public const float CollapseSafeLaneSpeed = 5.5f, CollapseSafeDelay = 7.3f;
+        public const float CollapseStartZ = 56f, CollapseFrontOriginZ = CollapseStartZ, CollapseEndZ = 112f, CollapseWaveEvery = 3f;
 
         /// <summary>The Collapse's timeline: the room second a tile in a lane starts to shake, from its near edge.</summary>
         public static float CollapseTileSeconds(float nearZ, bool safeLane, float speedScale = 1f) =>
@@ -460,7 +493,7 @@ namespace JamKit.Skyline
             for (int lane = 0; lane < 2; lane++)
             {
                 bool safeLane = lane == 1;
-                float t = 1.2f;
+                float t = Math.Max(1.2f, (safeLane ? CollapseSafeDelay : CollapseFastDelay) - 3f);
                 for (int guard = 0; guard < 64; guard++)
                 {
                     t += HellDebris.MinGap + (HellDebris.MaxGap - HellDebris.MinGap) * rng.NextFloat();
@@ -588,6 +621,8 @@ namespace JamKit.Skyline
         {
             public readonly HellRoomDef r;
             readonly Dictionary<string, int> _n = new Dictionary<string, int>();
+            bool _rim;
+            float _minX, _maxX, _len, _baseY, _topY;
 
             public Kit(HellRoomKind kind, string name)
             {
@@ -697,9 +732,94 @@ namespace JamKit.Skyline
                             if (radius >= MinLightRadius) r.lights.Add(Flare(new HellLight { position = p, radius = radius }, onFast));
                         }
                 }
+                Rim();
                 KeepAHidingPlace();
                 return r;
             }
+
+            /// <summary>
+            /// The open rim (the creator, 2026-10-18: "random walls in an odd box shape that prevent the player from seeing
+            /// outside"): the west, east and south sides are no longer 8-14 m walls. Along each, metre by metre: a low parapet
+            /// (<see cref="ParapetHeight"/>) wherever the safe path comes within <see cref="RimGuard"/> m, so the safe way stays
+            /// off the drop; a tall wall section only where something needs one (the job pocket's door, a chain anchor on the
+            /// wall); elsewhere an open cliff edge, the cavern's sky and spires beyond (a fall is a sink: back to the last safe spot).
+            /// </summary>
+            void Rim()
+            {
+                if (!_rim) return;
+                const float t = 0.6f;
+                HellJobPockets.Site(r.kind, out int pocketSide, out float doorZ);
+                float p0 = Math.Max(0f, Math.Min(_len - PocketWall, doorZ - PocketWall * 0.5f)), p1 = p0 + PocketWall;
+                // the west and east sides (x fixed, along z), then the south side either side of the vestibule (along x)
+                Side(_minX - t, _minX, 0f, _len, true, -1, p0, p1, pocketSide == -1);
+                Side(_maxX, _maxX + t, 0f, _len, true, 1, p0, p1, pocketSide == 1);
+                Side(_minX - t, -3f, -t, 0f, false, 0, 0f, 0f, false);
+                Side(3f, _maxX + t, -t, 0f, false, 0, 0f, 0f, false);
+            }
+
+            /// <summary>One side of the rim: a box x0..x1 by z0..z1 cut into runs of tall wall, parapet and open edge.</summary>
+            void Side(float x0, float x1, float z0, float z1, bool alongZ, int side, float pocket0, float pocket1, bool pocketHere)
+            {
+                float a0 = alongZ ? z0 : x0, a1 = alongZ ? z1 : x1;
+                int n = Math.Max(1, (int)Math.Ceiling((a1 - a0) - 1e-3f));
+                float step = (a1 - a0) / n;
+                int run = -1;
+                float runStart = a0;
+                for (int i = 0; i <= n; i++)
+                {
+                    int kind = -1;
+                    if (i < n)
+                    {
+                        float m = a0 + step * (i + 0.5f);
+                        var at = alongZ ? V((x0 + x1) * 0.5f, 0f, m) : V(m, 0f, (z0 + z1) * 0.5f);
+                        float pathY = NearPathY(at);
+                        kind = Tall(at, alongZ, side, pocket0, pocket1, pocketHere) || pathY > 0.15f ? 2 : !float.IsNaN(pathY) ? 1 : 0;
+                    }
+                    if (i > 0 && kind == run) continue;
+                    if (i > 0 && run > 0)
+                    {
+                        float b0 = runStart, b1 = a0 + step * i;
+                        float bx0 = alongZ ? x0 : b0, bx1 = alongZ ? x1 : b1, bz0 = alongZ ? b0 : z0, bz1 = alongZ ? b1 : z1;
+                        if (run == 2) Wall(bx0, bz0, bx1, bz1, _baseY, _topY, true);
+                        else Add(Id("parapet"), "wall", bx0, _baseY, bz0, bx1, ParapetHeight, bz1);
+                    }
+                    run = kind;
+                    runStart = a0 + step * i;
+                }
+            }
+
+            /// <summary>A tall wall section stays: the job pocket's door (its frame needs the wall), a chain anchor on this wall.</summary>
+            bool Tall(Vector3 at, bool alongZ, int side, float pocket0, float pocket1, bool pocketHere)
+            {
+                if (!alongZ) return false;
+                if (pocketHere && at.Z >= pocket0 && at.Z <= pocket1) return true;
+                foreach (var s in r.stops)
+                    if (Math.Abs(s.position.X - at.X) < 1.5f && Math.Abs(s.position.Z - at.Z) <= AnchorWall * 0.5f && s.position.Y > 2f) return true;
+                return false;
+            }
+
+            /// <summary>The highest the safe path is where it comes within <see cref="RimGuard"/> m of this rim point (NaN: it doesn't). A
+            /// raised stretch (a ramp or balcony along the side) keeps a tall wall: a parapet only guards the ground.</summary>
+            float NearPathY(Vector3 at)
+            {
+                float y = float.NaN;
+                for (int i = 1; i < r.safePath.Count; i++)
+                {
+                    var a = r.safePath[i - 1];
+                    var b = r.safePath[i];
+                    int n = Math.Max(1, (int)(Vector3.Distance(a, b) / 0.5f));
+                    for (int j = 0; j <= n; j++)
+                    {
+                        var q = Vector3.Lerp(a, b, j / (float)n);
+                        float d = (float)Math.Sqrt((q.X - at.X) * (q.X - at.X) + (q.Z - at.Z) * (q.Z - at.Z));
+                        if (d < RimGuard && (float.IsNaN(y) || q.Y > y)) y = q.Y;
+                    }
+                }
+                return y;
+            }
+
+            /// <summary>The safe path comes within <see cref="RimGuard"/> m of this rim point.</summary>
+            bool Guarded(Vector3 at) => HellRoomLint.FlatDistanceToPath(r.safePath, at) < RimGuard;
 
             /// <summary>The lint wants one dark zone no flare reaches: if every one is reached, the zone the fewest flares reach is
             /// kept clear (those flares are pulled back from it, or dropped).</summary>
@@ -765,11 +885,10 @@ namespace JamKit.Skyline
                 Wall(-3f - t, -8f, -3f, 0f, 0f, 5f, false, "vestibule");
                 Wall(3f, -8f, 3f + t, 0f, 0f, 5f, false, "vestibule");
                 Wall(-3f - t, -8f - t, 3f + t, -8f, 0f, 5f, false, "vestibule");
-                // the outer walls
-                Wall(minX - t, -t, -3f, 0f, baseY, topY, true);
-                Wall(3f, -t, maxX + t, 0f, baseY, topY, true);
-                Wall(minX - t, 0f, minX, length, baseY, topY, true);
-                Wall(maxX, 0f, maxX + t, length, baseY, topY, true);
+                // the outer walls: the north wall (the exit's gatehouse) stays tall; the west, east and south sides are an open
+                // rim (docs/HELL-ROOMS.md, "Open edges"), built by Rim() once the paths are known
+                _rim = true; _minX = minX; _maxX = maxX; _len = length; _baseY = baseY; _topY = topY;
+                r.rim = new CoverBox { min = V(minX, baseY, 0f), max = V(maxX, topY, length) };
                 Wall(minX - t, length, exitX - 2f, length + t, baseY, topY, true);
                 Wall(exitX + 2f, length, maxX + t, length + t, baseY, topY, true);
                 Wall(exitX - 2f, length, exitX + 2f, length + t, exitY + 4f, topY, false, "lintel");

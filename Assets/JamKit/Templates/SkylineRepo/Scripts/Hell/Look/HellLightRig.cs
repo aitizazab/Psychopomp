@@ -87,7 +87,7 @@ namespace JamKit.SkylineRepo
                     Haze(t, b, L, room.floor);
                 }
 
-            // braziers on the tall outer walls' inner faces
+            // braziers on the tall walls' inner faces and on the rim's parapets
             var group = new GameObject("Braziers").transform;
             group.SetParent(room.transform, false);
             var c = (V(def.bounds.min) + V(def.bounds.max)) * 0.5f;
@@ -95,7 +95,9 @@ namespace JamKit.SkylineRepo
             {
                 if (s.ramp || s.role == "floor" || s.role == "deck" || s.role == "ramp" || s.role == "cover" || s.role == "gate" || s.role == "well") continue;
                 Vector3 mn = V(s.box.min), mx = V(s.box.max);
-                if (mx.y - mn.y < 6f) continue;
+                // the open rim's parapets (docs/HELL-ROOMS.md, "Open edges") carry braziers on their tops; other walls need height
+                bool parapet = s.id.StartsWith("parapet");
+                if (!parapet && mx.y - mn.y < 6f) continue;
                 bool alongZ = mx.z - mn.z >= mx.x - mn.x;
                 float len = alongZ ? mx.z - mn.z : mx.x - mn.x;
                 if (len < 8f) continue;
@@ -103,7 +105,7 @@ namespace JamKit.SkylineRepo
                 if (alongZ) { bool minSide = c.x < (mn.x + mx.x) * 0.5f; face = minSide ? mn.x : mx.x; normal = minSide ? Vector3.left : Vector3.right; }
                 else { bool minSide = c.z < (mn.z + mx.z) * 0.5f; face = minSide ? mn.z : mx.z; normal = minSide ? Vector3.back : Vector3.forward; }
                 int n = Mathf.Max(1, Mathf.FloorToInt(len / L.brazierSpacing));
-                float y = Mathf.Min(mx.y - 1.2f, 4.2f);
+                float y = parapet ? mx.y + 0.75f : Mathf.Min(mx.y - 1.2f, 4.2f);
                 for (int k = 0; k < n; k++)
                 {
                     float along = (alongZ ? mn.z : mn.x) + len * (k + 0.5f) / n;

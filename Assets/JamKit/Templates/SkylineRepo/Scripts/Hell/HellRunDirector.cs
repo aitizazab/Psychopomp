@@ -36,6 +36,8 @@ namespace JamKit.SkylineRepo
         readonly HellSnapPool<HellRunStats.World> _snaps = new HellSnapPool<HellRunStats.World>();
         HellRoom _previous;
         HellFastPathTracker _fast;
+        /// <summary>Speed carried through the drops (docs/HELL-ROOMS.md, "Momentum through the drops").</summary>
+        readonly HellMomentum _momentum = new HellMomentum();
         HellAbilities _stepSource;
         bool _skipScreens;
         int _chapter = -1, _chapterPicks, _chapterPicked;
@@ -279,7 +281,11 @@ namespace JamKit.SkylineRepo
             room.Begin(player);
             var d = room.Def;
             _fast = new HellFastPathTracker(d.safePath, d.fastPath);
-            player.Movement.Teleport(HellRoom.U(d.entry) + Vector3.up * HellWorld.DropInHeight, d.entryYaw, Vector3.zero);
+            // you keep your speed through the drop: rotated into this room's entry direction, you land running
+            if (floor == 0 && index == 0) _momentum.Reset();
+            var carried = HellRoom.U(_momentum.Arrive(d.entryYaw));
+            player.Movement.Teleport(HellRoom.U(d.entry) + Vector3.up * HellWorld.DropInHeight, d.entryYaw, carried);
+            if (carried.sqrMagnitude > 0f) Debug.Log("HELL_RUN carried " + carried.magnitude.ToString("0.0") + " m/s into the room");
             player.SetAim(d.entryYaw, 0f);
             Debug.Log("HELL_RUN room " + (floor + 1) + "." + (index + 1) + " " + kind);
             HellRunEvents.RaiseRoomEntered(floor, index, kind.ToString());
@@ -301,6 +307,7 @@ namespace JamKit.SkylineRepo
             {
                 Flow.Died();
                 Current.Restart();
+                _momentum.Reset();
                 if (_fast != null) _fast.Reset();
                 player.Restart(HellRoom.U(Current.Def.entry), Current.Def.entryYaw);
                 _hud.Banner("AGAIN", 1.5f);
@@ -338,6 +345,7 @@ namespace JamKit.SkylineRepo
                         if (Time.unscaledTime >= _lineAt) { _lineAt = Time.unscaledTime + LineEvery; _hud.SetLine(Current.Objective.Line); }
                         _hud.SetClock(c);
                         if (_fast != null && !held) _fast.Observe(HellRoom.N(feet));
+                        if (!held && player.Movement != null && player.Movement.Sim != null) _momentum.Tick(Time.deltaTime, player.Movement.Sim.HorizontalSpeed);
                         if (Current.InDrop(feet) && Run.ReachedDrop())
                         {
                             bool taken = _fast != null && _fast.Taken;

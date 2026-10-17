@@ -282,7 +282,7 @@ namespace JamKit.Tests.Skyline
             Assert.That(d.kind, Is.EqualTo(HellRoomKind.Collapse));
             Assert.That(d.floor, Is.EqualTo(2));
             var tiles = d.hazards.Where(h => h.Timeline).ToList();
-            Assert.That(tiles.Count, Is.GreaterThan(40));
+            Assert.That(tiles.Count, Is.GreaterThan(25));
             // in each lane the floor falls in order from the entry: a tile farther along never goes before a nearer one
             foreach (var prefix in new[] { "tile-fast", "tile-safe" })
             {

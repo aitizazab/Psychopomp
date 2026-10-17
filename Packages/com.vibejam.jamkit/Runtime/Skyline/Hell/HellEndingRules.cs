@@ -423,7 +423,7 @@ namespace JamKit.Skyline
     {
         /// <summary>Where she runs: this far to your left and this far behind.</summary>
         public float side = 1.8f, behind = 0.8f;
-        /// <summary>Her top speed (m/s): above the Collapse's fastest front (11.1 on floor 3) and a slide.</summary>
+        /// <summary>Her top speed (m/s): above the Collapse's fastest front (13.8 m/s on floor 3, rooms3) and a slide.</summary>
         public float maxSpeed = 16f;
         /// <summary>Farther than this from her place (you Shadow Stepped, fell, sprinted off): she Shadow Steps to it.</summary>
         public float catchUp = 9f;
