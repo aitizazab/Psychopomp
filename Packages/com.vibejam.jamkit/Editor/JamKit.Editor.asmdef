@@ -1,0 +1,24 @@
+{
+    "name": "JamKit.Editor",
+    "rootNamespace": "JamKit.EditorTools",
+    "references": [
+        "JamKit.Core",
+        "JamKit.Unity",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Ink",
+        "InkEditor",
+        "Ink-Libraries"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

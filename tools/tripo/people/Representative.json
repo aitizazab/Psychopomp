@@ -1,0 +1,614 @@
+{
+ "name": "Representative",
+ "src": "lena",
+ "height": 1.74,
+ "colour": "an aubergine blazer over a cream silk blouse; gold at the glasses, the pin and the watch",
+ "note": "LeBaget's Community Partnerships representative (a woman, mid-forties): altered from the 3D Lena (the creator, 2026-10-13): espresso-brown hair, her own drawn face (brown eyes, arched brows, berry lipstick, no freckles), a cut aubergine blazer with lapels over a cream blouse, charcoal trousers, black shoes, gold glasses, a visitor badge and a gold pin",
+ "face": {
+  "rect": [
+   -58,
+   818,
+   60,
+   936
+  ],
+  "eyes": [
+   [
+    -27,
+    884
+   ],
+   [
+    25,
+    884
+   ]
+  ],
+  "eyebox": [
+   30,
+   16
+  ],
+  "brows": [
+   [
+    -25,
+    900
+   ],
+   [
+    24,
+    900
+   ]
+  ],
+  "brows_draw": [
+   [
+    -26,
+    902
+   ],
+   [
+    25,
+    902
+   ]
+  ],
+  "mouth": [
+   -1,
+   845
+  ],
+  "mouthL": [
+   -19,
+   846
+  ],
+  "mouthR": [
+   15,
+   846
+  ],
+  "jaw": 0.28,
+  "smile": 0.3,
+  "brow": 0.24,
+  "frown": 0.28,
+  "clean": [
+   [
+    0,
+    869,
+    47,
+    13
+   ],
+   [
+    -1,
+    846,
+    22,
+    8
+   ]
+  ],
+  "draw": {
+   "iris": [
+    0.32,
+    0.2,
+    0.12
+   ],
+   "iris_dark": [
+    0.1,
+    0.06,
+    0.04
+   ],
+   "brow": [
+    0.16,
+    0.1,
+    0.08
+   ],
+   "brow_thick": 3.4,
+   "brow_arch": 0.55,
+   "lash": [
+    0.06,
+    0.04,
+    0.04
+   ],
+   "lash_w": 0.3,
+   "lip": [
+    0.56,
+    0.12,
+    0.25
+   ],
+   "lip_line": [
+    0.3,
+    0.06,
+    0.12
+   ],
+   "lipstick": true,
+   "eye_scale": [
+    0.95,
+    0.9
+   ],
+   "rest_lid": 0.2,
+   "eye_tilt": 0.22,
+   "mouth_line_w": 1.4
+  },
+  "keep": [
+   [
+    50,
+    893,
+    12,
+    26
+   ]
+  ]
+ },
+ "alter": {
+  "metric": "chroma",
+  "despeckle": 2,
+  "classes": [
+   {
+    "name": "skin",
+    "samples": [
+     [
+      0.0,
+      0.915,
+      0.008
+     ],
+     [
+      0.03,
+      0.86,
+      0.006
+     ]
+    ],
+    "target": [
+     0.9,
+     0.73,
+     0.63
+    ],
+    "flatten": 0.25,
+    "not_in": [
+     [
+      0.0,
+      0.0,
+      0.27,
+      0.12,
+      0.15,
+      0.22
+     ]
+    ]
+   },
+   {
+    "name": "hair",
+    "sample": [
+     0.0,
+     0.955,
+     0.01
+    ],
+    "target": [
+     0.2,
+     0.13,
+     0.1
+    ],
+    "roughness": 0.8,
+    "zmin": 0.6,
+    "not_in": [
+     [
+      -0.004,
+      -0.07,
+      0.875,
+      0.04,
+      0.05,
+      0.06
+     ]
+    ]
+   },
+   {
+    "name": "pencil",
+    "proto": [
+     [
+      0.25,
+      0.42,
+      0.33
+     ],
+     [
+      0.55,
+      0.6,
+      0.35
+     ],
+     [
+      0.9,
+      0.8,
+      0.6
+     ]
+    ],
+    "zmin": 0.86,
+    "target": [
+     0.2,
+     0.13,
+     0.1
+    ]
+   },
+   {
+    "name": "lapel",
+    "sample": [
+     0.0,
+     0.72,
+     0.02
+    ],
+    "zmin": 0.6,
+    "poly": [
+     [
+      -0.058,
+      0.8
+     ],
+     [
+      -0.04,
+      0.815
+     ],
+     [
+      -0.034,
+      0.77
+     ],
+     [
+      0.0,
+      0.66
+     ],
+     [
+      -0.014,
+      0.645
+     ],
+     [
+      -0.052,
+      0.74
+     ]
+    ],
+    "target": [
+     0.24,
+     0.09,
+     0.19
+    ],
+    "flatten": 0.5
+   },
+   {
+    "name": "lapel2",
+    "sample": [
+     0.0,
+     0.72,
+     0.02
+    ],
+    "zmin": 0.6,
+    "poly": [
+     [
+      0.058,
+      0.8
+     ],
+     [
+      0.04,
+      0.815
+     ],
+     [
+      0.034,
+      0.77
+     ],
+     [
+      -0.0,
+      0.66
+     ],
+     [
+      0.014,
+      0.645
+     ],
+     [
+      0.052,
+      0.74
+     ]
+    ],
+    "target": [
+     0.24,
+     0.09,
+     0.19
+    ],
+    "flatten": 0.5
+   },
+   {
+    "name": "blouse",
+    "sample": [
+     0.0,
+     0.72,
+     0.02
+    ],
+    "zmin": 0.6,
+    "poly": [
+     [
+      -0.04,
+      0.815
+     ],
+     [
+      0.04,
+      0.815
+     ],
+     [
+      0.034,
+      0.77
+     ],
+     [
+      0.0,
+      0.66
+     ],
+     [
+      -0.034,
+      0.77
+     ]
+    ],
+    "target": [
+     0.96,
+     0.93,
+     0.87
+    ],
+    "flatten": 0.35
+   },
+   {
+    "name": "blazer",
+    "sample": [
+     0.0,
+     0.72,
+     0.02
+    ],
+    "zmin": 0.5,
+    "zmax": 0.83,
+    "target": [
+     0.32,
+     0.12,
+     0.25
+    ],
+    "flatten": 0.6
+   },
+   {
+    "name": "trousers",
+    "sample": [
+     -0.05,
+     0.3,
+     0.02
+    ],
+    "zmax": 0.59,
+    "target": [
+     0.17,
+     0.17,
+     0.2
+    ],
+    "flatten": 0.3
+   },
+   {
+    "name": "boots",
+    "sample": [
+     -0.06,
+     0.04,
+     0.012
+    ],
+    "zmax": 0.1,
+    "target": [
+     0.06,
+     0.06,
+     0.07
+    ],
+    "roughness": 0.3
+   },
+   {
+    "name": "watch",
+    "proto": [
+     0.8,
+     0.6,
+     0.3
+    ],
+    "zmin": 0.4,
+    "zmax": 0.56,
+    "target": null
+   }
+  ]
+ },
+ "accessories": [
+  {
+   "name": "GlassesL",
+   "bone": "Head",
+   "prim": "torus",
+   "minor": 0.09,
+   "segments": 32,
+   "location": [
+    -0.0288,
+    -0.072,
+    0.885
+   ],
+   "rotation": [
+    90,
+    0,
+    0
+   ],
+   "scale": [
+    0.0145,
+    0.0095,
+    0.012
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.8,
+   "metallic": 1.0
+  },
+  {
+   "name": "GlassesR",
+   "bone": "Head",
+   "prim": "torus",
+   "minor": 0.09,
+   "segments": 32,
+   "location": [
+    0.026,
+    -0.072,
+    0.885
+   ],
+   "rotation": [
+    90,
+    0,
+    0
+   ],
+   "scale": [
+    0.0145,
+    0.0095,
+    0.012
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.8,
+   "metallic": 1.0
+  },
+  {
+   "name": "GlassesBridge",
+   "bone": "Head",
+   "prim": "cylinder",
+   "segments": 10,
+   "location": [
+    -0.0014,
+    -0.073,
+    0.888
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    0.0009,
+    0.0009,
+    0.0129
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.8,
+   "metallic": 1.0
+  },
+  {
+   "name": "GlassesArmR",
+   "bone": "Head",
+   "prim": "cylinder",
+   "segments": 8,
+   "location": [
+    0.0533,
+    -0.0375,
+    0.887
+   ],
+   "rotation": [
+    -90,
+    0,
+    -20.9
+   ],
+   "scale": [
+    0.0008,
+    0.0008,
+    0.0358
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.8,
+   "metallic": 1.0
+  },
+  {
+   "name": "GlassesArmL",
+   "bone": "Head",
+   "prim": "cylinder",
+   "segments": 8,
+   "location": [
+    -0.0547,
+    -0.0375,
+    0.887
+   ],
+   "rotation": [
+    -90,
+    0,
+    18.7
+   ],
+   "scale": [
+    0.0008,
+    0.0008,
+    0.0354
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.8,
+   "metallic": 1.0
+  },
+  {
+   "name": "Badge",
+   "bone": "Spine2",
+   "prim": "cube",
+   "bevel": 0.0005,
+   "location": [
+    0.047,
+    -0.084,
+    0.722
+   ],
+   "rotation": [
+    -12,
+    0,
+    -5
+   ],
+   "scale": [
+    0.012,
+    0.0008,
+    0.0075
+   ],
+   "color": [
+    0.96,
+    0.96,
+    0.94
+   ],
+   "smoothness": 0.5
+  },
+  {
+   "name": "BadgeStripe",
+   "bone": "Spine2",
+   "prim": "cube",
+   "location": [
+    0.047,
+    -0.0849,
+    0.7262
+   ],
+   "rotation": [
+    -12,
+    0,
+    -5
+   ],
+   "scale": [
+    0.0121,
+    0.0003,
+    0.0019
+   ],
+   "color": [
+    0.78,
+    0.12,
+    0.14
+   ],
+   "smoothness": 0.5
+  },
+  {
+   "name": "Pin",
+   "bone": "Spine2",
+   "prim": "sphere",
+   "segments": 12,
+   "location": [
+    -0.044,
+    -0.064,
+    0.735
+   ],
+   "scale": [
+    0.0032,
+    0.0017,
+    0.0032
+   ],
+   "color": [
+    0.85,
+    0.67,
+    0.33
+   ],
+   "smoothness": 0.85,
+   "metallic": 1.0
+  }
+ ]
+}

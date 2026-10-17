@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b65f4c921c77e945825abdbaa5333d4, type: 3}
+  m_Name: guardian_angel
+  m_EditorClassIdentifier: JamKit.BulletHell::JamKit.BulletHell.UpgradeAsset
+  def:
+    id: guardian_angel
+    displayName: Guardian Angel
+    description: When you're hit, your Bomb Bay fires EVERY bomb it holds instead
+      of you losing a life. Then 10 s to recover.
+    rarity: 2
+    weight: 0
+    maxStacks: 1
+    tags:
+    - bomb
+    - defense
+    requires:
+    - bomb_bay
+    excludes: []
+    modifiers: []
+    effects:
+    - auto_bomb
+  iconText: GA
+  iconColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+  icon: {fileID: 0}
+  forgeModifiers:
+  - stat: bomb_recharge
+    op: 1
+    value: 0.2
+    sourceId: 
+  forgeEffects: []
+  forgeText: Bomb Bay recharges 20% faster
+  rubric:
+    verb: 4
+    situations:
+    - boss
+    - crowded
+    - low_life
+    wherePlayerIs: Anywhere; it needs the Bomb Bay.
+    idea: A warden's last mercy.
+  designNotes: 'Epic pass: with the Bay''s recharge it was near-invulnerability (56%
+    fewer hits). Now a save spends every stored bomb (one bigger blast) and waits
+    10 s (Boosts > Guardian Cooldown, shown under SPRINT): 47% fewer hits on the
+    real rooms.'

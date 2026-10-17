@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Unity layer plus editor tools and Unity-side tests, as the editor sees them. See ../UnityLayer/UnityLayer.props. -->
+  <Import Project="..\UnityLayer\UnityLayer.props" />
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);UNITY_EDITOR;UNITY_INCLUDE_TESTS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(PkgRoot)Editor\**\*.cs" />
+    <Compile Include="$(PkgRoot)Tests\Unity\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Sandbox\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\*\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\*\Tests\**\*.cs" />
+    <Compile Remove="$(ProjectAssets)Templates\SkylineRepo\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Dream\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Dream\Tests\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Argument\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Argument\Tests\**\*.cs" />
+    <!-- Visiting Hours' look: its runtime scripts are checked here only, since a VolumeComponent subclass needs
+         UnityEditor.CoreModule against the editor-built URP assemblies (the player check can't resolve it). -->
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Look\Scripts\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Look\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Characters\Editor\**\*.cs" />
+    <Compile Include="$(ProjectAssets)Templates\VisitingHours\Perf\Editor\**\*.cs" />
+    <EditorDll Include="$(UnityEditorDir)\Data\Managed\UnityEngine\UnityEditor*.dll" />
+    <Reference Include="@(EditorDll)" Private="false" />
+    <TestDll Include="$(ScriptAssemblies)UnityEngine.TestRunner.dll;$(ScriptAssemblies)UnityEditor.TestRunner.dll;$(ScriptAssemblies)InkEditor.dll" />
+    <Reference Include="@(TestDll)" Private="false" />
+    <UnityNUnit Include="$(MSBuildThisFileDirectory)..\..\Library\PackageCache\com.unity.ext.nunit@*\net40\unity-custom\nunit.framework.dll" />
+    <Reference Include="nunit.framework"><HintPath>@(UnityNUnit)</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <!-- JamKit > Record (Editor/Recording) compiles only once Unity has resolved com.unity.recorder and
+       built its assemblies; until then the code is #if'd out, as in Unity without the package. -->
+  <PropertyGroup Condition="Exists('$(ScriptAssemblies)Unity.Recorder.Editor.dll')">
+    <DefineConstants>$(DefineConstants);JAMKIT_RECORDER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(ScriptAssemblies)Unity.Recorder.Editor.dll')">
+    <RecorderDll Include="$(ScriptAssemblies)Unity.Recorder*.dll" />
+    <Reference Include="@(RecorderDll)" Private="false" />
+  </ItemGroup>
+</Project>

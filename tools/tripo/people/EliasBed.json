@@ -1,0 +1,212 @@
+{
+ "name": "EliasBed",
+ "src": "bed",
+ "height": 1.83,
+ "colour": "pale hospital blue",
+ "note": "the waking Elias in the hospital gown, asleep (Tripo, sheet vh3d-elias-bed2-take2); eyes painted shut",
+ "face": {
+  "rect": [
+   -56,
+   782,
+   62,
+   900
+  ],
+  "eyes": [
+   [
+    -28,
+    850
+   ],
+   [
+    33,
+    850
+   ]
+  ],
+  "eyebox": [
+   34,
+   12
+  ],
+  "brows": [
+   [
+    -30,
+    864
+   ],
+   [
+    33,
+    864
+   ]
+  ],
+  "mouth": [
+   2,
+   803
+  ],
+  "mouthL": [
+   -22,
+   806
+  ],
+  "mouthR": [
+   25,
+   806
+  ],
+  "jaw": 0.22,
+  "smile": 0.3,
+  "brow": 0.22,
+  "frown": 0.26,
+  "draw": {
+   "closed": true,
+   "brow": [
+    0.27,
+    0.16,
+    0.1
+   ],
+   "brow_thick": 3.6,
+   "lash": [
+    0.12,
+    0.07,
+    0.05
+   ],
+   "lip": [
+    0.62,
+    0.4,
+    0.37
+   ],
+   "lip_line": [
+    0.22,
+    0.1,
+    0.08
+   ],
+   "lip_alpha": 0.7,
+   "eye_scale": [
+    1.05,
+    3.6
+   ],
+   "mouth_line_w": 1.5
+  },
+  "clean": [
+   [
+    -30,
+    850,
+    16,
+    6.5
+   ],
+   [
+    32,
+    850,
+    16,
+    6.5
+   ],
+   [
+    -10,
+    866,
+    6,
+    6
+   ],
+   [
+    12,
+    866,
+    6,
+    6
+   ]
+  ],
+  "fill_regions": [
+   {
+    "ellipse": [
+     2,
+     795,
+     22,
+     11
+    ],
+    "proto": [
+     0.3,
+     0.2,
+     0.16
+    ],
+    "dist": 0.18
+   }
+  ]
+ },
+ "alter": {
+  "classes": [
+   {
+    "name": "skin",
+    "sample": [
+     0.04,
+     0.83,
+     0.008
+    ],
+    "target": null
+   },
+   {
+    "name": "hair",
+    "sample": [
+     0.0,
+     0.935,
+     0.01
+    ],
+    "zmin": 0.86,
+    "target": null,
+    "zskip": [
+     0.862,
+     0.905
+    ],
+    "roughness": 0.82
+   },
+   {
+    "name": "bandage",
+    "sample": [
+     0.0,
+     0.89,
+     0.01
+    ],
+    "zmin": 0.86,
+    "target": [
+     0.93,
+     0.92,
+     0.88
+    ],
+    "flatten": 0.5
+   }
+  ],
+  "back_of_head": {
+   "center": [
+    0.006,
+    0.0,
+    0.865
+   ],
+   "y0": 0.008,
+   "y1": 0.03,
+   "zmin": 0.75,
+   "radius": 0.14,
+   "hairline": 0.772,
+   "hair": "hair",
+   "skin": "skin",
+   "pattern": "strands",
+   "smooth": 12,
+   "bands": [
+    {
+     "zmin": 0.862,
+     "zmax": 0.905,
+     "class": "bandage"
+    }
+   ],
+   "neck": {
+    "center_y": -0.02,
+    "rx": 0.05,
+    "ry": 0.047
+   },
+   "z_occ": 0.83,
+   "zramp": 0.012,
+   "pattern_strength": 0.8,
+   "hair_mass": {
+    "crown": 0.005,
+    "mid": 0.005,
+    "nape": 0.003,
+    "clumps": 13,
+    "clump": 0.0022,
+    "lip": 0.005
+   },
+   "strand_normal": 0.6,
+   "roughness": 0.86
+  }
+ },
+ "idle": "lie"
+}

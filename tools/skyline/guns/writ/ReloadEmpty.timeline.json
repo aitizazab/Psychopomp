@@ -1,0 +1,6 @@
+{
+  "duration": 1.75,
+  "events": [
+    {"at": 0.8, "recipe": "recipes/seat.json"}
+  ]
+}

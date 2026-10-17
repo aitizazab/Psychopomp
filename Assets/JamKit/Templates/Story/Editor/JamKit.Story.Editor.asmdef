@@ -1,0 +1,25 @@
+{
+    "name": "JamKit.Story.Editor",
+    "rootNamespace": "JamKit.Narrative.EditorTools",
+    "references": [
+        "JamKit.Core",
+        "JamKit.Unity",
+        "JamKit.Editor",
+        "JamKit.Story",
+        "Ink",
+        "InkEditor",
+        "Ink-Libraries",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

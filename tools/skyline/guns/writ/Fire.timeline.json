@@ -1,0 +1,6 @@
+{
+  "duration": 0.22,
+  "events": [
+    {"at": 0, "recipe": "recipes/shot.json"}
+  ]
+}

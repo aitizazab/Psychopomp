@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b65f4c921c77e945825abdbaa5333d4, type: 3}
+  m_Name: seeker_rounds
+  m_EditorClassIdentifier: JamKit.BulletHell::JamKit.BulletHell.UpgradeAsset
+  def:
+    id: seeker_rounds
+    displayName: Seeker Rounds
+    description: 'Every third volley, slow seekers curve toward enemies: you still
+      aim, they finish the job.'
+    rarity: 2
+    weight: 0
+    maxStacks: 1
+    tags:
+    - gun
+    requires: []
+    excludes: []
+    modifiers: []
+    effects:
+    - homing
+  iconText: Sk
+  iconColor: {r: 0.8, g: 0.6, b: 1, a: 1}
+  icon: {fileID: 0}
+  forgeModifiers:
+  - stat: damage
+    op: 1
+    value: 0.1
+    sourceId: 
+  forgeEffects: []
+  forgeText: +10% damage
+  rubric:
+    verb: 2
+    situations:
+    - waves
+    - sides
+    - crowded
+    wherePlayerIs: 'Anywhere: it lets you dodge off the line and still land some
+      damage.'
+    idea: Embers that know where they're going.
+  designNotes: 'Epic pass: it removed aiming entirely (x1.59 DPS, 59% useful on the
+    real rooms). Now its homing streams fire every third volley (Shots > Homing Volley
+    Every), fly at 70% speed, turn at 4 rad/s (Player > Homing Turn Rate, was 7)
+    and hit for 70%: x1.37 DPS. With Twin Spread the side streams home but fire less
+    often: x1.38 against Twin Spread''s x1.30.'

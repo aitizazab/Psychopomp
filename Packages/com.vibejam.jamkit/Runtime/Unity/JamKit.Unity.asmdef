@@ -1,0 +1,22 @@
+{
+    "name": "JamKit.Unity",
+    "rootNamespace": "JamKit.Shell",
+    "references": [
+        "JamKit.Core",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Ink-Libraries",
+        "Ink"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

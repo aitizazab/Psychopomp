@@ -1,0 +1,132 @@
+{
+ "name": "Rafael",
+ "height": 1.76,
+ "idle": "idle",
+ "colour": "surgical teal: scrubs over charcoal sleeves",
+ "note": "Rafael Duarte, 31, the intern (Tripo, his own sheet vh3d-rafael-take1, 2026-10-13): curly black hair with volume, clean-shaven, broad shoulders, a pen behind each ear",
+ "hasFace": true,
+ "decal": "Rafael_FaceDecal",
+ "atlas": "Rafael_FaceAtlas.png",
+ "columns": 6,
+ "rows": 9,
+ "blink": true,
+ "expressions": [
+  {
+   "name": "neutral",
+   "shapes": []
+  },
+  {
+   "name": "warm",
+   "shapes": [
+    {
+     "shape": "Smile",
+     "weight": 55
+    }
+   ]
+  },
+  {
+   "name": "happy",
+   "shapes": [
+    {
+     "shape": "Smile",
+     "weight": 75
+    },
+    {
+     "shape": "BrowsUp",
+     "weight": 35
+    }
+   ]
+  },
+  {
+   "name": "sad",
+   "shapes": [
+    {
+     "shape": "Frown",
+     "weight": 80
+    },
+    {
+     "shape": "BrowsSad",
+     "weight": 100
+    }
+   ]
+  },
+  {
+   "name": "worried",
+   "shapes": [
+    {
+     "shape": "BrowsSad",
+     "weight": 85
+    },
+    {
+     "shape": "Frown",
+     "weight": 35
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 6
+    }
+   ]
+  },
+  {
+   "name": "hurt",
+   "shapes": [
+    {
+     "shape": "BrowsSad",
+     "weight": 100
+    },
+    {
+     "shape": "Frown",
+     "weight": 70
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 12
+    }
+   ]
+  },
+  {
+   "name": "angry",
+   "shapes": [
+    {
+     "shape": "BrowsDown",
+     "weight": 100
+    },
+    {
+     "shape": "Frown",
+     "weight": 55
+    }
+   ]
+  },
+  {
+   "name": "surprised",
+   "shapes": [
+    {
+     "shape": "BrowsUp",
+     "weight": 100
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 35
+    }
+   ]
+  },
+  {
+   "name": "doubtful",
+   "shapes": [
+    {
+     "shape": "BrowsDown",
+     "weight": 30
+    },
+    {
+     "shape": "Frown",
+     "weight": 25
+    },
+    {
+     "shape": "Smile",
+     "weight": 25
+    }
+   ]
+  }
+ ],
+ "accessories": []
+}

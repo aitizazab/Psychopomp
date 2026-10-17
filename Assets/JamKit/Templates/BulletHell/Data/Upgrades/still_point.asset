@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b65f4c921c77e945825abdbaa5333d4, type: 3}
+  m_Name: still_point
+  m_EditorClassIdentifier: JamKit.BulletHell::JamKit.BulletHell.UpgradeAsset
+  def:
+    id: still_point
+    displayName: Still Point
+    description: 'Hold still to focus: up to double damage after 0.6 s. Any movement
+      resets it.'
+    rarity: 2
+    weight: 0
+    maxStacks: 1
+    tags:
+    - gun
+    - risk
+    requires: []
+    excludes: []
+    modifiers: []
+    effects:
+    - still_point
+  iconText: SP
+  iconColor: {r: 0.6, g: 1, b: 0.9, a: 1}
+  icon: {fileID: 0}
+  forgeModifiers:
+  - stat: damage
+    op: 1
+    value: 0.1
+    sourceId: 
+  forgeEffects: []
+  forgeText: +10% damage
+  rubric:
+    verb: 1
+    situations:
+    - boss
+    - turrets
+    - long_fights
+    wherePlayerIs: Lined up under a target, in a gap you trust.
+    idea: The calm at the heart of the furnace.
+  designNotes: 'A different playstyle: move only in fast bursts between gaps, then
+    plant and burn (Boosts > Still Ramp Seconds, Still Max). The balance bot plays
+    it as a burst mover (still while safe and lined up, sprinting when it must):
+    x1.13 DPS, 7% fewer hits on the real rooms.'

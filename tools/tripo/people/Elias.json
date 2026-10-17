@@ -1,0 +1,217 @@
+{
+ "name": "Elias",
+ "src": "elias",
+ "height": 1.83,
+ "colour": "cornflower-blue apron on white",
+ "note": "the dream Elias at the barbecue (Tripo, sheet vh3d-elias-dream-take1)",
+ "face": {
+  "rect": [
+   -60,
+   772,
+   64,
+   896
+  ],
+  "eyes": [
+   [
+    -28,
+    853
+   ],
+   [
+    32,
+    853
+   ]
+  ],
+  "eyebox": [
+   32,
+   22
+  ],
+  "brows": [
+   [
+    -30,
+    874
+   ],
+   [
+    30,
+    874
+   ]
+  ],
+  "mouth": [
+   1,
+   799
+  ],
+  "mouthL": [
+   -22,
+   801
+  ],
+  "mouthR": [
+   24,
+   801
+  ],
+  "jaw": 0.3,
+  "smile": 0.34,
+  "brow": 0.24,
+  "frown": 0.28,
+  "draw": {
+   "iris": [
+    0.42,
+    0.26,
+    0.13
+   ],
+   "iris_dark": [
+    0.14,
+    0.08,
+    0.04
+   ],
+   "brow": [
+    0.27,
+    0.16,
+    0.1
+   ],
+   "brow_thick": 3.8,
+   "lash": [
+    0.12,
+    0.07,
+    0.05
+   ],
+   "lip": [
+    0.66,
+    0.4,
+    0.36
+   ],
+   "lip_line": [
+    0.2,
+    0.09,
+    0.07
+   ],
+   "lip_alpha": 0.75,
+   "eye_scale": [
+    1.12,
+    1.14
+   ],
+   "mouth_line_w": 1.7
+  },
+  "fill_regions": [
+   {
+    "ellipse": [
+     1,
+     791,
+     22,
+     11
+    ],
+    "proto": [
+     0.3,
+     0.2,
+     0.16
+    ],
+    "dist": 0.18
+   }
+  ],
+  "clean": [
+   [
+    -10,
+    871,
+    6,
+    6
+   ],
+   [
+    11,
+    871,
+    6,
+    6
+   ],
+   [
+    49,
+    871,
+    7,
+    6
+   ],
+   [
+    -49,
+    871,
+    7,
+    6
+   ]
+  ]
+ },
+ "alter": {
+  "classes": [
+   {
+    "name": "skin",
+    "sample": [
+     0.0,
+     0.895,
+     0.012
+    ],
+    "target": null
+   },
+   {
+    "name": "hair",
+    "sample": [
+     0.0,
+     0.945,
+     0.012
+    ],
+    "zmin": 0.76,
+    "target": null,
+    "roughness": 0.8
+   },
+   {
+    "name": "shirt",
+    "sample": [
+     -0.2,
+     0.57,
+     0.02
+    ],
+    "zmax": 0.765,
+    "zmin": 0.3,
+    "target": null
+   }
+  ],
+  "back_of_head": {
+   "center": [
+    0.002,
+    0.0,
+    0.865
+   ],
+   "y0": 0.008,
+   "y1": 0.03,
+   "zmin": 0.745,
+   "radius": 0.14,
+   "hairline": 0.772,
+   "hair": "hair",
+   "skin": "skin",
+   "pattern": "strands",
+   "smooth": 12,
+   "neck": {
+    "center_y": -0.02,
+    "rx": 0.05,
+    "ry": 0.048
+   },
+   "z_occ": 0.83,
+   "zramp": 0.012,
+   "pattern_strength": 0.8,
+   "hair_mass": {
+    "crown": 0.006,
+    "mid": 0.0055,
+    "nape": 0.003,
+    "clumps": 13,
+    "clump": 0.0025,
+    "lip": 0.005
+   },
+   "strand_normal": 0.6,
+   "roughness": 0.86
+  },
+  "back_paint": [
+   {
+    "zmin": 0.51,
+    "zmax": 0.765,
+    "xmax": 0.17,
+    "ymin": 0.01,
+    "class": "shirt",
+    "pattern": "plain",
+    "strength": 0.1,
+    "smooth": 24
+   }
+  ]
+ }
+}

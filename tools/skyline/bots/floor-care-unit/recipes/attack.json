@@ -1,0 +1,27 @@
+{
+  "sample_rate": 48000,
+  "length": 0.5,
+  "seed": 1,
+  "layers": [
+    {
+      "type": "sample",
+      "path": "../sources/fc_pump_spit.wav",
+      "start": 0.0,
+      "attack": 0,
+      "decay": 0,
+      "gain_db": 1.0
+    },
+    {
+      "type": "noise",
+      "color": "pink",
+      "lowpass": 320,
+      "attack": 0.001,
+      "decay": 0.09,
+      "gain_db": -6
+    }
+  ],
+  "master": {
+    "limit_db": -1.0
+  },
+  "note": "sample layers +3 dB for the centre pan; the spit itself 1.5 dB lower (review Minor 3) to leave headroom for acid_sweep, which plays with it"
+}

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b65f4c921c77e945825abdbaa5333d4, type: 3}
+  m_Name: ghost_step
+  m_EditorClassIdentifier: JamKit.BulletHell::JamKit.BulletHell.UpgradeAsset
+  def:
+    id: ghost_step
+    displayName: Ghost Step
+    description: 'Starting a sprint makes you a ghost for half a second: bullets
+      pass through. 3 a room, 5 s apart.'
+    rarity: 2
+    weight: 0
+    maxStacks: 1
+    tags:
+    - move
+    - defense
+    requires: []
+    excludes: []
+    modifiers: []
+    effects:
+    - ghost_step
+  iconText: GS
+  iconColor: {r: 0.75, g: 0.85, b: 1, a: 1}
+  icon: {fileID: 0}
+  forgeModifiers: []
+  forgeEffects:
+  - ghost_step
+  forgeText: +1 phase a room
+  rubric:
+    verb: 3
+    situations:
+    - boss
+    - crowded
+    wherePlayerIs: 'Anywhere: dash through a wall instead of around it, at the right
+      moment.'
+    idea: A spark too quick to burn.
+  designNotes: 'Epic pass: sprinting through everything had no drawback (77% fewer
+    hits). Now only a sprint''s first 0.5 s phases, 5 s apart, 3 per fight room (Boosts
+    > Ghost ...), shown as pips: a timing skill, and tapping sprint to pass one bullet
+    costs a phase. 11% fewer hits on the real rooms.'

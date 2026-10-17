@@ -1,0 +1,39 @@
+VISITING HOURS
+
+Made at Vibe Coding GameDev
+
+
+STORY, DIRECTION AND THE VOICE OF ELIAS
+The creator
+
+
+DESIGN AND CODE
+The creator, with Claude
+
+
+ART
+Concept art and pictures: made for the game with Gemini
+Nadia's 3D model: Tripo Studio, from our character sheet
+Furniture models: Kenney, Furniture Kit (CC0), kenney.nl
+Skies, textures and props: Poly Haven (CC0), polyhaven.com, and ambientCG (CC0), ambientcg.com
+
+
+MUSIC AND SOUND
+Placeholder sounds and music generated in code by JamKit
+The dream's movement sounds: Kenney, Impact Sounds, RPG Audio and Sci-Fi Sounds (CC0), kenney.nl
+The bedroom's sounds, from Freesound (CC0): harleto (breathing), Ferrettomato (the ring),
+Splash.Yang (the buzz), bsmacbride and Froey_ (the bed), Vladislav_Sazonov (the phone set down),
+jentlemen (the tap)
+The news report: Kokoro TTS (af_nicole, Apache 2.0)
+
+
+DIALOGUE
+Written with ink by inkle (MIT licence)
+
+
+BUILT WITH
+Unity 6
+JamKit, our jam framework
+
+
+THANK YOU FOR PLAYING

@@ -1,0 +1,223 @@
+{
+ "name": "Mags",
+ "src": "mags",
+ "height": 1.62,
+ "colour": "oatmeal cardigan over pale-blue scrubs, the brick-red glasses cord",
+ "note": "Marguerite Ilunga (Tripo, sheet vh3d-mags-take2)",
+ "face": {
+  "rect": [
+   -62,
+   772,
+   66,
+   900
+  ],
+  "eyes": [
+   [
+    -28,
+    868
+   ],
+   [
+    33,
+    868
+   ]
+  ],
+  "eyebox": [
+   32,
+   13
+  ],
+  "brows": [
+   [
+    -28,
+    886
+   ],
+   [
+    32,
+    886
+   ]
+  ],
+  "mouth": [
+   2,
+   820
+  ],
+  "mouthL": [
+   -25,
+   822
+  ],
+  "mouthR": [
+   30,
+   822
+  ],
+  "jaw": 0.3,
+  "smile": 0.34,
+  "brow": 0.24,
+  "frown": 0.28,
+  "lenses": [
+   [
+    -27,
+    854,
+    17,
+    8
+   ],
+   [
+    31,
+    854,
+    17,
+    8
+   ]
+  ],
+  "frame_protos": [
+   [
+    0.07,
+    0.08,
+    0.1
+   ],
+   [
+    0.15,
+    0.17,
+    0.19
+   ],
+   [
+    0.26,
+    0.28,
+    0.3
+   ]
+  ],
+  "frame_dist": 0.12,
+  "draw": {
+   "iris": [
+    0.3,
+    0.17,
+    0.1
+   ],
+   "iris_dark": [
+    0.08,
+    0.05,
+    0.03
+   ],
+   "brow": [
+    0.6,
+    0.6,
+    0.58
+   ],
+   "brow_thick": 3.4,
+   "lash": [
+    0.07,
+    0.05,
+    0.05
+   ],
+   "lip": [
+    0.46,
+    0.25,
+    0.24
+   ],
+   "lip_line": [
+    0.18,
+    0.08,
+    0.07
+   ],
+   "lip_alpha": 0.75,
+   "eye_scale": [
+    1.04,
+    1.25
+   ],
+   "rest_lid": 0.12,
+   "mouth_line_w": 1.6,
+   "brow_arch": 0.35
+  },
+  "clean": [
+   [
+    15,
+    888,
+    3.5,
+    3.5
+   ],
+   [
+    2,
+    813,
+    30,
+    9
+   ]
+  ]
+ },
+ "alter": {
+  "classes": [
+   {
+    "name": "skin",
+    "sample": [
+     0.0,
+     0.905,
+     0.01
+    ],
+    "target": null
+   },
+   {
+    "name": "hair",
+    "sample": [
+     0.0,
+     0.95,
+     0.012
+    ],
+    "zmin": 0.86,
+    "target": null,
+    "roughness": 0.85
+   },
+   {
+    "name": "cardigan",
+    "zmax": 0.78,
+    "target": null,
+    "proto": [
+     0.84,
+     0.79,
+     0.71
+    ]
+   }
+  ],
+  "back_of_head": {
+   "center": [
+    0.006,
+    -0.005,
+    0.875
+   ],
+   "y0": 0.015,
+   "y1": 0.035,
+   "zmin": 0.77,
+   "radius": 0.14,
+   "hairline": 0.79,
+   "hair": "hair",
+   "skin": "skin",
+   "pattern": "curls",
+   "smooth": 80,
+   "neck": {
+    "center_y": -0.02,
+    "rx": 0.056,
+    "ry": 0.049
+   },
+   "z_occ": 0.845,
+   "zramp": 0.012,
+   "pattern_strength": 0.9,
+   "hair_mass": {
+    "crown": 0.004,
+    "mid": 0.0035,
+    "nape": 0.002,
+    "clumps": 17,
+    "clump": 0.0018,
+    "lip": 0.004
+   },
+   "strand_normal": 0.5,
+   "roughness": 0.88,
+   "curl_size": 0.0042
+  },
+  "back_paint": [
+   {
+    "zmin": 0.27,
+    "zmax": 0.775,
+    "xmax": 0.2,
+    "ymin": 0.01,
+    "class": "cardigan",
+    "pattern": "knit",
+    "strength": 0.14,
+    "smooth": 24
+   }
+  ]
+ }
+}

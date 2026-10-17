@@ -1,0 +1,132 @@
+{
+ "name": "Elias",
+ "height": 1.83,
+ "idle": "idle",
+ "colour": "cornflower-blue apron on white",
+ "note": "the dream Elias at the barbecue (Tripo, sheet vh3d-elias-dream-take1)",
+ "hasFace": true,
+ "decal": "Elias_FaceDecal",
+ "atlas": "Elias_FaceAtlas.png",
+ "columns": 6,
+ "rows": 9,
+ "blink": true,
+ "expressions": [
+  {
+   "name": "neutral",
+   "shapes": []
+  },
+  {
+   "name": "warm",
+   "shapes": [
+    {
+     "shape": "Smile",
+     "weight": 55
+    }
+   ]
+  },
+  {
+   "name": "happy",
+   "shapes": [
+    {
+     "shape": "Smile",
+     "weight": 75
+    },
+    {
+     "shape": "BrowsUp",
+     "weight": 35
+    }
+   ]
+  },
+  {
+   "name": "sad",
+   "shapes": [
+    {
+     "shape": "Frown",
+     "weight": 80
+    },
+    {
+     "shape": "BrowsSad",
+     "weight": 100
+    }
+   ]
+  },
+  {
+   "name": "worried",
+   "shapes": [
+    {
+     "shape": "BrowsSad",
+     "weight": 85
+    },
+    {
+     "shape": "Frown",
+     "weight": 35
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 6
+    }
+   ]
+  },
+  {
+   "name": "hurt",
+   "shapes": [
+    {
+     "shape": "BrowsSad",
+     "weight": 100
+    },
+    {
+     "shape": "Frown",
+     "weight": 70
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 12
+    }
+   ]
+  },
+  {
+   "name": "angry",
+   "shapes": [
+    {
+     "shape": "BrowsDown",
+     "weight": 100
+    },
+    {
+     "shape": "Frown",
+     "weight": 55
+    }
+   ]
+  },
+  {
+   "name": "surprised",
+   "shapes": [
+    {
+     "shape": "BrowsUp",
+     "weight": 100
+    },
+    {
+     "shape": "MouthOpen",
+     "weight": 35
+    }
+   ]
+  },
+  {
+   "name": "doubtful",
+   "shapes": [
+    {
+     "shape": "BrowsDown",
+     "weight": 30
+    },
+    {
+     "shape": "Frown",
+     "weight": 25
+    },
+    {
+     "shape": "Smile",
+     "weight": 25
+    }
+   ]
+  }
+ ],
+ "accessories": []
+}

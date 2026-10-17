@@ -1,0 +1,28 @@
+{
+  "sample_rate": 48000,
+  "length": 0.36,
+  "seed": 19,
+  "layers": [
+    {
+      "type": "sample",
+      "path": "../samples/equip_lock.wav",
+      "start": 0.0,
+      "attack": 0.0,
+      "decay": 30.0,
+      "gain_db": -2,
+      "pan": 0.0
+    },
+    {
+      "type": "noise",
+      "start": 0.0,
+      "attack": 0.0003,
+      "decay": 0.02,
+      "gain_db": -20,
+      "pan": 0.0,
+      "highpass": 5000
+    }
+  ],
+  "master": {
+    "limit_db": -1.5
+  }
+}
