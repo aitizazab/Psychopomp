@@ -475,8 +475,8 @@ namespace JamKit.SkylineRepo
                     _fogMode = FogMode.ExponentialSquared; _fogDensity = 0.011f;
                     break;
                 case HellLookDirection.C:
-                    for (int i = 0; i < 3; i++) { _fog[i] = new Color(0.004f, 0.003f, 0.003f); _ambient[i] = new Color(0.025f, 0.022f, 0.022f); }
-                    _fogMode = FogMode.Linear; _fogRange = new Vector2(8f, 75f);
+                    for (int i = 0; i < 3; i++) { _fog[i] = new Color(0.006f, 0.005f, 0.005f); _ambient[i] = new Color(0.05f, 0.045f, 0.045f); }
+                    _fogMode = FogMode.Linear; _fogRange = new Vector2(10f, 95f);
                     break;
             }
             RenderSettings.fog = true;

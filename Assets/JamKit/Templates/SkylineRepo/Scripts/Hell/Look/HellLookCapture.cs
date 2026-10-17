@@ -63,6 +63,7 @@ namespace JamKit.SkylineRepo
             for (int f = 0; f < HellRoomVariants.FloorCount; f++)
             {
                 var room = HellWorld.Room(f, HellRoomKind.SixSigils);
+                ShowRoom(f, HellRoomKind.SixSigils);
                 Frame(WideShot(room), f, sw);
                 yield return Shot(Path.Combine(dir, "floor" + (f + 1) + "-wide.png"));
                 done++;
@@ -70,6 +71,7 @@ namespace JamKit.SkylineRepo
 
             // the imps against the floor 1 cavern's lava
             var enemyRoom = HellWorld.Room(0, HellRoomKind.SixSigils);
+            ShowRoom(0, HellRoomKind.SixSigils);
             var enemyShot = EnemyShot(enemyRoom);
             HideOtherBots();
             SpawnImps(enemyShot);
@@ -131,6 +133,22 @@ namespace JamKit.SkylineRepo
 
         struct ShotDef { public Vector3 position, lookAt; }
 
+        /// <summary>The luminance spread (0..255) over a 64 x 36 grid of the still: a few means nothing but fog in the frame.</summary>
+        static float LuminanceSpread(Texture2D tex, out float mean)
+        {
+            double sum = 0, sum2 = 0;
+            int n = 0;
+            for (int y = 0; y < 36; y++)
+                for (int x = 0; x < 64; x++)
+                {
+                    var c = tex.GetPixel((int)((x + 0.5f) * tex.width / 64f), (int)((y + 0.5f) * tex.height / 36f));
+                    double l = 255.0 * (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b);
+                    sum += l; sum2 += l * l; n++;
+                }
+            mean = (float)(sum / n);
+            return (float)System.Math.Sqrt(System.Math.Max(0.0, sum2 / n - (sum / n) * (sum / n)));
+        }
+
         static Vector3 U(NVec3 v) => new Vector3(v.X, v.Y, v.Z);
 
         static Vector3 Forward(HellRoomDef room) => Quaternion.Euler(0f, room.entryYaw, 0f) * Vector3.forward;
@@ -181,6 +199,16 @@ namespace JamKit.SkylineRepo
             _cam.backgroundColor = RenderSettings.fogColor;
         }
 
+        /// <summary>The run director keeps every room but the current one inactive (HellRunDirector.Start): a shot's room is
+        /// switched on here, as scenery only (no Begin, so it spawns and ticks nothing).</summary>
+        static void ShowRoom(int floor, HellRoomKind kind)
+        {
+            int n = 0;
+            foreach (var r in Object.FindObjectsByType<HellRoom>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (r.floor == floor && r.kind == kind && !r.gameObject.activeSelf) { r.gameObject.SetActive(true); n++; }
+            Debug.Log("HELL_LOOK_CAPTURE room floor " + (floor + 1) + " " + kind + (n > 0 ? " switched on" : " already on"));
+        }
+
         void HideOtherBots()
         {
             foreach (var b in SkylineBot.Live.ToArray())
@@ -229,6 +257,9 @@ namespace JamKit.SkylineRepo
             tex.Apply(false);
             RenderTexture.active = prev;
             File.WriteAllBytes(path, tex.EncodeToPNG());
+            float sd = LuminanceSpread(tex, out float mean);
+            if (sd < 4f) Debug.LogWarning("HELL_LOOK_CAPTURE WARNING nearly uniform still (luminance mean " + mean.ToString("0.0") + ", std dev " + sd.ToString("0.00") + " of 255): no scenery in shot? " + path);
+            else Debug.Log("HELL_LOOK_CAPTURE still luminance mean " + mean.ToString("0.0") + ", std dev " + sd.ToString("0.0"));
             Destroy(tex);
             Debug.Log("HELL_LOOK_CAPTURE wrote " + path + (submitted ? "" : " (camera.Render fallback)"));
         }
