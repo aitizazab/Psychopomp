@@ -408,6 +408,7 @@ namespace JamKit.SkylineRepo
                     AddSlider("Pad sensitivity", SkylineOptions.MinSensitivity, SkylineOptions.MaxSensitivity, 0.05f, () => o.padSensitivity, v => o.padSensitivity = v);
                     AddSlider("Field of view", SkylineOptions.MinFieldOfView, SkylineOptions.MaxFieldOfView, 1f, () => o.fieldOfView, v => o.fieldOfView = v,
                         v => Mathf.RoundToInt(v) + " deg");
+                    AddSlider("Screen shake", 0f, 1f, 0.05f, () => o.screenShake, v => o.screenShake = v, v => Mathf.RoundToInt(v * 100f) + "%");
                     AddToggle("Invert Y", () => o.invertY, v => o.invertY = v);
                     AddToggle("Aim assist (pad)", () => o.aimAssist, v => o.aimAssist = v);
                     AddButton(() => "Back", () => ShowPage(Page.Main));

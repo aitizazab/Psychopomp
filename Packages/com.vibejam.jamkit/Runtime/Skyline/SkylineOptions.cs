@@ -33,6 +33,8 @@ namespace JamKit.Skyline
         public SubtitleMode subtitleMode = SubtitleMode.Dialogue;
         /// <summary>The subtitle text size.</summary>
         public SubtitleSize subtitleSize = SubtitleSize.Medium;
+        /// <summary>Camera shake strength (the Look page's slider): 0 off, 1 as designed (docs/HELL-FX.md).</summary>
+        public float screenShake = 1f;
 
         public SkylineOptions Clone() => (SkylineOptions)MemberwiseClone();
 
@@ -46,6 +48,7 @@ namespace JamKit.Skyline
             mouseSensitivity = Range(mouseSensitivity, MinSensitivity, MaxSensitivity, 1f);
             padSensitivity = Range(padSensitivity, MinSensitivity, MaxSensitivity, 1f);
             fieldOfView = Range(fieldOfView, MinFieldOfView, MaxFieldOfView, DefaultFieldOfView);
+            screenShake = Unit(screenShake, 1f);
             if (!Enum.IsDefined(typeof(SubtitleMode), subtitleMode)) subtitleMode = SubtitleMode.Dialogue;
             if (!Enum.IsDefined(typeof(SubtitleSize), subtitleSize)) subtitleSize = SubtitleSize.Medium;
         }
@@ -69,6 +72,7 @@ namespace JamKit.Skyline
             Add(sb, "mouse", mouseSensitivity);
             Add(sb, "pad", padSensitivity);
             Add(sb, "fov", fieldOfView);
+            Add(sb, "shake", screenShake);
             sb.Append("subtitles=").Append((int)subtitleMode).Append('\n');
             sb.Append("subtitleSize=").Append((int)subtitleSize).Append('\n');
             sb.Append("invertY=").Append(invertY ? "1" : "0").Append('\n');
@@ -103,6 +107,7 @@ namespace JamKit.Skyline
                         case "mouse": if (isNumber) o.mouseSensitivity = f; break;
                         case "pad": if (isNumber) o.padSensitivity = f; break;
                         case "fov": if (isNumber) o.fieldOfView = f; break;
+                        case "shake": if (isNumber) o.screenShake = f; break;
                         case "subtitles": if (isNumber) o.subtitleMode = (SubtitleMode)(int)f; break;
                         case "subtitleSize": if (isNumber) o.subtitleSize = (SubtitleSize)(int)f; break;
                         case "invertY": o.invertY = value == "1"; break;

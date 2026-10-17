@@ -32,6 +32,8 @@ namespace JamKit.SkylineRepo
         /// <summary>The arc: a paler, electric gold-white.</summary>
         static readonly Color Arc = new Color(2.4f, 2.2f, 1.3f);
         static readonly List<SkylineBolt> _pool = new List<SkylineBolt>();
+        /// <summary>Every pooled bolt (active = in flight), for the Hell effects to read (docs/HELL-FX.md). Read-only use.</summary>
+        public static IReadOnlyList<SkylineBolt> Pool => _pool;
 
         Vector3 _vel;
         float _radius, _damage, _age;
