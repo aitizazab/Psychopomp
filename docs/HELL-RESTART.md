@@ -9,6 +9,31 @@ Not on GitHub yet. Commit only with the repo-local identity:
 `git -c user.name="Muhammad Aitizaz Abro" -c user.email="aitizaz.ab24@gmail.com" commit ...` (never the global
 config: it has the uni ID).
 
+## STATUS 2026-10-18 ~04:40 (read this first; submission 09:00 today)
+
+**Game: PSYCHOPOMP** (working title; repo still HellDescent). The God of Death is **Baja**; the boss is **Vesper**.
+Latest build: `out/hell/build/HellDescent.exe` (main `f4193380`); the plain exe uses the creator's looks (floor 1 Inked
+Inferno, floors 2-3 Molten Grit). Tests: Skyline 1418+, Movement 215, compile green, room lint 0.
+
+**In the game (all merged on main):** title/chapters/difficulty; Baja's hour (Easy 90 / Normal 65 / Hard 50, the escape
+gate, damnation, the Lucifer cliffhanger); Baja's errands (jobs); Vesper's fight and new model; the decision, escape and
+endings; shadow hides you, fire exposes you; tutorials and Vesper's beats (placeholder set); the new HUD and ability
+wheel (Tab); fonts (Cinzel Decorative Black title, Metal Mania subheads, Grenze Gotisch small text, Luckiest Guy and
+Bangers); the lighting rig, sky and open rooms; momentum through drops; the stalactite Collapse; sound (the creator's
+picks, mixed by importance); music round 2 (the in-run set plus Baja, Vesper and endings, via HellMusicDirector); models
+(scythe demon, ooze, Vesper round 2); trailer capture tools; the autopilot.
+
+**Docs:** HELL-DESIGN.md (every call of the creator's, newest at the end), HELL-SPRINT.md, HELL-THEME-REVIEW.md,
+HELL-MUSIC.md (+ HELL-MUSIC-DIRECTOR.md), HELL-HOUR.md, HELL-SHADOW.md, HELL-UI.md, HELL-LIGHTING.md, HELL-ROOMS.md,
+HELL-ENDING.md. **Review hub:** `FableAnimationTests/art/review/2026-10-18/hub/index.html` (Decisions needed tab first).
+
+**Waiting on the creator:** play the build; music round 2 notes; concepts round 2 picks; the story options (which set of
+Vesper's moments); Baja's lines in one take (`FableAnimationTests/audio/baja-takes/README.md`, then
+`audio-tools/baja_convert.py --one-take`). **Running:** the trailer pipeline (`FableAnimationTests/video/psychopomp-trailer/`).
+**Next:** record the gameplay takes for the trailer's slots (HELL-CAPTURE.md), cut the trailer, make the repo public (the
+creator runs `gh repo create aitizazab/HellDescent --public --source . --push`; check each push stays under 2 GB), upload
+the trailer to Drive, submit before 09:00.
+
 ## The report: everything since the pivot
 
 ### The pivot (morning of day 1)
