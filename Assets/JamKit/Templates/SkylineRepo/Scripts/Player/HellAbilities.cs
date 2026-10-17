@@ -98,6 +98,8 @@ namespace JamKit.SkylineRepo
         public static void AttachAll()
         {
             if (!AutoAttach) return;
+            // the scripted runs (capture, demo, perf probe) stay as they were unless asked for: their recordings are timed
+            if (SkylineRunArgs.Demo && !SkylineRunArgs.Has("-hell-abilities")) return;
             foreach (var p in FindObjectsByType<SkylinePlayer>(FindObjectsSortMode.None))
                 if (p.GetComponent<HellAbilities>() == null) p.gameObject.AddComponent<HellAbilities>();
         }
