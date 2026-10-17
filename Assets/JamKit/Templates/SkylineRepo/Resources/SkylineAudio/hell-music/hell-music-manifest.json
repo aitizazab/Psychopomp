@@ -1,0 +1,467 @@
+{
+  "about": "HellDescent music manifest v1 (2026-10-18). Load as a TextAsset: Resources.Load<TextAsset>(\"SkylineAudio/hell-music/hell-music-manifest\"). Every 'resource' is a Resources path without extension (OGG Vorbis, 48 kHz stereo). 'status': ready = the file exists; pending = planned, not rendered yet (skip it, fall back as 'fallback' says). Times in seconds unless named _samples.",
+  "sample_rate": 48000,
+  "bus": "SkylineSoundCategory.Music",
+  "cue_kinds": {
+    "layered_loop": "Several stems of identical length that ALWAYS play together, sample-locked (schedule all with AudioSource.PlayScheduled on the same dspTime; re-schedule each pass at start + n*loop_samples/sample_rate, or use clip.loop=true on all of them started on the same dspTime). Mixing = per-stem gain only, never a restart.",
+    "loop": "One file looping exactly at loop_samples (the whole file; tails are already folded onto the start).",
+    "parts": "A cue made of named parts; each part is a loop or a stinger. Code switches parts on bar lines (bar_seconds) when the scene says so.",
+    "stinger": "One-shot. Plays once; may overlap the music under it (duck the loop by duck_db for its length if given).",
+    "oneshot": "A fitted piece that plays once from start to end."
+  },
+  "cues": {
+    "inrun": {
+      "kind": "layered_loop",
+      "status": "ready",
+      "bpm": 135,
+      "beats_per_bar": 4,
+      "bars": 16,
+      "bar_seconds": 1.777778,
+      "loop_samples": 1365333,
+      "loop_seconds": 28.444438,
+      "key": "D minor",
+      "moods": [
+        "quiet",
+        "normal",
+        "danger"
+      ],
+      "speeds": [
+        "still",
+        "fast",
+        "flying"
+      ],
+      "how_to_mix": [
+        "Exactly one mood is active (target gain 1), the others fade to 0. Within the active mood, speed is additive: still = still stems; fast = still + fast stems; flying = still + fast + flying stems.",
+        "Every stem has a role: 'bed' (everything pitched) or 'drums' (all percussion of that layer). The Dark modifier (docs/HELL-SHADOW.md section 3) multiplies every 'drums' stem by DarkHush.MusicDrums(depth), the 'drone' stem by DarkHush.MusicDrone(depth), and the music bus low-pass by DarkHush.MusicCutoff(depth).",
+        "Stems are pre-levelled: with gain 1 on the right set, each of the 9 mood x speed combinations is at its intended loudness (listed in 'mix_lufs'). Do not normalise them.",
+        "Mood changes: equal-power fades starting on a bar line. Into danger: 1 s at the next bar line. Out of danger: 3 s, only after the threat has stayed low for 2 bars. Quiet <-> normal: 2 s.",
+        "Speed changes: the fast/flying stems fade in over 0.5 s at the next beat (not bar) and out over 1.5 s; smooth the player's speed over ~0.5 s with hysteresis so a single jump doesn't flicker it.",
+        "Time Dilation: the plan is a low-pass + slight pitch drop on the whole music bus (the same muffle as the world), not a separate stem."
+      ],
+      "speed_thresholds_hint": {
+        "fast_mps": 11,
+        "flying_mps": 18,
+        "note": "tune in play"
+      },
+      "mood_hint": "quiet = no enemy alerted and no objective pressure; normal = enemies alerted or an objective running; danger = health under 35% or an objective about to fail / last seconds of a clock; the boss uses its own cue.",
+      "mix_lufs": {
+        "quiet_still": -23,
+        "quiet_fast": -21.5,
+        "quiet_flying": -20.5,
+        "normal_still": -18,
+        "normal_fast": -16,
+        "normal_flying": -15.5,
+        "danger_still": -17,
+        "danger_fast": -15.5,
+        "danger_flying": -15
+      },
+      "stems": [
+        {
+          "id": "quiet_still_bed",
+          "mood": "quiet",
+          "speed": "still",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_still_bed"
+        },
+        {
+          "id": "quiet_still_drums",
+          "mood": "quiet",
+          "speed": "still",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_still_drums"
+        },
+        {
+          "id": "quiet_fast_bed",
+          "mood": "quiet",
+          "speed": "fast",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_fast_bed"
+        },
+        {
+          "id": "quiet_fast_drums",
+          "mood": "quiet",
+          "speed": "fast",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_fast_drums"
+        },
+        {
+          "id": "quiet_flying_bed",
+          "mood": "quiet",
+          "speed": "flying",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_flying_bed"
+        },
+        {
+          "id": "quiet_flying_drums",
+          "mood": "quiet",
+          "speed": "flying",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/quiet_flying_drums"
+        },
+        {
+          "id": "normal_still_bed",
+          "mood": "normal",
+          "speed": "still",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/normal_still_bed"
+        },
+        {
+          "id": "normal_still_drums",
+          "mood": "normal",
+          "speed": "still",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/normal_still_drums"
+        },
+        {
+          "id": "normal_fast_bed",
+          "mood": "normal",
+          "speed": "fast",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/normal_fast_bed"
+        },
+        {
+          "id": "normal_fast_drums",
+          "mood": "normal",
+          "speed": "fast",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/normal_fast_drums"
+        },
+        {
+          "id": "normal_flying_bed",
+          "mood": "normal",
+          "speed": "flying",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/normal_flying_bed"
+        },
+        {
+          "id": "normal_flying_drums",
+          "mood": "normal",
+          "speed": "flying",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/normal_flying_drums"
+        },
+        {
+          "id": "danger_still_bed",
+          "mood": "danger",
+          "speed": "still",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/danger_still_bed"
+        },
+        {
+          "id": "danger_still_drums",
+          "mood": "danger",
+          "speed": "still",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/danger_still_drums"
+        },
+        {
+          "id": "danger_fast_bed",
+          "mood": "danger",
+          "speed": "fast",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/danger_fast_bed"
+        },
+        {
+          "id": "danger_fast_drums",
+          "mood": "danger",
+          "speed": "fast",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/danger_fast_drums"
+        },
+        {
+          "id": "danger_flying_bed",
+          "mood": "danger",
+          "speed": "flying",
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/inrun/danger_flying_bed"
+        },
+        {
+          "id": "danger_flying_drums",
+          "mood": "danger",
+          "speed": "flying",
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/inrun/danger_flying_drums"
+        },
+        {
+          "id": "dark_drone",
+          "mood": "any",
+          "speed": "any",
+          "role": "drone",
+          "resource": "SkylineAudio/hell-music/inrun/dark_drone"
+        }
+      ],
+      "used_by": [
+        "the rooms",
+        "the shafts (keep playing; force speed = flying while falling)",
+        "the escape (danger mood, speed by the player)",
+        "boss fallback if vesper_boss is pending (danger mood)"
+      ],
+      "dark_drone_note": "dark_drone is pre-levelled ~6 dB under normal_still; DarkHush.MusicDrone gives it up to 0.8."
+    },
+    "baja_hold": {
+      "kind": "loop",
+      "status": "ready",
+      "use": "The PAUSE MENU: Baja put you on hold. Play it while paused (unscaled time); the in-run music keeps its clock running underneath but low-passed to ~600 Hz and -14 dB. Restart from 0 each time the menu opens.",
+      "resource": "SkylineAudio/hell-music/baja/baja_hold",
+      "bpm": 108,
+      "beats_per_bar": 3,
+      "bars": 16,
+      "loop_samples": 1280000,
+      "note": "Phone-line filtered (300 Hz-4.5 kHz) on purpose: you are on hold."
+    },
+    "baja_gift": {
+      "kind": "loop",
+      "status": "ready",
+      "use": "The SKILL PICK (time stopped; her gift). Fade the in-run music out over 0.5 s, this in over 0.5 s; reverse when the pick is made.",
+      "resource": "SkylineAudio/hell-music/baja/baja_gift",
+      "bpm": 72,
+      "beats_per_bar": 3,
+      "bars": 8,
+      "loop_samples": 960000
+    },
+    "baja_opening": {
+      "kind": "parts",
+      "status": "ready",
+      "use": "The opening cutscene (the God of Death's deal). Code switches parts on page changes; loops hold until told.",
+      "bar_seconds": {
+        "sister": 3.333333,
+        "hall": 1.666667,
+        "idea": 1.666667
+      },
+      "parts": {
+        "sister": {
+          "kind": "loop",
+          "page": "page 1 (the sister)",
+          "resource": "SkylineAudio/hell-music/baja/opening_sister",
+          "loop_samples": 1280000,
+          "bpm": 72,
+          "beats_per_bar": 4
+        },
+        "hall": {
+          "kind": "loop",
+          "page": "page 2 (going to Death; her reveal at panel 6)",
+          "resource": "SkylineAudio/hell-music/baja/opening_hall",
+          "loop_samples": 640000,
+          "bpm": 108,
+          "beats_per_bar": 3
+        },
+        "wait": {
+          "kind": "stinger",
+          "page": "panel 9, '...Wait.': stop the hall loop dead and play this",
+          "resource": "SkylineAudio/hell-music/baja/opening_wait"
+        },
+        "idea": {
+          "kind": "loop",
+          "page": "pages 4-5 (the funniest idea, the door)",
+          "resource": "SkylineAudio/hell-music/baja/baja_stats",
+          "loop_samples": 1920000,
+          "note": "the same file as baja_stats: the full lounge waltz"
+        },
+        "fall": {
+          "kind": "stinger",
+          "page": "last panel: you fall, the title burns in (stop the loop)",
+          "resource": "SkylineAudio/hell-music/baja/opening_fall"
+        }
+      }
+    },
+    "baja_job_brief": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "Baja offers a job",
+      "resource": "SkylineAudio/hell-music/baja/job_brief",
+      "duck_db": -6
+    },
+    "baja_job_done": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "a job done",
+      "resource": "SkylineAudio/hell-music/baja/job_done",
+      "duck_db": -6
+    },
+    "baja_job_failed": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "a job failed",
+      "resource": "SkylineAudio/hell-music/baja/job_failed",
+      "duck_db": -6
+    },
+    "baja_stats": {
+      "kind": "loop",
+      "status": "ready",
+      "use": "The STATS screen (and her ending cards' bed if an ending cue is pending).",
+      "resource": "SkylineAudio/hell-music/baja/baja_stats",
+      "bpm": 108,
+      "beats_per_bar": 3,
+      "loop_samples": 1920000,
+      "bars": 24
+    },
+    "baja_cliffhanger": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "After the credits: the fruit basket from Lucifer",
+      "resource": "SkylineAudio/hell-music/baja/cliffhanger"
+    },
+    "vesper_boss": {
+      "kind": "parts",
+      "status": "ready",
+      "use": "The boss fight. One clock for all phase loops (same length); switch at the next bar line on HellVesperFight phase changes with a 1 s crossfade. 'drums' stems obey the Dark modifier like the in-run set (phase 3 is dark: the drums drop by design anyway).",
+      "bpm": 150,
+      "beats_per_bar": 3,
+      "bars": 24,
+      "loop_samples": 1382400,
+      "parts": {
+        "p1_bed": {
+          "kind": "loop",
+          "phase": 1,
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/vesper/boss_p1_bed"
+        },
+        "p1_drums": {
+          "kind": "loop",
+          "phase": 1,
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/vesper/boss_p1_drums"
+        },
+        "p2_bed": {
+          "kind": "loop",
+          "phase": 2,
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/vesper/boss_p2_bed"
+        },
+        "p2_drums": {
+          "kind": "loop",
+          "phase": 2,
+          "role": "drums",
+          "resource": "SkylineAudio/hell-music/vesper/boss_p2_drums"
+        },
+        "p3_bed": {
+          "kind": "loop",
+          "phase": 3,
+          "role": "bed",
+          "resource": "SkylineAudio/hell-music/vesper/boss_p3_bed"
+        },
+        "kneel": {
+          "kind": "stinger",
+          "use": "her defeat: stop the loops, play this",
+          "resource": "SkylineAudio/hell-music/vesper/boss_kneel"
+        }
+      },
+      "rewind_tell_hint": "During her Rewind tell (1.6 s) play the active loop backwards or pitch it down; optional.",
+      "fallback": "inrun, mood danger",
+      "bar_seconds": 1.2,
+      "levels": "p1 drums+bed sum -16 LUFS, p2 -15.5, p3 bed -21; play pN_bed + pN_drums together (p3 has no drums stem)."
+    },
+    "vesper_history": {
+      "kind": "parts",
+      "status": "ready",
+      "use": "Vesper's history cutscene (floor 3's shaft). Switch parts on page changes.",
+      "parts": {
+        "daughter": {
+          "kind": "loop",
+          "resource": "SkylineAudio/hell-music/vesper/history_daughter",
+          "loop_samples": 921600
+        },
+        "bargain": {
+          "kind": "stinger",
+          "resource": "SkylineAudio/hell-music/vesper/history_bargain"
+        },
+        "bride": {
+          "kind": "loop",
+          "resource": "SkylineAudio/hell-music/vesper/history_bride",
+          "loop_samples": 921600
+        },
+        "boredom": {
+          "kind": "loop",
+          "resource": "SkylineAudio/hell-music/vesper/history_boredom",
+          "loop_samples": 921600
+        },
+        "centuries": {
+          "kind": "loop",
+          "resource": "SkylineAudio/hell-music/vesper/history_centuries",
+          "loop_samples": 921600
+        },
+        "stand": {
+          "kind": "stinger",
+          "use": "the last panel, straight into the fight",
+          "resource": "SkylineAudio/hell-music/vesper/history_stand"
+        }
+      },
+      "bpm": 75,
+      "beats_per_bar": 3,
+      "bar_seconds": 2.4
+    },
+    "vesper_decision": {
+      "kind": "parts",
+      "status": "ready",
+      "use": "The decision (in engine).",
+      "parts": {
+        "hold": {
+          "kind": "loop",
+          "resource": "SkylineAudio/hell-music/vesper/decision_hold",
+          "loop_samples": 921600
+        },
+        "spare": {
+          "kind": "stinger",
+          "use": "you offer your hand",
+          "resource": "SkylineAudio/hell-music/vesper/decision_spare"
+        },
+        "kill": {
+          "kind": "stinger",
+          "use": "you shoot (stop the loop dead first)",
+          "resource": "SkylineAudio/hell-music/vesper/decision_kill"
+        }
+      },
+      "bar_seconds": 2.4
+    },
+    "ending_kill": {
+      "kind": "oneshot",
+      "status": "ready",
+      "resource": "SkylineAudio/hell-music/endings/ending_kill"
+    },
+    "ending_spare_kept": {
+      "kind": "oneshot",
+      "status": "ready",
+      "resource": "SkylineAudio/hell-music/endings/ending_spare_kept"
+    },
+    "ending_spare_cost": {
+      "kind": "oneshot",
+      "status": "ready",
+      "resource": "SkylineAudio/hell-music/endings/ending_spare_cost"
+    },
+    "title": {
+      "kind": "loop",
+      "status": "ready",
+      "use": "Title screen",
+      "resource": "SkylineAudio/hell-music/title/title",
+      "loop_samples": 2048000,
+      "bpm": 90,
+      "beats_per_bar": 4,
+      "bars": 16
+    },
+    "floor_card_1": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "FLOOR ONE card",
+      "resource": "SkylineAudio/hell-music/title/floor_card_1"
+    },
+    "floor_card_2": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "FLOOR TWO card",
+      "resource": "SkylineAudio/hell-music/title/floor_card_2"
+    },
+    "floor_card_3": {
+      "kind": "stinger",
+      "status": "ready",
+      "use": "FLOOR THREE card",
+      "resource": "SkylineAudio/hell-music/title/floor_card_3"
+    },
+    "credits": {
+      "kind": "oneshot",
+      "status": "ready",
+      "use": "Credits roll",
+      "resource": "SkylineAudio/hell-music/title/credits",
+      "note": "83.6 s medley; fades out at its end."
+    }
+  }
+}
