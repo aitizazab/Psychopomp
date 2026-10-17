@@ -184,9 +184,11 @@ boss instead of finishing the run.
 - Nothing has been played; no Unity-side (EditMode/PlayMode) test.
 - **Her body is a model (2026-10-18)**, `Resources/HellModels/vesper` (built by `HellModelsBuild` from
   `Look/HellLook/Models/vesper.fbx`, made by `tools/hell-models/vesper.py`): Quaternius' "Woman in Dress" (CC0, rigged)
-  re-dressed as the Evening Star: obsidian skin with lava cracks, long fire hair, a floor-length black-violet gown with an
-  ember hem, a gold crown with a violet eight-point star on her brow, earrings, a choker with a violet pendant, a high
-  standing collar, gold shoulder plates, cuffs and belt. Her Animator plays Idle (a breath loop), Cast (also Rewind and
+  re-dressed to the round-2 brief (a trophy wife neglected for centuries: withdrawn, proud but hollow): a concealing
+  high-collared black robe with long sleeves, embroidered gold stars on the skirt, sleeves, capelets and collar lining, gold
+  clasps with chains draped between them, a violet brooch at the throat, pale ashen skin, and dark molten-cracked hair
+  hanging round her head like a curtain past the collar (its ends burning), only her glowing eyes showing. Her stance is
+  withdrawn (chin down, shoulders in, forearms drawn in front of her). Her Animator plays Idle (a breath loop), Cast (also Rewind and
   Strike), Reel, Kneel by the int `Pose` (= `HellVesperBody.Pose`), and the Blink clip (a lunge, arms swept back) on the
   trigger `Blink` at each blink tell. The `Heart` rides her chest bone; capsules on her chest and hips and a sphere on her
   head are the body zones; decorations have disabled boxes. Without the prefab the primitive stand-in returns.
