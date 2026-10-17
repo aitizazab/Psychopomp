@@ -105,9 +105,12 @@ be walkable on `ArenaNav` (1 m grid), unless it's a climb.
 
 **Darkness:**
 - every room has at least one dark zone;
-- no fire light reaches a dark zone.
+- no steady fire light reaches a dark zone; a lava **flare** may, for a moment (at most 2 s up, 25% of its cycle), never into
+  a dark zone on the fast line, and one dark zone per room stays out of every flare (fire kills shadow, live:
+  `docs/HELL-SHADOW.md`, 2026-10-18).
 
 The lights are generated over the lava (one per 12 m, radius 9), and each one's radius is clamped clear of the dark zones.
+A light held back by a dark zone off the fast line also flares out to 9 m for 1.2 s every 6-8 s (`HellLight.flare*`).
 
 **Falling tiles:** no solid may stand on a timeline tile; anything over one must reach down to the lava bed (this caught
 the old floating baffles).

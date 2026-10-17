@@ -158,7 +158,7 @@ namespace JamKit.SkylineRepo
         sealed class Blast { public Transform t; public float age, radius; }
         readonly List<Blast> _blasts = new List<Blast>();
 
-        public static void FireBlast(Vector3 at, float radius) => Instance.MakeBlast(at, radius);
+        public static void FireBlast(Vector3 at, float radius) { HellShadowFire.Blast(at, radius); Instance.MakeBlast(at, radius); }
 
         void MakeBlast(Vector3 at, float radius)
         {

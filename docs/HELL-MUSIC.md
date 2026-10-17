@@ -58,6 +58,11 @@ melody, only a blinding major chord (organ + choir); the endings take their colo
 **Also planned (system, not tracks):** Time Dilation thins the music to a muffled pulse (low-pass + slowed playback on
 the music bus); dark zones drop the drums; the Rewind could reverse the music for its 0.5 s.
 
+**The Dark modifier hook (built 2026-10-18, `docs/HELL-SHADOW.md` section 3):** `HellShadowAudio.Depth` (0..1) is how
+hidden the player is; on the current tune apply `DarkHush.MusicDrums(depth)` to the drums stem (1 to 0),
+`DarkHush.MusicCutoff(depth)` to the music bus low-pass (22 kHz to 900 Hz) and `DarkHush.MusicDrone(depth)` to a held
+"Dark" drone layer (0 to 0.8). The world and enemies are already hushed under it (-7 dB, low-pass to 1.2 kHz).
+
 **Round 1 sketches (2026-10-18, page above):** the 9 melody statements (piano), the in-run skeleton as layered builds
 (Normal Still, Quiet Still, Danger Still, Normal Fast, Normal Flying) plus a switch demo through all of them, the God of
 Death's lounge waltz (51 s) and Vesper's waltz (55 s) as layered builds, and four rhythm-guitar sounds to pick from.

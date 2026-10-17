@@ -370,7 +370,13 @@ namespace JamKit.Skyline
         readonly Dictionary<int, Box> _zones = new Dictionary<int, Box>();
         readonly Dictionary<int, Sphere> _spheres = new Dictionary<int, Sphere>();
         readonly Dictionary<int, Sphere> _lights = new Dictionary<int, Sphere>();
+        /// <summary>Passing fire (docs/HELL-SHADOW.md): timed lights in a fixed ring, the oldest overwritten when full (no garbage).</summary>
+        readonly Sphere[] _flashes = new Sphere[FlashCapacity];
+        int _flashNext;
         int _next = 1;
+
+        /// <summary>How many passing fire lights live at once (a bolt stamps a few per frame only near darkness).</summary>
+        public const int FlashCapacity = 128;
 
         public int ZoneCount => _zones.Count;
 
@@ -382,7 +388,62 @@ namespace JamKit.Skyline
         public int AddLight(Vector3 c, float r) { int id = _next++; _lights[id] = new Sphere { c = c, r = r, until = double.PositiveInfinity }; return id; }
         public bool RemoveLight(int id) => _lights.Remove(id);
 
-        public void Clear() { _zones.Clear(); _spheres.Clear(); _lights.Clear(); }
+        public void Clear() { _zones.Clear(); _spheres.Clear(); _lights.Clear(); ClearFlashes(); }
+
+        /// <summary>A passing fire light at <paramref name="c"/> (radius <paramref name="r"/>) until <paramref name="until"/> (game
+        /// seconds): an ember bolt's path, a burning enemy, a blast, a lava flare. Lit beats dark while it lasts.</summary>
+        public void AddFlash(Vector3 c, float r, double until)
+        {
+            if (!(r > 0f)) return;
+            _flashes[_flashNext] = new Sphere { c = c, r = r, until = until };
+            _flashNext = (_flashNext + 1) % FlashCapacity;
+        }
+
+        public void ClearFlashes() { Array.Clear(_flashes, 0, _flashes.Length); _flashNext = 0; }
+
+        /// <summary>Live passing lights now (for the look and the tests).</summary>
+        public int FlashCount(double now)
+        {
+            int n = 0;
+            for (int i = 0; i < _flashes.Length; i++) if (_flashes[i].r > 0f && _flashes[i].until > now) n++;
+            return n;
+        }
+
+        /// <summary>A passing fire light covers <paramref name="p"/> at <paramref name="now"/> (no time given: none counts).</summary>
+        public bool FlashLit(Vector3 p, double now)
+        {
+            if (double.IsNegativeInfinity(now)) return false;
+            for (int i = 0; i < _flashes.Length; i++)
+            {
+                var f = _flashes[i];
+                if (f.r > 0f && f.until > now && Vector3.DistanceSquared(p, f.c) <= f.r * f.r) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Inside an authored dark zone or a live dark sphere, whatever the light (the stealth rule asks lit apart).</summary>
+        public bool InDarkVolume(Vector3 p, double now = double.NegativeInfinity)
+        {
+            foreach (var s in _spheres.Values)
+                if (s.until > now && Vector3.DistanceSquared(p, s.c) <= s.r * s.r) return true;
+            foreach (var z in _zones.Values)
+                if (p.X >= z.min.X && p.X <= z.max.X && p.Y >= z.min.Y && p.Y <= z.max.Y && p.Z >= z.min.Z && p.Z <= z.max.Z) return true;
+            return false;
+        }
+
+        /// <summary>Within <paramref name="margin"/> m of a dark zone or a live dark sphere (a passing bolt lights only near the dark).</summary>
+        public bool NearDarkVolume(Vector3 p, float margin, double now = double.NegativeInfinity)
+        {
+            float m2 = margin * margin;
+            foreach (var s in _spheres.Values)
+            {
+                float rr = s.r + margin;
+                if (s.until > now && Vector3.DistanceSquared(p, s.c) <= rr * rr) return true;
+            }
+            foreach (var z in _zones.Values)
+                if (Vector3.DistanceSquared(p, Vector3.Clamp(p, z.min, z.max)) <= m2) return true;
+            return false;
+        }
 
         /// <summary>Drops spheres whose time is up.</summary>
         public void Expire(double now)
@@ -398,6 +459,9 @@ namespace JamKit.Skyline
             return false;
         }
 
+        /// <summary>A fixed fire light or a passing one (at <paramref name="now"/>) covers <paramref name="p"/>.</summary>
+        public bool IsLit(Vector3 p, double now) => IsLit(p) || FlashLit(p, now);
+
         public bool IsDark(Vector3 p, double now = double.NegativeInfinity)
         {
             bool dark = false;
@@ -406,7 +470,7 @@ namespace JamKit.Skyline
             if (!dark)
                 foreach (var z in _zones.Values)
                     if (p.X >= z.min.X && p.X <= z.max.X && p.Y >= z.min.Y && p.Y <= z.max.Y && p.Z >= z.min.Z && p.Z <= z.max.Z) { dark = true; break; }
-            return dark && !IsLit(p);
+            return dark && !IsLit(p, now);
         }
 
         /// <summary>The segment a..b passes through a live dark sphere (Nightfall blocks sight through it).</summary>

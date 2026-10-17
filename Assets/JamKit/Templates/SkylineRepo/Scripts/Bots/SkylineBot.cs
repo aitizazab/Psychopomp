@@ -496,8 +496,9 @@ namespace JamKit.SkylineRepo
             bool live = TargetLive(target) && target.Root != null && target.Root.gameObject.activeInHierarchy;
             if (live && Def.aimLagSeconds > 0f) _chestTrail.Record(_clock, N(target.Chest));
             Vector3 aimAt = Vector3.zero;
-            bool sees = live && Sees(out aimAt);
+            bool sees = live && !targetHidden && Sees(out aimAt);   // Shadow hides you (SkylineBot.HellShadow.cs)
             SeesTarget = sees;
+            if (sees) HellNoteSeen();
             if (sees && !_everSeen)
             {
                 _everSeen = true;
@@ -552,7 +553,7 @@ namespace JamKit.SkylineRepo
                 // the drone's hover patrol round its post (FightSim's, the same code): strafes across the line to the target
                 if (_patrol != null && !arriving)
                 {
-                    Vector3 to = live ? target.Chest - (_pos + U(_patrol.Offset)) : Vector3.zero;
+                    Vector3 to = live ? HuntChest() - (_pos + U(_patrol.Offset)) : Vector3.zero;
                     _patrol.Tick(dt, N(_pos), IsAwake && !practice, Brain.State == BotState.Telegraph, N(to), _patrolBlocked);
                 }
             }
@@ -785,18 +786,18 @@ namespace JamKit.SkylineRepo
         void FloorUnit(float dt, bool live, bool sees, Vector3 aimAt)
         {
             var d = Def;
-            Vector3 feet = live ? target.Root.position : _pos;
+            Vector3 feet = live ? HuntFeet() : _pos;
             float dx = feet.x - _pos.x, dz = feet.z - _pos.z;
             float flat = Mathf.Sqrt(dx * dx + dz * dz);
             Vector3 nozzle = _pos + new Vector3(0f, 0.2f, 0f), ankle = new Vector3(feet.x, _pos.y + 0.2f, feet.z);
-            bool reach = live && IsAwake && flat <= d.sweepRadius && Clear(nozzle, ankle);
+            bool reach = live && !targetHidden && IsAwake && flat <= d.sweepRadius && Clear(nozzle, ankle);
             // a door-spawned unit works on one level at a time: it does not sweep under a gallery at the Unit above
             if (_arrival != null && live && Mathf.Abs(feet.y - _pos.y) > BotArrival.FloorEngageHeight) reach = false;
             Brain.Tick(dt, reach, _cues);
             HandleCues(_cues, sees, aimAt, reach);
             if (_acid != null && _acid.Running)
             {
-                if (!_acid.Hit && live && !practice && AcidSweep.Touches(N(_pos), _acid.Yaw, _acid.T, N(feet), _pos.y, d) && Clear(nozzle, ankle))
+                if (!_acid.Hit && live && !practice && AcidSweep.Touches(N(_pos), _acid.Yaw, _acid.T, N(target.Root.position), _pos.y, d) && Clear(nozzle, ankle))
                 {
                     _acid.Hit = true;
                     target.TakeAttack(d.attackDamage, d.id, nozzle);
@@ -990,7 +991,12 @@ namespace JamKit.SkylineRepo
                 _lastKnown = target.Chest;
                 _hasGoal = false;
                 _returning = false;
-                if (!Clear(_pos, _lastKnown) && FindVantage(out _goal))
+                if (HiddenSearchGoal(out _goal))
+                {
+                    _hasGoal = true;   // lost into the dark: it goes to look (SkylineBot.HellShadow.cs)
+                    _trail.Add(_pos);
+                }
+                else if (!Clear(_pos, _lastKnown) && FindVantage(out _goal))
                 {
                     _hasGoal = true;
                     _trail.Add(_pos);   // the way back

@@ -46,6 +46,7 @@ namespace JamKit.SkylineRepo
             if (_ember <= 0f)
             {
                 _ember = 0.12f;
+                HellShadowFire.Burning(_bot.Center);   // a burning enemy lights the dark round it (docs/HELL-SHADOW.md)
                 SkylineSpark.Burst(_bot.Center + UnityEngine.Random.insideUnitSphere * _bot.Radius * 0.6f, Vector3.up, 2, 1.6f);
             }
             if (due > 0f)

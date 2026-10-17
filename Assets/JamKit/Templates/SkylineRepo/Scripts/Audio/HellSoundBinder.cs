@@ -385,7 +385,8 @@ namespace JamKit.SkylineRepo
             }
 
             // Time Dilation's heartbeat (the muffle itself is set from PitchChanged)
-            if (HellSoundTable.DilationHeartbeat && _dilationDepth > 0.05f) Loop(a, 1, HellSoundCues.Heartbeat, null, _dilationDepth);
+            float beat = Mathf.Max(_dilationDepth, HellShadowAudio.HeartbeatLevel);   // and in the dark (docs/HELL-SHADOW.md)
+            if (HellSoundTable.DilationHeartbeat && beat > 0.05f) Loop(a, 1, HellSoundCues.Heartbeat, null, beat);
         }
 
         float _dilationDepth;

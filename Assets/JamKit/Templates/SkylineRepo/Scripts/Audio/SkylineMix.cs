@@ -229,6 +229,10 @@ namespace JamKit.SkylineRepo
         }
 
         /// <summary>True for a category Time Dilation slows and muffles (HellSoundTable.Dilated: the bots, the world, the beds).</summary>
+        /// <summary>Darkness's hush (HellShadowAudio, docs/HELL-SHADOW.md): a dip (dB, 0 or less) and a low-pass (Hz) on the dilated
+        /// categories (the bots, the world, the beds) while the player hides in the dark.</summary>
+        public static float HushDb, HushCutoffHz = 22000f;
+
         public static bool Dilated(SkylineSoundCategory c) =>
             c == SkylineSoundCategory.Bots || c == SkylineSoundCategory.World || c == SkylineSoundCategory.Ambience;
 
@@ -286,7 +290,7 @@ namespace JamKit.SkylineRepo
         /// shots and hits (<paramref name="shotDepth"/>; the sidechain), the two summed in dB.</summary>
         public static float DuckGain(SkylineSoundCategory c, float depth, float shotDepth)
         {
-            double db = DuckDb[(int)c] * Math.Max(0f, depth) + ShotDuckDb[(int)c] * Math.Max(0f, shotDepth);
+            double db = DuckDb[(int)c] * Math.Max(0f, depth) + ShotDuckDb[(int)c] * Math.Max(0f, shotDepth) + (Dilated(c) ? Math.Min(0f, HushDb) : 0f);
             return db >= 0.0 ? 1f : (float)Math.Pow(10.0, db / 20.0);
         }
 

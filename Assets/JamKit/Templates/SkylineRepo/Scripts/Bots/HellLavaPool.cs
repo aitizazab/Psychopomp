@@ -105,6 +105,7 @@ namespace JamKit.SkylineRepo
             if (SkylineBot.TargetLive(_target) && _target.Root != null && _target.Root.gameObject.activeInHierarchy)
                 inside = _lava.Contains(N(_target.Root.position));
             float dmg = _lava.Tick(dt, inside);
+            if (_lava.Burning && (Time.frameCount + GetInstanceID()) % 12 == 0) HellShadowFire.Pool(transform.position, _lava.CurrentRadius);   // docs/HELL-SHADOW.md
             if (dmg > 0f) _target.TakeAttack(dmg, _attackerId, transform.position + Vector3.up * 0.2f);
             if (_lava.Gone) { gameObject.SetActive(false); return; }
             for (int i = 0; i < Bubbles; i++) _bubblePhase[i] += dt * (0.9f + 0.25f * i);

@@ -28,8 +28,8 @@ namespace JamKit.Skyline
     /// <item>the safe path is solid ground: every sample over a walkable top within half a metre (a ramp followed, a short
     /// climb of up to <see cref="ArenaNav.MaxClimb"/> m allowed), never over a hazard, never inside a solid or a beam, and
     /// each leg either walkable on <see cref="ArenaNav"/> or a short climb;</item>
-    /// <item>entry, exit and the stops are not inside solids; spawns are inside the room; no fire light reaches a dark zone;
-    /// every room has at least one dark zone.</item>
+    /// <item>entry, exit and the stops are not inside solids; spawns are inside the room; no steady fire light reaches a dark
+    /// zone (a lava flare may, for a moment, off the fast line: CheckDarkness); every room has at least one dark zone.</item>
     /// </list>
     /// Timeline tiles (The Collapse's floor) count as ground; gates count as open.
     /// </summary>
@@ -86,10 +86,7 @@ namespace JamKit.Skyline
             if (InsideBlocking(r, r.entry + new Vector3(0, 0.9f, 0)) != null) p.Add(r.name + ": the entry is inside a solid");
             foreach (var s in r.spawns)
                 if (!Contains(r.bounds, s.position)) p.Add(r.name + ": a " + s.role + " spawn is outside the room");
-            if (r.darkZones.Count == 0) p.Add(r.name + ": no dark zone (the Shadow Step needs darkness)");
-            foreach (var l in r.lights)
-                foreach (var d in r.darkZones)
-                    if (DistanceToBox(l.position, d) < l.radius) p.Add(r.name + ": a fire light at " + V(l.position) + " reaches a dark zone");
+            CheckDarkness(r, p);
             return res;
         }
 
@@ -383,6 +380,69 @@ namespace JamKit.Skyline
             t0 = Math.Max(t0, u0);
             t1 = Math.Min(t1, u1);
             return t1 > t0;
+        }
+
+        /// <summary>
+        /// Darkness and fire (docs/HELL-SHADOW.md; the rule was "no fire light reaches a dark zone", relaxed for fire that passes):
+        /// every room has a dark zone; no <b>steady</b> fire light reaches one; a lava <b>flare</b> may, but only for a moment
+        /// (at most <see cref="MaxFlareSeconds"/> up, at most <see cref="MaxFlareDuty"/> of its cycle), never into a dark zone on the
+        /// fast line (a Shadow Step landing, <see cref="OnFastLine"/>), and some dark zone in the room stays out of every flare (a
+        /// hiding place fire never finds by itself). Moving fire (bolts, burning enemies, blasts) is not room data: it may light
+        /// any dark.
+        /// </summary>
+        static void CheckDarkness(HellRoomDef r, List<string> p)
+        {
+            if (r.darkZones.Count == 0) { p.Add(r.name + ": no dark zone (the Shadow Step needs darkness)"); return; }
+            foreach (var l in r.lights)
+            {
+                foreach (var d in r.darkZones)
+                    if (DistanceToBox(l.position, d) < l.radius) p.Add(r.name + ": a fire light at " + V(l.position) + " reaches a dark zone");
+                if (!(l.flareRadius > 0f)) continue;
+                if (l.flareSeconds > MaxFlareSeconds) p.Add(r.name + ": a lava flare at " + V(l.position) + " stays up " + l.flareSeconds + " s (a moment: at most " + MaxFlareSeconds + ")");
+                if (!(l.flarePeriod > 0f) || l.flareSeconds / l.flarePeriod > MaxFlareDuty)
+                    p.Add(r.name + ": a lava flare at " + V(l.position) + " is up too much of its cycle (at most " + MaxFlareDuty + ")");
+                foreach (var d in r.darkZones)
+                    if (DistanceToBox(l.position, d) < l.flareRadius && OnFastLine(r, d))
+                        p.Add(r.name + ": a lava flare at " + V(l.position) + " reaches a dark zone on the fast line (a Shadow Step landing)");
+            }
+            bool someUntouched = false;
+            foreach (var d in r.darkZones)
+            {
+                bool touched = false;
+                foreach (var l in r.lights)
+                    if (l.flareRadius > 0f && DistanceToBox(l.position, d) < l.flareRadius) { touched = true; break; }
+                if (!touched) { someUntouched = true; break; }
+            }
+            if (!someUntouched) p.Add(r.name + ": every dark zone is reached by a lava flare (keep one hiding place out of the fire)");
+        }
+
+        /// <summary>A lava flare's most time up (s) and most share of its cycle.</summary>
+        public const float MaxFlareSeconds = 2f, MaxFlareDuty = 0.25f;
+        /// <summary>A dark zone this close (m) to the fast path (or a hold ring's racing line) is on the fast line.</summary>
+        public const float FastLineDarkReach = 2.5f;
+
+        /// <summary>Is dark zone <paramref name="d"/> on the fast line: within <see cref="FastLineDarkReach"/> of the fast path
+        /// or a hold ring's racing line (sampled every <see cref="Sample"/> m)?</summary>
+        public static bool OnFastLine(HellRoomDef r, CoverBox d)
+        {
+            if (NearLine(r.fastPath, d)) return true;
+            return r.hold != null && NearLine(r.hold.loop, d);
+        }
+
+        static bool NearLine(List<Vector3> line, CoverBox d)
+        {
+            if (line == null) return false;
+            for (int i = 0; i < line.Count; i++)
+            {
+                if (DistanceToBox(line[i], d) <= FastLineDarkReach) return true;
+                if (i == 0) continue;
+                var a = line[i - 1];
+                var b = line[i];
+                int n = Math.Max(1, (int)Math.Ceiling(Vector3.Distance(a, b) / Sample));
+                for (int k = 1; k < n; k++)
+                    if (DistanceToBox(Vector3.Lerp(a, b, k / (float)n), d) <= FastLineDarkReach) return true;
+            }
+            return false;
         }
 
         public static float DistanceToBox(Vector3 p, CoverBox b)
