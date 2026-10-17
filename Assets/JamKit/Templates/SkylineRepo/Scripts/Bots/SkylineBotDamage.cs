@@ -42,6 +42,7 @@ namespace JamKit.SkylineRepo
         Vector3 DamagePoint(int stage)
         {
             bool one = stage <= 1;
+            if (Def.hell != HellKind.None) return HellDamagePoint(one);
             if (Def.layer == ThreatLayer.Walls) return one ? new Vector3(-0.8f, -0.3f, 0.3f) : new Vector3(0.8f, -0.3f, 0.3f);
             if (Def.moveSpeed > 0f) return one ? new Vector3(0.22f, 0.38f, 0.1f) : new Vector3(0.3f, 0.3f, -0.32f);
             if (Beam != null) return one ? new Vector3(0.44f, 0.1f, 0.1f) : new Vector3(-0.3f, 0.36f, -0.1f);
@@ -153,9 +154,10 @@ namespace JamKit.SkylineRepo
                 SkylineSpark.Burst(world, outward, stage >= 2 ? 22 : 16, stage >= 2 ? 6.5f : 5f);
                 // a panel torn off: a few body-coloured shards thrown out where it happened
                 float size = 0.06f * Def.bodyScale;
-                var gold = SkylineBotLook.Lit(SkylineBotLook.Gold);
-                var white = SkylineBotLook.Lit(SkylineBotLook.White);
-                var dark = SkylineBotLook.Lit(SkylineBotLook.Dark);
+                bool hell = Def.hell != HellKind.None;   // Hell: charred hide, bone and rust instead of CONCIERGE's panels
+                var gold = SkylineBotLook.Lit(hell ? HellLook.Bone : SkylineBotLook.Gold);
+                var white = SkylineBotLook.Lit(hell ? HellLook.Rust : SkylineBotLook.White);
+                var dark = SkylineBotLook.Lit(hell ? HellLook.Char : SkylineBotLook.Dark);
                 int shards = stage >= 2 ? 4 : 3;
                 for (int i = 0; i < shards; i++) Shard(world, i % 3 == 0 ? gold : i % 3 == 1 ? white : dark, size * _rng.Range(0.8f, 1.4f));
                 Sound("plate_shed");
@@ -184,9 +186,11 @@ namespace JamKit.SkylineRepo
             scorch.transform.localRotation = Quaternion.Euler(_rng.Range(0f, 360f), _rng.Range(0f, 360f), 0f);
             _damageProps.Add(scorch);
             Color[] wire = { new Color(0.9f, 0.45f, 0.1f), new Color(0.25f, 0.5f, 0.95f) };
+            bool hell = Def.hell != HellKind.None;   // Hell: two glowing cracks of fire instead of wires
             for (int i = 0; i < 2; i++)
             {
-                var w = SkylineBotLook.Visual(PrimitiveType.Cylinder, "DamageWire" + stage + "_" + i, rig, SkylineBotLook.Lit(wire[i]), false);
+                var w = SkylineBotLook.Visual(PrimitiveType.Cylinder, "DamageWire" + stage + "_" + i, rig,
+                    hell ? HellLook.Glow(i == 0 ? HellLook.EmberHot : HellLook.Flame) : SkylineBotLook.Lit(wire[i]), false);
                 w.transform.localPosition = point + new Vector3(_rng.Range(-0.05f, 0.05f), -0.07f, _rng.Range(-0.05f, 0.05f));
                 w.transform.localScale = new Vector3(0.015f, 0.08f, 0.015f);
                 w.transform.localRotation = Quaternion.Euler(_rng.Range(-25f, 25f), 0f, _rng.Range(-25f, 25f));
@@ -203,7 +207,7 @@ namespace JamKit.SkylineRepo
             if (Def.layer == ThreatLayer.Walls) return Quaternion.Euler(0f, 0f, two ? 5f : 2f);
             if (Def.moveSpeed > 0f)
                 return Quaternion.Euler((two ? 3.5f : 1.5f) * Mathf.Sin(t * 9f), 0f, (two ? 3.5f : 0f) * Mathf.Sin(t * 6.5f + 1f));
-            if (Beam != null)
+            if (Beam != null || Def.hell == HellKind.ScytheDemon)
             {
                 float droop = two ? 10f : 4f;
                 float twitch = two ? 2.5f * Mathf.Sin(t * 23f) * Mathf.Max(0f, Mathf.Sin(t * 1.7f)) : 0f;

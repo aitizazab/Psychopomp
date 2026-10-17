@@ -35,8 +35,8 @@ namespace JamKit.SkylineRepo
         {
             foreach (var id in enemyIds)
             {
-                var def = SkylineEnemies.Find(id);
-                if (def == null) continue;
+                var def = SkylineBot.FindDef(id);
+                if (def == null || def.hell != HellKind.None) continue;   // Hell bodies are primitives built on spawn (HellBodies)
                 SkylineWarmQueue.Add(() => BuildOne(def));
             }
         }

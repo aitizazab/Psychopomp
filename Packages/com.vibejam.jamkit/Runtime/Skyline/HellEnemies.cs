@@ -22,7 +22,7 @@ namespace JamKit.Skyline
         {
             id = SkylineEnemies.DroneId, displayName = "Fire imp", hell = HellKind.FireImp, aim = AimModel.LeadsYou, layer = ThreatLayer.Air,
             chassisHp = 60f, plates = new[] { new PlateDef("horns", 15f) }, bodyRadius = 0.6f,
-            bodyScale = 1f, weakPointScale = 1f, weakPointRadius = 0.24f,
+            bodyScale = 1f, weakPointScale = 1f, weakPointRadius = 0.2f,
             alertSeconds = 0.5f, telegraphSeconds = 0.4f, fireInterval = 1.1f, loseSightSeconds = 3f, rememberSeconds = 8f, searchSpeed = 2.5f,
             patrolSpeed = 3f, patrolLeash = 3f, patrolBob = 0.3f, patrolDashSpeed = 5.5f,
             projectileSpeed = 30f * ImpBoltSpeedFactor, projectileRadius = 0.18f, aimLagSeconds = 0.2f, aimSpreadDeg = 0.5f,

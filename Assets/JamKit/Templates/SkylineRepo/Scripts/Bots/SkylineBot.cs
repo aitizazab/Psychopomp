@@ -136,7 +136,16 @@ namespace JamKit.SkylineRepo
             StateEntered = null; Attacked = null; MineEvent = null; Barked = null; Killed = null;
             SearchArea = DefaultSearchArea;
             _glassLayer = int.MinValue;
+            HellRoster = true;
         }
+
+        /// <summary>The event game's roster (docs/HELL-ENEMIES.md): on (the default), the Skyline ids spawn the Hell enemies (the
+        /// drone's id a fire imp, the spotlight's a scythe demon, the floor-care unit's a lava ooze; the gondola stays). Off: the
+        /// Skyline bots, as before (the old Skyline scenes and their play-mode checks).</summary>
+        public static bool HellRoster = true;
+
+        /// <summary>The def a spawn of <paramref name="enemyId"/> makes, by <see cref="HellRoster"/>.</summary>
+        public static EnemyDef FindDef(string enemyId) => HellRoster ? HellEnemies.Find(enemyId) : SkylineEnemies.Find(enemyId);
 
         /// <summary>Makes a bot of <paramref name="enemyId"/> at <paramref name="position"/> (a floor-care unit's on the floor,
         /// the others' at their centre: the drone hovers at this height) facing <paramref name="yaw"/>, alone (no group).</summary>
@@ -149,7 +158,7 @@ namespace JamKit.SkylineRepo
         public static SkylineBot Spawn(string enemyId, Vector3 position, float yaw, ulong seed, ISkylineTarget target, WritTuning writ, Transform parent,
             int group, Vector3 railEnd)
         {
-            var def = SkylineEnemies.Find(enemyId);
+            var def = FindDef(enemyId);
             if (def == null)
             {
                 Debug.LogWarning("SKYLINE_BOT unknown enemy " + enemyId);
@@ -176,7 +185,7 @@ namespace JamKit.SkylineRepo
         /// </summary>
         public static SkylineBot Spawn(string enemyId, SpawnDoor door, ulong seed, ISkylineTarget target, WritTuning writ, Transform parent, int group = -1)
         {
-            var def = SkylineEnemies.Find(enemyId);
+            var def = FindDef(enemyId);
             if (def == null || door == null)
             {
                 Debug.LogWarning("SKYLINE_BOT unknown enemy or door " + enemyId);
@@ -390,7 +399,7 @@ namespace JamKit.SkylineRepo
             _voice.rolloffMode = AudioRolloffMode.Linear;
             _voice.minDistance = 2f;
             _voice.maxDistance = 45f;
-            var idleClip = SkylineSounds.Get(def.id + "/idle_loop");
+            var idleClip = def.hell != HellKind.None ? null : SkylineSounds.Get(def.id + "/idle_loop");   // Hell: no robot hum
             if (idleClip != null)
             {
                 _idle = gameObject.AddComponent<AudioSource>();
@@ -404,7 +413,7 @@ namespace JamKit.SkylineRepo
                 _idle.Play();
             }
 
-            if (def.aim == AimModel.FiresAtWhereYouAre && def.projectileSpeed <= 0f)
+            if (def.aim == AimModel.FiresAtWhereYouAre && def.projectileSpeed <= 0f && def.hell == HellKind.None)
             {
                 Beam = new TelegraphedShot
                 {
@@ -412,7 +421,7 @@ namespace JamKit.SkylineRepo
                 };
                 _beamView = SkylineBeam.Create(transform);
             }
-            if (def.moveSpeed > 0f) _acid = SkylineAcid.Create(transform, def);
+            if (def.moveSpeed > 0f && def.hell == HellKind.None) _acid = SkylineAcid.Create(transform, def);
             if (def.layer == ThreatLayer.Walls)
             {
                 Rail = new GondolaRail(N(position), N(railEnd), def.railSpeed);
@@ -437,15 +446,21 @@ namespace JamKit.SkylineRepo
             _initialized = true;
             Live.Add(this);
             if (isActiveAndEnabled && !SkylineTargets.Aimables.Contains(this)) SkylineTargets.Aimables.Add(this);
+            if (def.hell != HellKind.None) HellInit();
             Pose(0f);
         }
 
         void OnEnable()
         {
             if (_initialized && Alive && !SkylineTargets.Aimables.Contains(this)) SkylineTargets.Aimables.Add(this);
+            if (_initialized && Def.hell != HellKind.None) HellEnabled();
         }
 
-        void OnDisable() => SkylineTargets.Aimables.Remove(this);
+        void OnDisable()
+        {
+            SkylineTargets.Aimables.Remove(this);
+            if (_initialized && Def.hell != HellKind.None) HellDisabled();
+        }
 
         void OnDestroy()
         {
@@ -519,6 +534,7 @@ namespace JamKit.SkylineRepo
                 if (_arrival != null && live) _pos = U(_arrival.Step(N(_pos), N(target.Root.position), ArrivalBlockers, dt,
                     SearchArea.xMin, SearchArea.xMax, SearchArea.yMin, SearchArea.yMax));
                 bool arriving = Arriving;
+                if (Def.hell == HellKind.ScytheDemon && !arriving) DemonStride(dt, live);
                 Brain.Tick(dt, IsAwake && sees && !arriving, _cues);
                 if (sees)
                 {
@@ -540,6 +556,7 @@ namespace JamKit.SkylineRepo
 
             Knockback(dt);
             Face(dt, sees, live);
+            if (Def.hell != HellKind.None) HellTick(dt, live);
             Pose(dt);
             TickDamage(dt);
             TickFlash(dt);
@@ -645,6 +662,7 @@ namespace JamKit.SkylineRepo
                     _lockBeeped = false;
                 }
             }
+            else if (Def.hell == HellKind.ScytheDemon) DemonWindUp();
             else if (Def.id == SkylineEnemies.DroneId) { _charging = true; _charge = 0f; }
             else if (Def.layer == ThreatLayer.Walls) _squeegeeTarget = -70f;
         }
@@ -652,6 +670,8 @@ namespace JamKit.SkylineRepo
         void OnAttack(bool sees, Vector3 aimAt, bool floorReach)
         {
             if (practice || Beam != null) return;       // the spotlight's shot is the beam's
+            if (Def.hell == HellKind.ScytheDemon) { DemonVolley(sees); return; }
+            if (Def.hell == HellKind.LavaOoze) { if (floorReach) OozeSlam(); return; }
             if (Def.layer == ThreatLayer.Walls)
             {
                 _squeegeeTarget = 35f;
@@ -694,7 +714,8 @@ namespace JamKit.SkylineRepo
             float len = aim.magnitude;
             if (!(len > 1e-4f)) return;
             Vector3 dir = Spread(aim / len, d.aimSpreadDeg);
-            SkylineBolt.Fire(from, dir * d.projectileSpeed, d.projectileRadius, d.attackDamage, d.id, target, transform);
+            var bolt = SkylineBolt.Fire(from, dir * d.projectileSpeed, d.projectileRadius, d.attackDamage, d.id, target, transform);
+            if (d.hell == HellKind.FireImp && bolt != null) bolt.MakeEmber();
             _patrol?.OnVolley();
             Sound("attack");
             Attacked?.Invoke(this);
@@ -743,13 +764,18 @@ namespace JamKit.SkylineRepo
 
         void Bark(string bark)
         {
+            if (Def.hell != HellKind.None) return;   // the Skyline barks are CONCIERGE's robots; Hell's voices come later
             string line = SkylineBarks.Line(Def.id, bark);
             if (string.IsNullOrEmpty(line)) return;
             Barked?.Invoke(this, bark, line);
             SkylineBarks.Say(transform, line, Def.id, (int)(_seed & 0x7FFFFFFFUL), _voice, Def.displayName);
         }
 
-        void Sound(string name) => SkylineSounds.PlayAt(Def.id + "/" + name, Center);
+        void Sound(string name)
+        {
+            if (Def.hell != HellKind.None) { HellSound(name); return; }
+            SkylineSounds.PlayAt(Def.id + "/" + name, Center);
+        }
 
         // ------------------------------------------------------------------ the floor-care unit
 
@@ -1177,7 +1203,7 @@ namespace JamKit.SkylineRepo
         {
             if (!(amount > 0f)) return;
             if (Def.layer == ThreatLayer.Walls) { _swayVel += amount * 60f; return; }
-            if (Beam != null) { _shake = Mathf.Min(1f, _shake + amount * 0.5f); return; }
+            if (Beam != null || Def.hell == HellKind.ScytheDemon) { _shake = Mathf.Min(1f, _shake + amount * 0.5f); return; }   // too heavy to knock
             Vector3 d = dir;
             if (Def.moveSpeed > 0f) d.y = 0f;
             if (d.sqrMagnitude < 1e-6f) return;
@@ -1197,7 +1223,7 @@ namespace JamKit.SkylineRepo
                 if (!CastStep(_pos, step, out _)) _pos += step;
                 else _kick = Vector3.zero;
             }
-            else if (Def.layer != ThreatLayer.Walls && Beam == null)
+            else if (Def.layer != ThreatLayer.Walls && Beam == null && Def.hell != HellKind.ScytheDemon)
             {
                 if (!BlockedThick(_pos, _pos + step, Def.bodyRadius * 0.9f)) _pos += step;
                 else _kick = Vector3.zero;
@@ -1383,6 +1409,7 @@ namespace JamKit.SkylineRepo
 
         void WreckNow(Vector3 normal)
         {
+            if (Def.hell != HellKind.None) { HellDie(normal); return; }   // a fire-and-smoke burst, then deactivated (the Rewind can bring it back)
             _hitCues.Clear();
             Brain.OnWrecked(_hitCues);
             HandleCues(_hitCues, false, Center, false);
@@ -1561,7 +1588,8 @@ namespace JamKit.SkylineRepo
         {
             if (Parts == null) return;
             var rig = Parts.rig;
-            if (Def.layer == ThreatLayer.Walls)
+            if (Def.hell == HellKind.ScytheDemon) PoseDemon(dt);
+            else if (Def.layer == ThreatLayer.Walls)
             {
                 transform.position = _pos;
                 rig.rotation = Quaternion.Euler(0f, _spawnYaw, _sway);
@@ -1630,13 +1658,15 @@ namespace JamKit.SkylineRepo
             {
                 if (_chargeBall == null)
                 {
-                    _chargeBall = SkylineBotLook.Part(PrimitiveType.Sphere, "Charge", Parts.muzzle, Vector3.zero, Vector3.zero, new Color(0.95f, 0.15f, 0.1f), false);
+                    _chargeBall = Def.hell == HellKind.FireImp
+                        ? SkylineBotLook.Visual(PrimitiveType.Sphere, "Charge", Parts.muzzle, HellLook.Glow(HellLook.EmberHot), false)   // an ember swelling in its mouth
+                        : SkylineBotLook.Part(PrimitiveType.Sphere, "Charge", Parts.muzzle, Vector3.zero, Vector3.zero, new Color(0.95f, 0.15f, 0.1f), false);
                     _chargeBall.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
                 _charge += dt;
                 float k = Def.telegraphSeconds > 0f ? Mathf.Clamp01(_charge / Def.telegraphSeconds) : 1f;
                 _chargeBall.SetActive(true);
-                _chargeBall.transform.localScale = Vector3.one * (0.04f + 0.12f * k);
+                _chargeBall.transform.localScale = Vector3.one * (0.04f + (Def.hell == HellKind.FireImp ? 0.2f : 0.12f) * k);
             }
             else if (_chargeBall != null) _chargeBall.SetActive(false);
         }

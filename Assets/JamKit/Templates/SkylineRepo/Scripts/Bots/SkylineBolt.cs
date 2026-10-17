@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JamKit.Skyline;
 using UnityEngine;
 
 namespace JamKit.SkylineRepo
@@ -12,8 +13,11 @@ namespace JamKit.SkylineRepo
     /// as a floating sausage): a white-hot core stretched along its flight, a tapering gold streak behind it, and a thin
     /// crackling arc that re-jitters every frame along the streak, so a taser reads at a glance and its line can be read
     /// from the side. Pooled (filled up front by <see cref="Prewarm"/>): a spent bolt is switched off and reused, never
-    /// destroyed.</para></summary>
-    public sealed class SkylineBolt : MonoBehaviour
+    /// destroyed.</para>
+    /// <para>Hell (docs/HELL-ENEMIES.md): <see cref="MakeEmber"/> turns a fired bolt into the fire imp's ember (a glowing orange-yellow
+    /// core with a short red-orange trail, no arc, a flare where it strikes). Rewindable: a bolt registers while it flies, and the
+    /// <see cref="HellRewindLedger"/> switches off one fired after the moment a Rewind goes back to.</para></summary>
+    public sealed class SkylineBolt : MonoBehaviour, IHellRewindSpawned
     {
         const float MaxAge = 4f;
         const int PrewarmCount = 24;
@@ -38,6 +42,11 @@ namespace JamKit.SkylineRepo
         TrailRenderer _trail;
         LineRenderer _arc;
         readonly Vector3[] _arcPts = new Vector3[ArcPoints];
+        bool _ember;
+        Material _coreMat, _trailMat;
+        MeshRenderer _coreR;
+        /// <summary>The ember's trail (s): short, so a 90 m/s bolt draws a streak of about 4 m.</summary>
+        const float EmberTrailSeconds = 0.045f;
 
         public static SkylineBolt Fire(Vector3 from, Vector3 velocity, float radius, float damage, string attackerId, ISkylineTarget target, Transform owner)
         {
@@ -58,10 +67,44 @@ namespace JamKit.SkylineRepo
             b._core.localScale = new Vector3(d * 0.55f, d * 0.55f, d * 1.6f);
             b._trail.widthMultiplier = d * 0.7f;
             b._arc.positionCount = 0;
+            b.SetEmber(false);
             go.SetActive(true);
             b._trail.Clear();
             b._trail.emitting = true;
             return b;
+        }
+
+        /// <summary>This bolt is the fire imp's ember (call right after <see cref="Fire"/>).</summary>
+        public void MakeEmber()
+        {
+            SetEmber(true);
+            _trail.Clear();
+        }
+
+        void SetEmber(bool on)
+        {
+            _ember = on;
+            if (_coreR == null) _coreR = _core.GetComponent<MeshRenderer>();
+            if (_coreMat == null) _coreMat = _coreR.sharedMaterial;
+            if (_trailMat == null) _trailMat = _trail.sharedMaterial;
+            float d = Mathf.Max(0.05f, _radius * 2f);
+            if (on)
+            {
+                _coreR.sharedMaterial = HellLook.HostileGlow(HellLook.EmberHot);
+                _trail.sharedMaterial = HellLook.HostileGlow(HellLook.EmberTrail);
+                _trail.time = EmberTrailSeconds;
+                _trail.widthMultiplier = d * 0.9f;
+                _core.localScale = new Vector3(d * 0.8f, d * 0.8f, d * 1.4f);
+                _arc.positionCount = 0;
+            }
+            else
+            {
+                _coreR.sharedMaterial = _coreMat;
+                _trail.sharedMaterial = _trailMat;
+                _trail.time = StreakSeconds;
+                _trail.widthMultiplier = d * 0.7f;
+                _core.localScale = new Vector3(d * 0.55f, d * 0.55f, d * 1.6f);
+            }
         }
 
         /// <summary>Fills the pool now (at scene start), so no bolt is created mid-fight.</summary>
@@ -172,13 +215,20 @@ namespace JamKit.SkylineRepo
                     if (IsTarget(c) && _target != null) _target.TakeAttack(_damage, _attackerId, _attackerPos);
                     // the zap where it struck: a few white-hot sparks (a bolt, not a bot)
                     Vector3 at = _hits[bi].point == Vector3.zero ? from : _hits[bi].point;
-                    SkylineSpark.Burst(at, _hits[bi].normal, 5, 3.5f);
+                    if (_ember) HellFx.EmberHit(at, _hits[bi].normal);
+                    else SkylineSpark.Burst(at, _hits[bi].normal, 5, 3.5f);
                     Stop();
                     return;
                 }
             }
             transform.position = from + step;
-            DrawArc();
+            if (_ember)
+            {
+                // the ember flickers
+                float d = Mathf.Max(0.05f, _radius * 2f), f = 1f + 0.18f * Mathf.Sin(_age * 90f) + 0.1f * Mathf.Sin(_age * 151f);
+                _core.localScale = new Vector3(d * 0.8f * f, d * 0.8f * f, d * 1.4f);
+            }
+            else DrawArc();
             if (_age > MaxAge) Stop();
         }
 
@@ -206,6 +256,57 @@ namespace JamKit.SkylineRepo
             if (_arc != null) _arc.positionCount = 0;
             gameObject.SetActive(false);
         }
+
+        void OnEnable()
+        {
+            HellRewindRegistry.Register(this);
+            HellRewindLedger.Enabled(this);
+        }
+
+        void OnDisable()
+        {
+            HellRewindRegistry.Unregister(this);
+            HellRewindLedger.Disabled(this);
+        }
+
+        sealed class Snap
+        {
+            public bool active, ember;
+            public Vector3 position, vel, attackerPos, from;
+            public Quaternion rotation;
+            public float radius, damage, age;
+            public string attackerId;
+            public ISkylineTarget target;
+            public Transform owner;
+        }
+
+        public object Snapshot() => new Snap
+        {
+            active = gameObject.activeSelf, ember = _ember, position = transform.position, rotation = transform.rotation, vel = _vel,
+            attackerPos = _attackerPos, from = _from, radius = _radius, damage = _damage, age = _age, attackerId = _attackerId, target = _target, owner = _owner,
+        };
+
+        public void Restore(object snapshot)
+        {
+            if (!(snapshot is Snap s)) return;
+            if (!s.active) { if (gameObject.activeSelf) Stop(); return; }
+            _vel = s.vel;
+            _radius = s.radius;
+            _damage = s.damage;
+            _age = s.age;
+            _attackerId = s.attackerId;
+            _attackerPos = s.attackerPos;
+            _from = s.from;
+            _target = s.target;
+            _owner = s.owner;
+            transform.SetPositionAndRotation(s.position, s.rotation);
+            SetEmber(s.ember);
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
+            _trail.Clear();
+            _trail.emitting = true;
+        }
+
+        public void VanishForRewind() => Stop();
 
         bool IsTarget(Collider c)
         {

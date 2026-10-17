@@ -530,6 +530,8 @@ namespace JamKit.SkylineRepo
 
         public static SkylineBotParts Build(EnemyDef def, Transform root, MonoBehaviour owner)
         {
+            // the event game's enemies have their own bodies (one builder or prefab per enemy, docs/HELL-ENEMIES.md)
+            if (def.hell != HellKind.None) return HellBodies.Build(def, root, owner);
             // a body built ahead at load (judge round 2, perf: no Instantiate, colliders or hit zones on the frame a fight starts)
             var pooled = SkylineBodyPool.Take(def, root, owner);
             if (pooled != null) return pooled;
@@ -770,7 +772,7 @@ namespace JamKit.SkylineRepo
 
         // ---------------- zones ----------------
 
-        static void AssignZones(EnemyDef def, SkylineBotParts p, MonoBehaviour owner)
+        internal static void AssignZones(EnemyDef def, SkylineBotParts p, MonoBehaviour owner)
         {
             foreach (var c in p.rig.GetComponentsInChildren<Collider>(true)) Zone(c, owner, HitZone.Body, -1);
             if (p.mount != null) foreach (var c in p.mount.GetComponentsInChildren<Collider>(true)) Zone(c, owner, HitZone.Body, -1);
