@@ -11,16 +11,18 @@ namespace JamKit.Tests.Skyline
         {
             var o = HellLookOptions.Parse(new[] { "HellDescent.exe" });
             Assert.That(o.look, Is.EqualTo(HellLookDirection.None));
-            Assert.That(o.outline, Is.EqualTo(HellOutlineVariant.Kit));
+            Assert.That(o.outline, Is.EqualTo(HellOutlineVariant.SoulfirePulse), "the creator's pick is the default");
+            Assert.That(o.studs, Is.EqualTo(HellStudColour.Bone));
             Assert.That(o.Any, Is.False);
         }
 
         [Test]
-        public void ALookDefaultsToTheLimeOutline()
+        public void ALookDefaultsToTheSoulfirePulse()
         {
             var o = HellLookOptions.Parse(new[] { "x", "-hellLook", "b" });
             Assert.That(o.look, Is.EqualTo(HellLookDirection.B));
-            Assert.That(o.outline, Is.EqualTo(HellOutlineVariant.Lime));
+            Assert.That(o.outline, Is.EqualTo(HellOutlineVariant.SoulfirePulse));
+            Assert.That(HellLookOptions.Pulses(o.outline), Is.True);
             Assert.That(o.outlineGiven, Is.False);
         }
 
@@ -30,6 +32,8 @@ namespace JamKit.Tests.Skyline
         [TestCase("white-hot", HellOutlineVariant.WhiteHot)]
         [TestCase("pulse", HellOutlineVariant.Pulse)]
         [TestCase("kit", HellOutlineVariant.Kit)]
+        [TestCase("soulfire-pulse", HellOutlineVariant.SoulfirePulse)]
+        [TestCase("off", HellOutlineVariant.Off)]
         public void OutlinesParse(string s, HellOutlineVariant v)
         {
             var o = HellLookOptions.Parse(new[] { "-hellLook", "A", "-hellOutline", s, "-hellStuds", "bone", "-hellLookCapture", "C:/out" });
@@ -55,10 +59,12 @@ namespace JamKit.Tests.Skyline
         [Test]
         public void ThePulseQuickensWithTheWindUp()
         {
-            Assert.That(HellLookOptions.PulseHz(0f), Is.EqualTo(1f));
-            Assert.That(HellLookOptions.PulseHz(1f), Is.EqualTo(6f));
+            Assert.That(HellLookOptions.PulseHz(0f), Is.EqualTo(0.6f).Within(1e-5), "a slow breath while idle");
+            Assert.That(HellLookOptions.PulseHz(1f), Is.EqualTo(6f).Within(1e-5), "fastest just before it fires");
+            Assert.That(HellLookOptions.PulseDepth(1f), Is.GreaterThan(HellLookOptions.PulseDepth(0f)));
+            Assert.That(HellLookOptions.Hue(HellOutlineVariant.SoulfirePulse).mode, Is.EqualTo(2));
             Assert.That(HellLookOptions.PulseHz(0.5f), Is.GreaterThan(HellLookOptions.PulseHz(0.2f)));
-            Assert.That(HellLookOptions.PulseHz(3f), Is.EqualTo(6f));
+            Assert.That(HellLookOptions.PulseHz(3f), Is.EqualTo(6f).Within(1e-5));
         }
 
         [Test]

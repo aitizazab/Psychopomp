@@ -6,17 +6,21 @@ namespace JamKit.Skyline
     /// C Black and Ember. <see cref="None"/> leaves the grey-box scene as the builder made it.</summary>
     public enum HellLookDirection { None, A, B, C }
 
-    /// <summary>The hostile outline in Hell: the kit's red-magenta, acid lime, soulfire (cold pale cyan-white), white-hot, or the
-    /// pulse (lime whose brightness pulses, faster as the enemy winds up an attack).</summary>
-    public enum HellOutlineVariant { Kit, Lime, Soulfire, WhiteHot, Pulse }
+    /// <summary>The hostile outline in Hell. <see cref="SoulfirePulse"/> is the creator's pick (2026-10-17) and the default: soulfire
+    /// (cold pale cyan-white) breathing slowly while the enemy idles and pulsing faster through an attack's wind-up, peaking just
+    /// before it fires. The rest stay for the comparison stills: the kit's red-magenta, acid lime, soulfire steady, white-hot, and
+    /// <see cref="Pulse"/> (lime pulsing). <see cref="Off"/>: no outline pass at all in an unstyled scene.</summary>
+    public enum HellOutlineVariant { Kit, Lime, Soulfire, WhiteHot, Pulse, SoulfirePulse, Off }
 
-    /// <summary>The safe path's guide studs: the builder's cold blue, bone-white, or dim stone (if soulfire's cyan clashes).</summary>
+    /// <summary>The safe path's guide studs: the builder's cold blue, bone-white (the default since the soulfire pick: blue clashed
+    /// with the cyan-white outline), or dim stone.</summary>
     public enum HellStudColour { Blue, Bone, Stone }
 
     /// <summary>
     /// The look test's switches, parsed from the command line (pure, so it is tested without Unity):
     /// <c>-hellLook A|B|C</c>, <c>-hellOutline lime|soulfire|whitehot|pulse|kit</c>, <c>-hellStuds blue|bone|stone</c>,
-    /// <c>-hellLookCapture &lt;dir&gt;</c> (the stills, then quit). A look with no outline named gets lime (the art pass's pick).
+    /// <c>-hellLookCapture &lt;dir&gt;</c> (the stills, then quit). With no outline named the outline is the soulfire pulse (the
+    /// creator's pick) and the studs bone-white, with or without a look.
     /// </summary>
     public struct HellLookOptions
     {
@@ -40,11 +44,17 @@ namespace JamKit.Skyline
             if (outline != null) { o.outline = ParseOutline(outline); o.outlineGiven = true; }
             else o.outline = DefaultOutline(o.look);
             if (studs != null) { o.studs = ParseStuds(studs); o.studsGiven = true; }
+            else o.studs = DefaultStuds;
             o.captureDir = Value(args, CaptureSwitch);
             return o;
         }
 
-        public static HellOutlineVariant DefaultOutline(HellLookDirection look) => look == HellLookDirection.None ? HellOutlineVariant.Kit : HellOutlineVariant.Lime;
+        /// <summary>The creator's pick (2026-10-17), whatever the look.</summary>
+        public static HellOutlineVariant DefaultOutline(HellLookDirection look) => HellOutlineVariant.SoulfirePulse;
+        public const HellStudColour DefaultStuds = HellStudColour.Bone;
+
+        /// <summary>True for the variants whose brightness follows the enemy's wind-up.</summary>
+        public static bool Pulses(HellOutlineVariant v) => v == HellOutlineVariant.Pulse || v == HellOutlineVariant.SoulfirePulse;
 
         public static HellLookDirection ParseLook(string s)
         {
@@ -64,7 +74,9 @@ namespace JamKit.Skyline
                 case "lime": return HellOutlineVariant.Lime;
                 case "soulfire": case "cyan": return HellOutlineVariant.Soulfire;
                 case "whitehot": case "white": return HellOutlineVariant.WhiteHot;
-                case "pulse": return HellOutlineVariant.Pulse;
+                case "pulse": case "limepulse": return HellOutlineVariant.Pulse;
+                case "soulfirepulse": case "soulpulse": case "default": return HellOutlineVariant.SoulfirePulse;
+                case "off": case "none": return HellOutlineVariant.Off;
                 default: return HellOutlineVariant.Kit;
             }
         }
@@ -88,13 +100,17 @@ namespace JamKit.Skyline
                 case HellOutlineVariant.Soulfire: return (0xC8 / 255f, 0xF4 / 255f, 1f, 1);  // #C8F4FF cold pale cyan-white
                 case HellOutlineVariant.WhiteHot: return (1f, 0xF6 / 255f, 0xE8 / 255f, 1);  // #FFF6E8 near-white, a touch warm
                 case HellOutlineVariant.Pulse: return (0xA6 / 255f, 1f, 0f, 2);             // lime, pulsing
+                case HellOutlineVariant.SoulfirePulse: return (0xC8 / 255f, 0xF4 / 255f, 1f, 2); // soulfire, pulsing (the pick)
                 default: return (1f, 0x2E / 255f, 0x63 / 255f, 0);                          // #FF2E63, the kit's
             }
         }
 
-        /// <summary>The pulse's rate in Hz for a wind-up of 0 (idle) .. 1 (about to attack): 1 Hz up to 6 Hz (the composite's
-        /// formula, kept here so a test pins it).</summary>
-        public static float PulseHz(float windup) => 1f + 5f * Math.Max(0f, Math.Min(1f, windup));
+        /// <summary>The pulse's rate in Hz for a wind-up of 0 (idle) .. 1 (about to fire): a slow 0.6 Hz breath up to 6 Hz (the
+        /// composite's formula, kept here so a test pins it).</summary>
+        public static float PulseHz(float windup) => 0.6f + 5.4f * Math.Max(0f, Math.Min(1f, windup));
+
+        /// <summary>The pulse's depth (brightness swings 1 +- this): shallow while idle (a breath), deep at the peak of a wind-up.</summary>
+        public static float PulseDepth(float windup) => 0.25f + 0.5f * Math.Max(0f, Math.Min(1f, windup));
 
         /// <summary>Which floor (0..2) a world position belongs to: the floors are rows <see cref="HellWorld.FloorSpacing"/> apart in z.</summary>
         public static int FloorAt(float worldZ)

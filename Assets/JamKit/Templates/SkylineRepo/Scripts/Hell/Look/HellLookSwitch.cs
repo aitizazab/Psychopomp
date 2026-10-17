@@ -28,8 +28,8 @@ namespace JamKit.SkylineRepo
     {
         [Tooltip("The baked direction (the command line's -hellLook wins).")]
         public HellLookDirection look = HellLookDirection.A;
-        public HellOutlineVariant outline = HellOutlineVariant.Lime;
-        public HellStudColour studs = HellStudColour.Blue;
+        public HellOutlineVariant outline = HellOutlineVariant.SoulfirePulse;
+        public HellStudColour studs = HellStudColour.Bone;
 
         public const string ResourceFolder = "HellLook/";
 
@@ -77,14 +77,16 @@ namespace JamKit.SkylineRepo
             var sw = Object.FindAnyObjectByType<HellLookSwitch>();
             if (sw == null)
             {
-                if (!opts.Any) return;
+                // Always in the Hell scene since the creator's outline pick (2026-10-17): with no look it restyles nothing, it only
+                // turns on the soulfire pulse outline (an outlines-only ink pass) and the bone-white studs. -hellOutline off skips it.
+                if (!opts.Any && opts.outline == HellOutlineVariant.Off) return;
                 sw = new GameObject("Hell Look (switch)").AddComponent<HellLookSwitch>();
                 sw.look = opts.look;
                 sw.outline = opts.outline;
-                sw.studs = opts.look == HellLookDirection.C ? HellStudColour.Stone : HellStudColour.Blue;
+                sw.studs = opts.studs;
             }
             if (opts.look != HellLookDirection.None) sw.look = opts.look;
-            if (opts.outlineGiven || opts.look != HellLookDirection.None) sw.outline = opts.outline;
+            if (opts.outlineGiven) sw.outline = opts.outline;
             if (opts.studsGiven) sw.studs = opts.studs;
             sw.Apply();
             if (opts.captureDir != null && sw.GetComponent<HellLookCapture>() == null)
@@ -114,7 +116,18 @@ namespace JamKit.SkylineRepo
             _applied = true;
             ActiveLook = look;
             Debug.Log("HELL_LOOK apply " + look + ", outline " + outline + ", studs " + studs);
-            if (look == HellLookDirection.None) { SetOutline(outline); return; }
+            if (look == HellLookDirection.None)
+            {
+                // the plain scene: only the outline (an outlines-only ink pass) and the studs
+                if (outline != HellOutlineVariant.Off)
+                {
+                    Post();
+                    foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)) PrepareCamera(cam);
+                }
+                SetOutline(outline);
+                SetStuds(studs);
+                return;
+            }
 
             var renderers = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             int swapped = 0;
@@ -503,6 +516,11 @@ namespace JamKit.SkylineRepo
             var vig = profile.Add<Vignette>(true);
             switch (look)
             {
+                case HellLookDirection.None:
+                    // outlines only, nothing else changes (no tonemapping, bloom or vignette)
+                    ink.fadeStart.Override(0f); ink.fadeEnd.Override(0.05f); ink.farInk.Override(0f);
+                    tone.active = false; bloom.active = false; vig.active = false;
+                    break;
                 case HellLookDirection.A:
                     ink.inkColor.Override(Hex("#16141F"));
                     tone.mode.Override(TonemappingMode.Neutral);
@@ -548,7 +566,7 @@ namespace JamKit.SkylineRepo
         {
             outline = v;
             ActiveOutline = v;
-            var h = HellLookOptions.Hue(v);
+            var h = HellLookOptions.Hue(v == HellOutlineVariant.Off ? HellOutlineVariant.Kit : v);
             var lin = new Color(h.r, h.g, h.b).linear;
             Shader.SetGlobalVector(HostileId, new Vector4(lin.r, lin.g, lin.b, h.mode));
         }
@@ -584,6 +602,7 @@ namespace JamKit.SkylineRepo
 
         void Update()
         {
+            if (HellLookOptions.Pulses(outline)) FeedWindups();
             if (look == HellLookDirection.None) return;
             var cam = Camera.main;
             if (floorOverride >= 0) AtmosphereFor(floorOverride);
@@ -591,7 +610,6 @@ namespace JamKit.SkylineRepo
             float t = Time.time;
             foreach (var m in _scrolling)
                 if (m != null) m.SetTextureOffset(BaseMapId, new Vector2(t * 0.012f, t * 0.02f));
-            if (outline == HellOutlineVariant.Pulse) FeedWindups();
         }
 
         void FeedWindups()
@@ -607,6 +625,7 @@ namespace JamKit.SkylineRepo
                     if (bot.Brain != null)
                     {
                         float tel = bot.Def != null ? Mathf.Max(0.2f, bot.Def.telegraphSeconds) : 0.5f;
+                        // idle 0 (a slow breath); alert 0.3; through the telegraph 0.5 rising to 1 at the moment it fires
                         if (bot.Brain.State == BotState.Telegraph) w = 0.5f + 0.5f * Mathf.Clamp01(bot.Brain.StateTime / tel);
                         else if (bot.Brain.State == BotState.Alert) w = 0.3f;
                     }

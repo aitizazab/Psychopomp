@@ -328,13 +328,16 @@ Shader "Hidden/Skyline/InkComposite"
                             if (_SkHellHostile.w > 0.5 && h.bestRank > 2.5)
                             {
                                 // Hell override on a hostile outline: the chosen hue; in pulse mode its brightness pulses at
-                                // 1 Hz idle up to 6 Hz fully wound up (the wind-up rides in the mask's blue channel)
+                                // 0.6 Hz idle up to 6 Hz fully wound up (the wind-up rides in the mask's blue channel)
                                 outlineRgb = _SkHellHostile.rgb;
                                 if (_SkHellHostile.w > 1.5)
                                 {
-                                    float hz = lerp(1.0, 6.0, saturate(h.bestHue.b));
-                                    float s01 = 0.5 + 0.5 * sin(_SkInkTime.x * 6.2831853 * hz);
-                                    outlineRgb *= lerp(0.25, 1.6, s01);
+                                    // HellLookOptions.PulseHz / PulseDepth: a slow shallow breath idle, fast and deep at the peak
+                                    float wind = saturate(h.bestHue.b);
+                                    float hz = lerp(0.6, 6.0, wind);
+                                    float depth = lerp(0.25, 0.75, wind);
+                                    float s11 = sin(_SkInkTime.x * 6.2831853 * hz);
+                                    outlineRgb *= 1.0 + depth * s11;
                                 }
                             }
                             cover = smoothstep(0.0, 4.0, h.hue);

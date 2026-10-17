@@ -14,8 +14,8 @@ namespace JamKit.SkylineRepo
     /// renders fixed camera shots at 2560x1440 into <c>&lt;dir&gt;/&lt;A|B|C&gt;/</c>, then quits:
     /// <c>floor1-wide.png</c>, <c>floor2-wide.png</c>, <c>floor3-wide.png</c> (each floor's Six Sigils cavern from above its entry),
     /// <c>enemies-at-range.png</c> (three fire imps 12-26 m out over the floor 1 cavern's lava) and <c>dark-zone.png</c> (a floor 1 dark
-    /// zone). Under look A it also renders the enemy shot once per outline into <c>&lt;dir&gt;/outlines/</c>: <c>lime</c>, <c>soulfire</c>,
-    /// <c>whitehot</c>, <c>pulse</c> and <c>studs-bone</c> (soulfire with bone-white studs). Logs <c>HELL_LOOK_CAPTURE ...</c>.
+    /// zone). Under look A it also renders the enemy shot once per outline into <c>&lt;dir&gt;/outlines/</c>: <c>soulfire-pulse</c> (the
+    /// creator's pick), <c>lime</c>, <c>soulfire</c>, <c>whitehot</c>, <c>pulse</c>, and <c>studs-blue|bone|stone</c> beside the pick. Logs <c>HELL_LOOK_CAPTURE ...</c>.
     /// The shots render through a camera of their own into a render texture (the run and its HUD carry on underneath, unseen);
     /// time is stopped once the imps are placed, so every direction sees the same moment.
     /// </summary>
@@ -95,25 +95,31 @@ namespace JamKit.SkylineRepo
                 string od = Path.Combine(outDir, "outlines");
                 Directory.CreateDirectory(od);
                 var keep = sw.outline;
-                var variants = new[] { HellOutlineVariant.Lime, HellOutlineVariant.Soulfire, HellOutlineVariant.WhiteHot, HellOutlineVariant.Pulse };
+                var variants = new[] { HellOutlineVariant.SoulfirePulse, HellOutlineVariant.Lime, HellOutlineVariant.Soulfire, HellOutlineVariant.WhiteHot, HellOutlineVariant.Pulse };
                 // the pulse still: idle, alert and about-to-fire imps (brightness differs; in play it pulses, faster as it winds up)
                 for (int i = 0; i < _imps.Count; i++) if (_imps[i] != null) sw.forcedWindup[_imps[i]] = i / (float)Mathf.Max(1, _imps.Count - 1);
                 Frame(enemyShot, 0, sw);
                 foreach (var v in variants)
                 {
                     sw.SetOutline(v);
-                    Time.timeScale = v == HellOutlineVariant.Pulse ? 1f : 0f;   // the pulse's phase needs a moving clock for one frame
+                    Time.timeScale = HellLookOptions.Pulses(v) ? 1f : 0f;   // the pulse's phase needs a moving clock for one frame
                     yield return null;
                     Time.timeScale = 0f;
-                    yield return Shot(Path.Combine(od, v.ToString().ToLowerInvariant() + ".png"));
+                    string vname = v == HellOutlineVariant.SoulfirePulse ? "soulfire-pulse" : v.ToString().ToLowerInvariant();
+                    yield return Shot(Path.Combine(od, vname + ".png"));
                     done++;
                 }
-                sw.SetOutline(HellOutlineVariant.Soulfire);
-                sw.SetStuds(HellStudColour.Bone);
-                yield return null;
-                yield return Shot(Path.Combine(od, "studs-bone.png"));
-                done++;
-                sw.SetStuds(sw.studs);
+                // the studs beside the picked outline: blue (the clash), bone-white (the default) and dim stone
+                var keepStuds = sw.studs;
+                sw.SetOutline(HellOutlineVariant.SoulfirePulse);
+                foreach (var st in new[] { HellStudColour.Blue, HellStudColour.Bone, HellStudColour.Stone })
+                {
+                    sw.SetStuds(st);
+                    yield return null;
+                    yield return Shot(Path.Combine(od, "studs-" + st.ToString().ToLowerInvariant() + ".png"));
+                    done++;
+                }
+                sw.SetStuds(keepStuds);
                 sw.SetOutline(keep);
             }
 

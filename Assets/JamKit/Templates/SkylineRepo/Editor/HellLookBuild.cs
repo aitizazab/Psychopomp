@@ -196,7 +196,7 @@ namespace JamKit.SkylineRepo.EditorTools
                 var sw = new GameObject("Hell Look (switch)").AddComponent<HellLookSwitch>();
                 sw.look = look;
                 sw.outline = HellLookOptions.DefaultOutline(look);
-                sw.studs = look == HellLookDirection.C ? HellStudColour.Stone : HellStudColour.Blue;
+                sw.studs = HellLookOptions.DefaultStuds;
                 EditorSceneManager.SaveScene(scene);
             }
             AssetDatabase.Refresh();
