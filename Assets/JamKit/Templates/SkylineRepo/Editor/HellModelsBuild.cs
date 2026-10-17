@@ -252,6 +252,9 @@ namespace JamKit.SkylineRepo.EditorTools
                 case "M_Char": c = HellLook.Char; charred = true; break;
                 case "M_Crust": c = HellLook.Crust; charred = true; break;
                 case "M_Skin": c = new Color(0.16f, 0.05f, 0.035f); charred = true; break;   // Vesper's molten skin: dark with hot cracks
+                case "M_Hair": c = new Color(0.16f, 0.04f, 0.025f); charred = true; break;   // Vesper's hair: dark with molten cracks
+                case "M_Robe": c = new Color(0.045f, 0.035f, 0.04f); break;                  // her concealing robe
+                case "M_Ash": c = new Color(0.4f, 0.37f, 0.38f); break;                      // her pale ashen skin
                 case "M_Bone": c = HellLook.Bone; break;
                 case "M_Rust": c = HellLook.Rust; break;
                 case "M_Steel": c = HellLook.Steel; break;
@@ -297,7 +300,7 @@ namespace JamKit.SkylineRepo.EditorTools
                 m.EnableKeyword("_EMISSION");
                 m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
                 m.SetTexture("_EmissionMap", SavedTexture("hm_cracks.png", HellLookTextures.Cracks()));
-                m.SetColor("_EmissionColor", new Color(2.6f, 0.75f, 0.12f) * (role == "M_Skin" ? 1.6f : 1.2f));
+                m.SetColor("_EmissionColor", new Color(2.6f, 0.75f, 0.12f) * (role == "M_Hair" ? 2.2f : role == "M_Skin" ? 1.6f : 1.2f));
             }
             EditorUtility.SetDirty(m);
             made[role] = m;

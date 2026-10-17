@@ -13,6 +13,7 @@ PALETTE = {
     "M_Steel": (0.22, 0.2, 0.2), "M_Crust": (0.12, 0.085, 0.075), "M_Hollow": (0.02, 0.01, 0.01),
     "M_Flesh": (0.36, 0.06, 0.04), "M_Gown": (0.05, 0.025, 0.07), "M_Skin": (0.2, 0.06, 0.04),
     "M_Gold": (0.75, 0.45, 0.12), "M_Veil": (0.12, 0.06, 0.16),
+    "M_Robe": (0.045, 0.035, 0.04), "M_Ash": (0.4, 0.37, 0.38), "M_Hair": (0.2, 0.05, 0.03),
     "G_Core": (5, 3.6, 1.3), "G_Eye": (5, 3, 0.4), "G_Flame": (3.4, 1.0, 0.15), "G_FlameDeep": (2.6, 0.35, 0.06),
     "G_Edge": (5, 1.5, 0.35), "G_Lava": (2.2, 0.5, 0.07), "G_LavaHot": (3.6, 1.4, 0.25), "G_Ember": (2.6, 0.75, 0.12),
     "G_Violet": (1.6, 0.6, 3.6), "G_Hair": (3.2, 0.9, 0.12), "G_HairHot": (4.5, 2.2, 0.5),
@@ -54,7 +55,7 @@ def mat(name):
         if name in ("M_Gold", "M_Steel"):
             bsdf.inputs["Metallic"].default_value = 0.8
             bsdf.inputs["Roughness"].default_value = 0.4
-        if name in ("M_Char", "M_Crust", "M_Skin"):
+        if name in ("M_Char", "M_Crust", "M_Skin", "M_Hair"):
             # the in-game re-dress: a dark rock base with glowing ember cracks (Resources/HellLook textures)
             tex = nt.nodes.new("ShaderNodeTexImage")
             tex.image = bpy.data.images.load(os.path.join(TEX, "basalt_diff.jpg"))
@@ -65,14 +66,14 @@ def mat(name):
             em = nt.nodes.new("ShaderNodeTexImage")
             em.image = bpy.data.images.load(os.path.join(TEX, "lava_emis.jpg"))
             ramp = nt.nodes.new("ShaderNodeValToRGB")
-            ramp.color_ramp.elements[0].position = 0.55
-            ramp.color_ramp.elements[1].position = 0.85
+            ramp.color_ramp.elements[0].position = 0.35 if name == "M_Hair" else 0.55
+            ramp.color_ramp.elements[1].position = 0.7 if name == "M_Hair" else 0.85
             nt.links.new(em.outputs["Color"], ramp.inputs[0])
             tint = nt.nodes.new("ShaderNodeMixRGB"); tint.blend_type = 'MULTIPLY'; tint.inputs[0].default_value = 1
             tint.inputs[2].default_value = (1, 0.28, 0.04, 1)
             nt.links.new(ramp.outputs[0], tint.inputs[1])
             nt.links.new(tint.outputs[0], bsdf.inputs["Emission Color"])
-            bsdf.inputs["Emission Strength"].default_value = 2.5 if name != "M_Skin" else 3.5
+            bsdf.inputs["Emission Strength"].default_value = 6.0 if name == "M_Hair" else (2.5 if name != "M_Skin" else 3.5)
     return m
 
 
