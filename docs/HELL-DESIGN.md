@@ -33,7 +33,11 @@ code (movement engine, guns, bots, waves, objective circles, floor builder from 
      died long ago. She is you further down the same road. She reaches you once per floor (floor 1: her voice in the
      Soul Lantern, hostile; floor 2: her deal and her daughter revealed, curious; floor 3: she sees herself in you).
      **The creator's note:** sparing must be more deliberate than turning away, and show why she comes with you
-     instead of accepting defeat (pitch in `HELL-RESTART.md`, "Story").
+     instead of accepting defeat. **The creator's correction (2026-10-17 23:30; replaces the "letter" pitch):**
+     Lucifer grew bored of her after a century, and she is lost without purpose, looking for anything new to chase, to
+     live for. (The letter pitch didn't hold: why would she stay with a Lucifer who failed her, why leave now, and does
+     he even care that she's there?) The deliberate spare, the walk to her, the reason the God of Death accepts it and
+     the jobs deciding your fate still stand.
   3. **The deal:** she gives you the powers and access to Hell (she has no access to Hell herself) in exchange for
      favours, and mainly for killing <name> to teach Lucifer not to mess with her. Your **sister** is in Hell.
   4. "Don't take too long" is flavour. The Time theme lands in the exchange: <name>'s time (or your own?) for your
