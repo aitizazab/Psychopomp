@@ -49,10 +49,46 @@ namespace JamKit.Skyline
     /// </summary>
     public static class HellFlowText
     {
-        /// <summary>The working title (the creator's, 2026-10-18; was "HELL DESCENT"): the one place it is written. The title
+        /// <summary>The working title (the creator's, 2026-10-18; was "HELL DESCENT", then "OVERDUE"): the one place it is written. The title
         /// screen sets it in Cinzel Decorative Black (HellFaces.Title).</summary>
-        public const string Title = "OVERDUE";
+        public const string Title = "PSYCHOPOMP";
         public const bool TitlePlaceholder = true;
+
+        /// <summary>The title screen's splash line (Minecraft-style: tilted, yellow, pulsing near the title), one picked at
+        /// random each time the title shows (<see cref="Splash"/>). <b>ALL PLACEHOLDER</b> for the creator to edit: add, cut or
+        /// rewrite freely; keep each short (about 30 characters reads best).</summary>
+        public static readonly string[] Splashes =
+        {
+            "To Hell and Back Before Lunch!",
+            "Now with 100% more damnation!",
+            "Death is just a deadline!",
+            "Baja says hurry!",
+            "Errands of the damned!",
+            "Your sister is waiting!",
+            "Mind the lava!",
+            "Shadow-stepping since Tuesday!",
+            "Rewind responsibly!",
+            "Time is not on your side!",
+            "Also try: not dying!",
+            "Overdue by three hundred years!",
+            "Collect souls, not regrets!",
+            "The hourglass is half empty!",
+            "Please do not feed the imps!",
+            "Abandon all hope! (Optional.)",
+            "Lucifer is bored again!",
+            "Free scythe with every soul!",
+            "Darkness included!",
+            "Don't take too long!",
+        };
+        public const bool SplashesPlaceholder = true;
+
+        /// <summary>A splash line for a random draw (any int; negative and huge values wrap).</summary>
+        public static string Splash(int draw)
+        {
+            if (Splashes.Length == 0) return "";
+            int i = draw % Splashes.Length;
+            return Splashes[i < 0 ? i + Splashes.Length : i];
+        }
 
         public const string GodOfDeath = "BAJA";
 

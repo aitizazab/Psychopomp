@@ -1,4 +1,4 @@
-# OVERDUE (Hell): the UI and HUD pass
+# PSYCHOPOMP (Hell): the UI and HUD pass
 
 Branch `hell-ui`, 2026-10-18 (night). The creator asked: "what does our UI currently look like? The same as Skyline? The
 plating will probably have to change, and we'll need an ability wheel or something." This file is the answer (the
@@ -85,7 +85,7 @@ HUD to sand, change `HellFxPalette.Rewind` (one line).
 | `HellFaces.Comic` | **Bangers** (kept, with Luckiest Guy) | the comic lettering, unchanged |
 | (project face) | | story prose: opening cards, subtitles, Baja's job line (read, not glanced at) |
 
-The working title is **OVERDUE**, written once: `HellFlowText.Title`.
+The working title is **PSYCHOPOMP**, written once: `HellFlowText.Title`. Under it, at its lower right, a **Minecraft-style splash line**: tilted, yellow, Luckiest Guy, pulsing gently, picked at random each time the title shows from `HellFlowText.Splashes` (20 lines, ALL PLACEHOLDER for the creator to edit, e.g. "To Hell and Back Before Lunch!").
 
 ### Health: the ember vessel (the damage model kept)
 
@@ -203,7 +203,7 @@ It sits under the HUD's root, so the clean picture hides it.
 | `Scripts/Hud/HellInputDevice.cs` | the device in use, short control labels (cached) |
 | `Scripts/Hud/HellUiShots.cs` | `-hell-ui-shots <dir>`: the stills below |
 | `ThirdParty/Fonts/Resources/SkylineFonts/{CinzelDecorative,MetalMania,BarlowCondensed}/` | the fonts with their OFL.txt; `ThirdParty/Fonts/CREDITS.md` |
-| Edited | `SkylineHudHealth` (the vessel hook), `SkylineHudObjective` (sigil, no strip), `SkylineHudSubtitles` (Hell width and height), `SkylineHudFlashes`, `SkylineHud` (bone flashes), `SkylineHudAmmo` (no garbage), `SkylineHudStyle` (faces), `SkylinePauseMenu`, `SkylineDeviceInput` (`LookHeld`), `HellAbilities` (no step/rewind under the wheel), `HellSkills` (Nightfall obeys the binding), `HellHudLine` (faces, places, the clock), `HellRunDirector` (line/clock split, cleared outside play), `HellJobDirector`, `HellLinePlayer`, `HellEndingHud`, `HellVesperHud`, `HellScreens`, `HellEndingCards`, `HellSkillPick`, `HellFlowText` (OVERDUE, font credits), `HudModels` (speaker colours), `BindingTable` (`Wheel`), the replay buttons |
+| Edited | `SkylineHudHealth` (the vessel hook), `SkylineHudObjective` (sigil, no strip), `SkylineHudSubtitles` (Hell width and height), `SkylineHudFlashes`, `SkylineHud` (bone flashes), `SkylineHudAmmo` (no garbage), `SkylineHudStyle` (faces), `SkylinePauseMenu`, `SkylineDeviceInput` (`LookHeld`), `HellAbilities` (no step/rewind under the wheel), `HellSkills` (Nightfall obeys the binding), `HellHudLine` (faces, places, the clock), `HellRunDirector` (line/clock split, cleared outside play), `HellJobDirector`, `HellLinePlayer`, `HellEndingHud`, `HellVesperHud`, `HellScreens`, `HellEndingCards`, `HellSkillPick`, `HellFlowText` (PSYCHOPOMP, font credits), `HudModels` (speaker colours), `BindingTable` (`Wheel`), the replay buttons |
 
 Unity makes the `.meta` files for the new scripts, fonts and font folders on import (none were written by hand): commit them.
 
@@ -223,7 +223,7 @@ an import (fonts need their metas). A build (`out\hell\build\HellDescent.exe`) o
 
 Each writes `<name>.png` into the folder and logs `HELL_UI_SHOT <name> <path>`, then quits (about 15 s). What to look for:
 
-1. **Fonts load** (no `SKYLINE_HUD font missing` in the log): OVERDUE in Cinzel Decorative on `title.png`; Metal Mania on
+1. **Fonts load** (no `SKYLINE_HUD font missing` in the log): PSYCHOPOMP in Cinzel Decorative on `title.png`; Metal Mania on
    the objective line, banners, job card title, wheel names, decision prompt; Barlow on the key labels and pause menu rows.
 2. `play.png`: the vessel (ember, Ward over it), the tiles with key labels, three skill chips, the hourglass top right,
    the objective line with the clock under it, nothing overlapping.

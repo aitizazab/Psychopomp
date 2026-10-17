@@ -274,10 +274,20 @@ namespace JamKit.Tests.Skyline
         {
             var faces = new[] { HellFaces.Title, HellFaces.Heading, HellFaces.Fine, HellFaces.Numbers, HellFaces.Comic };
             Assert.That(faces.Distinct().Count(), Is.EqualTo(faces.Length));
-            Assert.That(HellFlowText.Title, Is.EqualTo("OVERDUE"));
+            Assert.That(HellFlowText.Title, Is.EqualTo("PSYCHOPOMP"));
             Assert.That(HellFlowText.Credits[0].text, Is.EqualTo(HellFlowText.Title), "the credits open on the title");
             foreach (var name in new[] { "Cinzel Decorative", "Metal Mania", "Barlow Condensed" })
                 Assert.That(HellFlowText.Credits.Any(c => c.text.Contains(name)), Is.True, name + " is credited");
+        }
+
+        [Test]
+        public void TheSplashLinesAreShortAndAnyDrawPicksOne()
+        {
+            Assert.That(HellFlowText.Splashes.Length, Is.GreaterThanOrEqualTo(16));
+            Assert.That(HellFlowText.SplashesPlaceholder, Is.True, "the creator edits them");
+            foreach (var s in HellFlowText.Splashes) Assert.That(s.Length, Is.InRange(4, 40), s);
+            Assert.That(HellFlowText.Splashes.Distinct().Count(), Is.EqualTo(HellFlowText.Splashes.Length));
+            foreach (int d in new[] { 0, 7, -3, int.MinValue, int.MaxValue }) Assert.That(HellFlowText.Splashes, Does.Contain(HellFlowText.Splash(d)));
         }
 
         [Test]

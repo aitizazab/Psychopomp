@@ -43,6 +43,9 @@ namespace JamKit.SkylineRepo
         // and hints Barlow Condensed, numbers Luckiest Guy; story prose keeps the project face (it is read, not glanced at)
         const string Display = HellFaces.Heading, Numbers = HellFaces.Numbers, TitleFace = HellFaces.Title, Fine = HellFaces.Fine;
         const int EmberCount = 46;
+        static readonly Color SplashYellow = new Color(1f, 0.93f, 0.25f, 1f);
+        KeylinedLabel _splash;
+        readonly System.Random _splashRng = new System.Random();
         const float Fade = 0.45f, CreditsSpeed = 70f;
 
         UIDocument _doc;
@@ -148,11 +151,22 @@ namespace JamKit.SkylineRepo
         void BuildTitle()
         {
             _title = Column(_root);
-            var name = new KeylinedLabel(150f, 7f, TitleFace);
+            var name = new KeylinedLabel(124f, 6f, TitleFace);
             name.SetText(HellFlowText.Title);
             name.SetColor(Ember);
-            foreach (var c in name.Children()) c.style.letterSpacing = 12f;
-            _title.Add(name);
+            foreach (var c in name.Children()) c.style.letterSpacing = 10f;
+            var nameBox = new VisualElement { pickingMode = PickingMode.Ignore };
+            nameBox.Add(name);
+            _title.Add(nameBox);
+            // the splash line (Minecraft-style; HellFlowText.Splashes): tilted, yellow, pulsing at the title's lower right
+            _splash = new KeylinedLabel(34f, 3f, Numbers);
+            _splash.SetColor(SplashYellow);
+            _splash.style.position = Position.Absolute;
+            _splash.style.right = -70f;
+            _splash.style.bottom = -12f;
+            _splash.style.rotate = new Rotate(new Angle(-12f));
+            _splash.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+            nameBox.Add(_splash);
             var rule = new VisualElement { pickingMode = PickingMode.Ignore };
             rule.style.width = 520f;
             rule.style.height = 3f;
@@ -292,6 +306,7 @@ namespace JamKit.SkylineRepo
         {
             Show(Screen.Title);
             _title.style.display = DisplayStyle.Flex;
+            if (_splash != null) _splash.SetText(HellFlowText.Splash(_splashRng.Next()));
             OpenChapters(false);
             VesperErrands = null;
             _sel = 0;
@@ -472,6 +487,11 @@ namespace JamKit.SkylineRepo
             switch (Showing)
             {
                 case Screen.Title:
+                    if (_splash != null)
+                    {
+                        float pulse = 1f + 0.06f * Mathf.Sin(now * Mathf.PI * 2f * 1.1f);   // a gentle pulse
+                        _splash.style.scale = new Scale(new Vector3(pulse, pulse, 1f));
+                    }
                     if (!skipInput) TitleInput();
                     break;
                 case Screen.Opening:
