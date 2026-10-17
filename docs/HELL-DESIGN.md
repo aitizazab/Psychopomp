@@ -24,6 +24,19 @@ code (movement engine, guns, bots, waves, objective circles, floor builder from 
     <name>'s soul to Baja. <name> then needs development as a character.
   - Then the credits, an end screen with cool stats, and back to the title screen.
   - Open questions after the pitch: `HELL-RESTART.md`, "Story".
+- **The creator's answers (2026-10-17, later that evening):**
+  1. The God of Death is **not** Skyline's Baja, but the two could be linked later (Baja possessing Skyline's AI for
+     some purpose).
+  2. <name>: the creator asked for a pitch (pending their pick).
+  3. **The deal:** she gives you the powers and access to Hell (she has no access to Hell herself) in exchange for
+     favours, and mainly for killing <name> to teach Lucifer not to mess with her. Your **sister** is in Hell.
+  4. "Don't take too long" is flavour. The Time theme lands in the exchange: <name>'s time (or your own?) for your
+     sister's.
+  5. Time and shadow powers: she deals with mortality and crossing over. **The jobs stay:** each gives a chance at an
+     upgrade or power, and doing most or all of them is what makes her spare you if you spare <name> after beating her
+     and just grab your sister and escape.
+  6. The final boss is probably <name>. Either a post-battle choice (kill or spare), or a full-length one (you don't
+     fight her, and eventually she stops fighting back). The creator asked for a pitch of which is better.
 - Three floors, descending. After each floor: pick one new skill (shadow, time or fire flavoured) from three offered.
 
 ## The player's abilities
