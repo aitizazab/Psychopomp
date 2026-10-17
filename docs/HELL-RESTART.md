@@ -103,6 +103,14 @@ changes game speed, the stand-in stubs deleted. A build command for a Hell-only 
    - Why a death god's gift is time and shadow; are the "jobs on the way" from the first premise kept or dropped?
    - The final boss (<name> or Lucifer) and how the ending choice is made in play; which ending the trailer hints at.
    - Then titles.
+   **Update 2026-10-17 23:00:** <name> = Vesper (see HELL-DESIGN.md). Pitched for the deliberate spare (waiting on
+   the creator): **the letter.** Lucifer told Vesper the deal failed and kept her ignorant; the God of Death, who reaps
+   everyone, holds the daughter's last words. On floor 3, before the boss, you find them (or a job earns them). After
+   the fight Vesper, beaten, asks you to finish it. To spare her you lower the gun, walk to her and hold Use to give her
+   the letter: her daughter lived a full life, had children, died old. Her reason to stay was a lie; she leaves
+   Lucifer, and asks to see one sunset before her end. Why the God of Death can accept it: every soul comes to her in
+   the end, and Lucifer losing his bride teaches the lesson anyway (with your jobs done she's amused; without, you pay).
+   Sprint plan: `HELL-SPRINT.md`.
    Build items it adds: a title screen, a boss, an escape sequence (The Collapse is the base), the ending choice,
    credits, the stats screen.
 6. **Publish:** `gh repo create aitizazab/HellDescent --public --source . --push` (the creator runs it; the handbook

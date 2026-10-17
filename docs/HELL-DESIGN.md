@@ -27,7 +27,13 @@ code (movement engine, guns, bots, waves, objective circles, floor builder from 
 - **The creator's answers (2026-10-17, later that evening):**
   1. The God of Death is **not** Skyline's Baja, but the two could be linked later (Baja possessing Skyline's AI for
      some purpose).
-  2. <name>: the creator asked for a pitch (pending their pick).
+  2. <name> is **Vesper, the Evening Star** (picked 2026-10-17): Lucifer is the Morning Star; she is his bride.
+     Centuries ago she made the same deal you are making: her daughter died, she bargained with Lucifer (she stays
+     as his bride, her daughter lives). He kept her alive and immortal as a trophy; the daughter lived, grew old and
+     died long ago. She is you further down the same road. She reaches you once per floor (floor 1: her voice in the
+     Soul Lantern, hostile; floor 2: her deal and her daughter revealed, curious; floor 3: she sees herself in you).
+     **The creator's note:** sparing must be more deliberate than turning away, and show why she comes with you
+     instead of accepting defeat (pitch in `HELL-RESTART.md`, "Story").
   3. **The deal:** she gives you the powers and access to Hell (she has no access to Hell herself) in exchange for
      favours, and mainly for killing <name> to teach Lucifer not to mess with her. Your **sister** is in Hell.
   4. "Don't take too long" is flavour. The Time theme lands in the exchange: <name>'s time (or your own?) for your
