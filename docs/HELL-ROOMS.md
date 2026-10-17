@@ -256,7 +256,14 @@ plays with floor 1's handedness. Its difference is in the numbers and the enemy 
   once and the block drops 6 m. It returns after the room's delay, unless your body is in its place. Timeline tiles
   trigger on the room clock instead. Rewindable, and never destroyed.
 - **`HellAnchor`** is a shootable chain anchor (`ISkylineHittable` via `SkylineHitZone`). Deflected shots return
-  `hit = false`, so they show no marker.
+  `hit = false`, so they show no marker. Its look is `HellChainViews` (made in `HellRoom.Awake`, ticked in its Update;
+  the builder's red box and box links are hidden at run time, the box's collider stays the hit zone): a massive iron
+  chain from a riveted wall bracket to the exit gate, held by one straining link at the anchor (ember to white-hot as its
+  health falls, cracks that widen, sparks that thicken, a pulse and swell on each hit) inside a faint rune ring that
+  burns bright while you stand in the ward. Broken: the link shatters (glowing pieces, a spark burst, a light flash), the
+  chain whips and falls into a heap at the gate's foot, the gate shudders (a visual twin; its collider never moves). It
+  reads the `ChainAnchors` state every frame, so a Rewind or a restart makes an anchor whole again at once; no per-frame
+  allocation.
 - **`HellRunDirector`** runs the deck and the run:
   - it drops you into each room from 4 m above its vestibule, moving at the speed you carried out of the last one
     (`HellMomentum`, "Momentum through the drops");
