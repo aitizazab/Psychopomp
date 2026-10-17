@@ -351,6 +351,7 @@ namespace JamKit.SkylineRepo
                 case VesperEventKind.Bolt: FireBolt(e.amount); break;
                 case VesperEventKind.BlinkTell:
                     HellFx.SmokeBurst(Body.transform.position, 10, 0.5f);
+                    Body.PlayBlink();   // the model's lunge as she dissolves (no-op on the stand-in)
                     HellAbilityAudio.Play("vesper/blink_tell", at);
                     break;
                 case VesperEventKind.Blinked:

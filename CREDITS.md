@@ -12,6 +12,7 @@ Built in Blender by `tools/hell-models/*.py` (FBX in `Assets/JamKit/Templates/Sk
 |---|---|---|---|---|
 | Skull | Kay Lousberg (KayKit) | CC0 1.0 | https://poly.pizza/m/7clFQGz5jH | the scythe demon's head |
 | Scythe | Quaternius | CC0 1.0 | https://poly.pizza/m/yE9TKCewO8 | the scythe demon's scythe |
+| Woman in Dress (rigged) | Quaternius | CC0 1.0 | https://poly.pizza/m/zMyPlQXBzq | Vesper's body and rig (her clips are posed here) |
 | Hide and ember-crack textures | HellDescent (`HellLookTextures`, procedural) | CC BY 4.0 | this repo | charred parts of every model |
 | Lava texture (Lava004) | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Lava004 | the ooze's molten body |
 

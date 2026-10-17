@@ -9,7 +9,8 @@ namespace JamKit.SkylineRepo
     /// core in a violet cage at her chest: the weak point. It is the hittable (shots go to <see cref="HellVesperFight"/>) and an
     /// aim-assist target. The fight sets the pose (<see cref="SetPose"/>) and the heart's look (<see cref="SetHeart"/>).
     /// <para>To swap in final art: a prefab at <c>Resources/HellModels/vesper</c> with a child named <c>Heart</c> (the weak
-    /// point), optionally <c>ArmR</c> (raised for the volley and the cut) and <c>Veil</c>; its origin at her feet.</para>
+    /// point), optionally <c>ArmR</c> (raised for the volley and the cut; where her bolts leave) and an Animator with the int
+    /// <c>Pose</c> (this enum) and the trigger <c>Blink</c> (then its clips carry the poses); its origin at her feet.</para>
     /// </summary>
     public sealed class HellVesperBody : MonoBehaviour, ISkylineHittable, ISkylineAimable
     {
@@ -27,6 +28,9 @@ namespace JamKit.SkylineRepo
 
         public HellVesperFight fight;
         Transform _rig, _armR, _heart, _cage, _ring;
+        Animator _anim;   // the model's (Resources/HellModels/vesper): its clips play the poses; the stand-in tilts instead
+        static readonly int PoseId = Animator.StringToHash("Pose");
+        static readonly int BlinkId = Animator.StringToHash("Blink");
         Renderer _heartR, _cageR, _ringR;
         Pose _pose = Pose.Stand;
         HeartLook _look = HeartLook.Ember;
@@ -60,6 +64,7 @@ namespace JamKit.SkylineRepo
                 _rig.name = "Rig";
                 _heart = SkylineBotBodies.Find(_rig, "Heart");
                 _armR = SkylineBotBodies.Find(_rig, "ArmR");
+                _anim = _rig.GetComponentInChildren<Animator>();
                 foreach (var r in _rig.GetComponentsInChildren<Renderer>(true))
                     if (r.GetComponent<Collider>() == null && r is MeshRenderer) r.gameObject.AddComponent<BoxCollider>();
             }
@@ -169,6 +174,13 @@ namespace JamKit.SkylineRepo
             if (_pose == p) return;
             _pose = p;
             _poseT = 0f;
+            if (_anim != null && _anim.runtimeAnimatorController != null) _anim.SetInteger(PoseId, (int)p);
+        }
+
+        /// <summary>The model's blink clip (a lunge, arms swept back), when it has one; the fight calls it as she dissolves.</summary>
+        public void PlayBlink()
+        {
+            if (_anim != null && _anim.runtimeAnimatorController != null) _anim.SetTrigger(BlinkId);
         }
 
         public void SetHeart(HeartLook look)
@@ -197,6 +209,13 @@ namespace JamKit.SkylineRepo
             if (_ring != null && _ring.gameObject.activeSelf) _ring.Rotate(0f, -540f * Time.deltaTime, 0f, Space.Self);
             if (_cage != null) _cage.localScale = new Vector3(0.36f, 0.36f, 0.12f) * (1f + 0.06f * Mathf.Sin(t * (_look == HeartLook.Cold ? 18f : 5f)));
             if (_rig == null) return;
+            if (_anim != null)
+            {
+                // the model's clips carry the pose (kneel, reel, cast); the rig only hovers a hand's breadth while she stands
+                float hover = _pose == Pose.Stand ? Mathf.Sin(t * 1.3f) * 0.04f : 0f;
+                _rig.localPosition = Vector3.Lerp(_rig.localPosition, new Vector3(0f, (_pose == Pose.Stand ? 0.08f : 0f) + hover, 0f), 8f * Time.deltaTime);
+                return;
+            }
             // the pose: the rig sinks and leans, the right arm swings
             float lean = 0f, sink = 0f, arm = 0f;
             switch (_pose)
