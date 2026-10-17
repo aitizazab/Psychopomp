@@ -69,3 +69,6 @@ Death's lounge waltz (51 s) and Vesper's waltz (55 s) as layered builds, and fou
 Files and scripts: `FableAnimationTests/audio/hell-music/` (`scripts/melodies.py`, `inrun.py`, `themes.py`,
 `guitar_tones.py`, `page.py`; shared `hell_lib.py`). Every render measured with the ears tool and levelled to -18 LUFS.
 Waiting on the creator before anything else is made.
+
+**The player (built 2026-10-18):** `HellMusicDirector` plays this from the composer's manifest; rules, modifiers and the
+stage-to-cue table in `docs/HELL-MUSIC-DIRECTOR.md`.
