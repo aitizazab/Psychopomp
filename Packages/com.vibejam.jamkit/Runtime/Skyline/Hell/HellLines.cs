@@ -18,7 +18,7 @@ namespace JamKit.Skyline
     /// the display name is the subtitle's prefix.</summary>
     public static class HellSpeakers
     {
-        public const string Death = "death", Vesper = "vesper", Hint = "hint";
+        public const string Death = "god", Vesper = "vesper", Hint = "hint";
 
         /// <summary>The subtitle prefix. The God of Death has no name yet (docs/HELL-GAPS.md #28): change it here.</summary>
         public static string Display(string id)
