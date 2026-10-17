@@ -44,6 +44,22 @@ namespace JamKit.Skyline
         public static bool Touching(CoverBox lava, Vector3 feet, float above = 0.15f) =>
             feet.X > lava.min.X && feet.X < lava.max.X && feet.Z > lava.min.Z && feet.Z < lava.max.Z &&
             feet.Y <= lava.max.Y + above && feet.Y >= lava.min.Y - 1f;
+
+        /// <summary>Feet sunk into floorless lava (<see cref="HellRoomDef.lavaFloor"/> false: The Collapse's bridge): inside its
+        /// footprint and at least <paramref name="depth"/> under its surface. The room sinks you at once (no wading out: the
+        /// floor you fell from is gone).</summary>
+        public static bool Under(CoverBox lava, Vector3 feet, float depth = 0.3f) =>
+            feet.X > lava.min.X && feet.X < lava.max.X && feet.Z > lava.min.Z && feet.Z < lava.max.Z &&
+            feet.Y <= lava.max.Y - depth;
+
+        /// <summary>Is the player sunk in floorless lava in room <paramref name="r"/> (always false where the lava has a floor)?</summary>
+        public static bool SunkIn(HellRoomDef r, Vector3 feet)
+        {
+            if (r == null || r.lavaFloor) return false;
+            foreach (var h in r.hazards)
+                if (h.kind == HellHazardKind.Lava && Under(h.box, feet)) return true;
+            return false;
+        }
     }
 
     public enum CollapseState { Solid, Shaking, Fallen }

@@ -204,7 +204,9 @@ A safe run of 12 rooms takes roughly 15-25 minutes; the Six Sigils' safe path al
 - Shadow Steps land in the dark within reach, and only on the fast route;
 - every fast route except the Brand's and the Lantern's has a gap, beam or wall move;
 - no room has a gap the planner can't cross;
-- The Collapse's fast lane jumps the lava, slides the beam and steps the 12 m gap, while its safe lane is a plain run.
+- The Collapse's fast lane (rooms3) jumps the bridge's lava gap, while its safe lane is a plain run. The autopilot doesn't
+  wall-kick the run-up hall's stalactites, so on the fast route it reaches the bridge at a sprint, finds it already falling,
+  sinks and falls back to the safe lane (expect `route safe` for The Collapse in the fast sweep: by design, not a bug).
 
 **Resuming:**
 - it picks the nearest point between the last task done and the next one;
@@ -235,7 +237,7 @@ the per-assembly check are green.
   - Expect `route safe` entries in the fast sweep. They are data for the rooms lane, not bugs in the rooms.
 - **The Collapse:**
   - It doesn't dodge the debris; it takes the hits.
-  - On the fast lane, the Shadow Step's stop-aim-release costs about half a second against the front.
+  - On the fast lane it has no stalactite kicks (rooms3), so it loses the bridge and takes the safe lane.
 - **The fight:**
   - It has no cover cycle: it fights from the path, walking.
   - It doesn't use Time Dilation, Nightfall or the other floor skills' buttons.

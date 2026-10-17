@@ -40,7 +40,7 @@ lighting model (bands or PBR) and the post. Every number is in `HellLookPalette.
 
 - **Light rig** (`HellLightRig`): the builder's lava lights are replaced by lights **1.6 m above every lava surface**, one per
   9 m, intensity 15-25, range 14 (cut a metre short of every dark zone's pall, so dark zones stay dark). **Braziers** on
-  every tall outer wall's inner face every 15 m (iron bowl and bracket, a flame, a halo in the air, a light of intensity 9,
+  every tall wall's inner face every 15 m, and (rooms3, 2026-10-18) standing on the open rim's 1 m parapets every 15 m (iron bowl and bracket, a flame, a halo in the air, a light of intensity 9,
   range 13) graze the textured walls. Every fire **flickers**. The **3 braziers nearest the camera cast hard shadows**, the
   sky glow (directional) casts soft shadows. C adds a dim **carried ember** on the camera (Deep Rock's headlamp).
 - **Ambient** as spherical harmonics: a cool-ish sky above, a warm equator, the **lava glow from below**. Proven by
@@ -107,3 +107,14 @@ work was 6.6 ms / 30 ms 1% lows, so the spikes are not new: hitches (spawns, sha
   `-hellLookFloors B,A,C` (into `<dir>/floors-BAC/`).
 - Frame times: add `-hell-perf out/hell-look/perf-B -hell-perf-rooms 1.SixSigils,2.BreakChains,3.Collapse`.
 - Review page: `FableAnimationTests/art/review/2026-10-18/hell-look-v2.html`.
+
+## The open rim (rooms3, 2026-10-18)
+
+The rooms' west, east and south walls are gone (docs/HELL-ROOMS.md, "Open edges"): the sky and the spires (`HellBeyond`) now
+show past a low rim. What stays tall: every room's north wall (the exit's gatehouse), a 24 m wall at each job pocket's door,
+an 8 m wall behind a chain anchor, and walls beside raised safe walkways (ramps and balconies). Braziers stay on those tall
+walls (`HellLightRig`: walls 6 m and up), and the parapets (`parapet-*` solids, 1 m) now carry braziers standing on their
+tops every 15 m, so the rim stays ringed with fire. Under every room, 40 m down, the builder lays an "Abyss Sea" (one big
+lava box, no collider) so the cliff edges drop away into a glowing lava sea. Check in a capture: the braziers on the
+parapets (their bracket hangs inward over the parapet's top), the far spires seen over the rim, and the sea's glow at the
+cliff edges.

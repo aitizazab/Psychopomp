@@ -181,6 +181,13 @@ namespace JamKit.Skyline
         public float collapseShakeSeconds = 0.8f;
         /// <summary>Lava: damage per second while touching it, the damage of sinking, and seconds of contact that sink you.</summary>
         public float lavaDps = 12f, lavaSinkDamage = 35f, lavaSinkSeconds = 1.0f;
+        /// <summary>The lava's top is a floor you wade on (true: the builder gives the basins a collider at the surface, a
+        /// jump and a mantle get you out). False (The Collapse's bridge, docs/HELL-ROOMS.md): no collider, a fallen tile drops
+        /// you into it and <see cref="LavaContact.Under"/> sinks you as soon as your feet are under its surface.</summary>
+        public bool lavaFloor = true;
+        /// <summary>The open rim's inner edge (the room's west, east, south and north wall lines; docs/HELL-ROOMS.md, "Open
+        /// edges"): the lint keeps the safe path off it where no parapet stands. Zero size: not checked.</summary>
+        public CoverBox rim;
 
         public HellObjectiveTuning tuning = new HellObjectiveTuning();
         /// <summary>Hold the Brand's ring (null in the other rooms).</summary>
@@ -283,10 +290,10 @@ namespace JamKit.Skyline
                 kind = r.kind, name = r.name, floor = r.floor, mirrored = r.mirrored ^ mirror, minLeg = r.minLeg,
                 quarterTurns = (r.quarterTurns + Q) % 4, ordered = r.ordered,
                 entry = Point(r.entry), entryYaw = Yaw(r.entryYaw), exit = Point(r.exit), exitYaw = Yaw(r.exitYaw),
-                dropZone = Box(r.dropZone), bounds = Box(r.bounds), exitGateId = r.exitGateId, innerGateId = r.innerGateId,
+                dropZone = Box(r.dropZone), bounds = Box(r.bounds), rim = Box(r.rim), exitGateId = r.exitGateId, innerGateId = r.innerGateId,
                 gateTarget = Point(r.gateTarget), collapseReturnSeconds = r.collapseReturnSeconds,
                 collapseShakeSeconds = r.collapseShakeSeconds, lavaDps = r.lavaDps, lavaSinkDamage = r.lavaSinkDamage,
-                lavaSinkSeconds = r.lavaSinkSeconds, tuning = r.tuning,
+                lavaSinkSeconds = r.lavaSinkSeconds, lavaFloor = r.lavaFloor, tuning = r.tuning,
             };
             foreach (var s in r.solids) o.solids.Add(Solid(s));
             foreach (var h in r.hazards) o.hazards.Add(Hazard(h));

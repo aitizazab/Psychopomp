@@ -155,13 +155,12 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
-        public void TheCollapseFastLaneJumpsTheLavaSlidesTheBeamAndStepsTheBigGap()
+        public void TheCollapseFastLaneJumpsTheLavaGap()
         {
             var r = HellWorld.Room(0, HellRoomKind.Collapse);
             var plan = HellAutopilotPlan.Build(r, HellAutoRoute.Fast);
             Assert.That(plan.Count(HellAutoMove.Jump), Is.GreaterThanOrEqualTo(1));
-            Assert.That(plan.Count(HellAutoMove.Slide), Is.GreaterThanOrEqualTo(1));
-            Assert.That(plan.Count(HellAutoMove.ShadowStep), Is.EqualTo(1));
+            Assert.That(plan.Count(HellAutoMove.ShadowStep), Is.LessThanOrEqualTo(1), "rooms3: the bridge has no 12 m Shadow Step gap");
             var safe = HellAutopilotPlan.Build(r, HellAutoRoute.Safe);
             Assert.That(safe.Count(HellAutoMove.Jump) + safe.Count(HellAutoMove.Slide) + safe.Count(HellAutoMove.ShadowStep), Is.EqualTo(0), "the safe lane is a plain run");
         }

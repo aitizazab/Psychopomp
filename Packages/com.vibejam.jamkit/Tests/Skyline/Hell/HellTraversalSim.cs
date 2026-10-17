@@ -28,7 +28,7 @@ namespace JamKit.Tests.Skyline
         readonly bool _mirror;
         readonly int _turns;
 
-        public HellTraversalWorld(HellRoomDef room, bool mirror, int quarterTurns)
+        public HellTraversalWorld(HellRoomDef room, bool mirror, int quarterTurns, bool timeline = false)
         {
             Room = room;
             _mirror = mirror;
@@ -50,14 +50,14 @@ namespace JamKit.Tests.Skyline
                 switch (h.kind)
                 {
                     case HellHazardKind.Lava:
-                        World.Add((b.min + b.max) * 0.5f, b.max - b.min, false);
+                        if (room.lavaFloor) World.Add((b.min + b.max) * 0.5f, b.max - b.min, false);   // floorless lava: you fall in
                         Lava.Add(h);
                         break;
                     case HellHazardKind.Collapse:
                         var box = World.Add((b.min + b.max) * 0.5f, b.max - b.min, false);
                         // The Collapse's timeline tiles fall on the room clock, not under you: they stay solid here (the race
                         // against the clock is HellRoomTests' own simulation)
-                        if (!h.Timeline) Platforms.Add((h, box, new CollapseCycle(room.collapseShakeSeconds, room.collapseReturnSeconds)));
+                        if (!h.Timeline || timeline) Platforms.Add((h, box, new CollapseCycle(room.collapseShakeSeconds, room.collapseReturnSeconds)));
                         break;
                     case HellHazardKind.Beam:
                         Beams.Add(h);
@@ -84,7 +84,8 @@ namespace JamKit.Tests.Skyline
         {
             foreach (var (h, box, cycle) in Platforms)
             {
-                bool standing = CollapseCycle.StandingOn(h.box, sim.Position, sim.Grounded);
+                if (h.Timeline && time >= h.timelineSeconds) cycle.Trigger();
+                bool standing = !h.Timeline && CollapseCycle.StandingOn(h.box, sim.Position, sim.Grounded);
                 bool was = cycle.Solid;
                 if (cycle.Tick(dt, standing, CollapseCycle.BodyIn(h.box, sim.Position, sim.Height)) && log != null)
                     log.Add(F(time) + " s: platform " + h.id + " fell");
@@ -234,6 +235,10 @@ namespace JamKit.Tests.Skyline
         public float goalRadius = 1.5f, timeout = 8f;
         /// <summary>Carrying the Soul Lantern: the stick scaled as the Unity player scales it (MoveScale 0.8), no Shadow Step.</summary>
         public bool carry;
+        /// <summary>The room clock runs (The Collapse): its timeline tiles shake and fall on time, from the leg's start (t 0 = the room's start).</summary>
+        public bool timeline;
+        /// <summary>Called after every step (measuring a run: its speed, its lead on the front).</summary>
+        public Action<HellProbe> watch;
         public readonly List<Beat> beats = new List<Beat>();
 
         public HellLeg(HellRoomKind room, string name, Vector3 from, Vector3 face)
@@ -276,6 +281,7 @@ namespace JamKit.Tests.Skyline
 
         public HellLeg StartSpeed(float share) { startSpeed = share; return this; }
         public HellLeg Carrying() { carry = true; return this; }
+        public HellLeg OnTheClock(Action<HellProbe> watch = null) { timeline = true; this.watch = watch; return this; }
         public override string ToString() => room + ": " + name;
     }
 
@@ -363,7 +369,7 @@ namespace JamKit.Tests.Skyline
         {
             var room = Variant(leg.room, floor);
             var tune = HellRoomVariants.Floors[floor];
-            var w = new HellTraversalWorld(room, tune.mirror, tune.quarterTurns);
+            var w = new HellTraversalWorld(room, tune.mirror, tune.quarterTurns, leg.timeline);
             var def = new MoveDef();
             def.sprintSpeed *= speedShare;
             var sim = new MoveSim(w.World, def);
@@ -482,6 +488,7 @@ namespace JamKit.Tests.Skyline
 
                 sim.Step(input, H);
                 w.TickPlatforms(sim, H, res.log, time);
+                leg.watch?.Invoke(new HellProbe { Pos = w.ToLocal(sim.Position), Sim = sim, BeatTime = time - beatStart, Time = time + H });
                 if (sim.Mode != lastMode)
                 {
                     res.log.Add(T(time) + sim.Mode + " at " + V(w.ToLocal(sim.Position)) + ", " + HellTraversalWorld.F(sim.HorizontalSpeed) + " m/s");

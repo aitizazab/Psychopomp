@@ -205,7 +205,7 @@ namespace JamKit.Skyline
     /// than <see cref="VisualSpan"/> seconds remain, closing linearly to shut at the window's end. If it shuts before you
     /// reach it, the run ends in damnation. A death restarts the attempt with a new window from the hour then (it kept
     /// running), never less than <see cref="MinWindow"/>, so a run that is out of time still gets a real, tight chance: the
-    /// floor-3 Collapse's fast lane takes about 11-12 s, its safe lane about 16-17 s.
+    /// floor-3 Collapse's fast lane (the stalactite kicks, rooms3) takes about 9 s, its safe lane about 15 s.
     /// </summary>
     public static class HellHourGate
     {

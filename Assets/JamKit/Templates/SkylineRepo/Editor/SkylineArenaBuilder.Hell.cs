@@ -82,6 +82,10 @@ namespace JamKit.SkylineRepo.EditorTools
                 }
                 BuildShaft(floorRoot, f, mats);
             }
+            // the abyss under the open rims (docs/HELL-ROOMS.md, "Open edges"): a lava sea far below every room, no collider (a
+            // fall off a cliff edge is a sink before you reach it)
+            float seaX1 = HellRoomLayouts.Kinds.Length * HellWorld.SlotSpacing + 250f, seaZ1 = (HellRoomVariants.FloorCount - 1) * HellWorld.FloorSpacing + 250f;
+            NoShadow(Box(world, "Abyss Sea", new Vector3(-250f, HellRoomLayouts.AbyssSeaY - 1f, -250f), new Vector3(seaX1, HellRoomLayouts.AbyssSeaY, seaZ1), MakeHellMats(0).lava, false, null, true));
 
             // the player, the HUD, the run
             var start = HellWorld.Room(0, HellRoomLayouts.Kinds[0]);
@@ -192,7 +196,8 @@ namespace JamKit.SkylineRepo.EditorTools
                 switch (h.kind)
                 {
                     case HellHazardKind.Lava:
-                        var lava = Box(lavaRoot, h.id, U(h.box.min), U(h.box.max), m.lava, true, false);
+                        // a floorless basin (The Collapse's bridge) has no collider: a fallen tile drops you into the lava
+                        var lava = Box(lavaRoot, h.id, U(h.box.min), U(h.box.max), m.lava, d.lavaFloor, d.lavaFloor ? false : (bool?)null);
                         NoShadow(lava);
                         break;
                     case HellHazardKind.Collapse:

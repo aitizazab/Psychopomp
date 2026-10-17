@@ -87,6 +87,7 @@ namespace JamKit.Skyline
             foreach (var s in r.spawns)
                 if (!Contains(r.bounds, s.position)) p.Add(r.name + ": a " + s.role + " spawn is outside the room");
             CheckDarkness(r, p);
+            CheckOpenEdges(r, p);
             return res;
         }
 
@@ -463,6 +464,53 @@ namespace JamKit.Skyline
             return (float)Math.Sqrt(dx * dx + dz * dz);
         }
 
+
+        /// <summary>How near (m) the safe path may come to the open rim without a parapet or wall on it.</summary>
+        public const float OpenEdgeClear = 2.5f;
+
+        /// <summary>
+        /// Open edges (docs/HELL-ROOMS.md): the rooms' west, east and south sides are an open rim (cliffs into the abyss). Every
+        /// safe path sample within <see cref="OpenEdgeClear"/> m of the rim must have a parapet or wall (a solid at least 0.8 m
+        /// above the sample) on the rim beside it, so the safe way never runs along a drop. The doors (the
+        /// vestibule and the exit doorway: within 8 m of the entry, 4 m of the exit) are the room's own doors.
+        /// </summary>
+        static void CheckOpenEdges(HellRoomDef r, List<string> p)
+        {
+            var rim = r.rim;
+            if (rim.max.X - rim.min.X < 1f || rim.max.Z - rim.min.Z < 1f) return;
+            var samples = Samples(r.safePath);
+            int reported = 0;
+            foreach (var s in samples)
+            {
+                if (FlatDistance(s, r.entry) < 8f || FlatDistance(s, r.exit) < 4f) continue;   // the vestibule and the exit doorway
+                // the nearest rim point (on whichever side is nearest)
+                float dW = s.X - rim.min.X, dE = rim.max.X - s.X, dS = s.Z - rim.min.Z, dN = rim.max.Z - s.Z;
+                float d = Math.Min(Math.Min(dW, dE), Math.Min(dS, dN));
+                if (d > OpenEdgeClear) continue;
+                Vector3 q = d == dW ? new Vector3(rim.min.X - 0.3f, s.Y, s.Z) : d == dE ? new Vector3(rim.max.X + 0.3f, s.Y, s.Z)
+                    : d == dS ? new Vector3(s.X, s.Y, rim.min.Z - 0.3f) : new Vector3(s.X, s.Y, rim.max.Z + 0.3f);
+                bool guarded = false;
+                foreach (var w in r.solids)
+                    if (w.role != "floor" && w.role != "ramp" && w.role != "deck" && OnXZ(w.box, q) && w.box.max.Y >= s.Y + 0.8f) { guarded = true; break; }
+                if (!guarded && reported++ < 3) p.Add(r.name + ": the safe path at " + V(s) + " runs within " + F(d) + " m of an open edge (no parapet)");
+            }
+        }
+
+        /// <summary>The flat (xz) distance from <paramref name="p"/> to a polyline.</summary>
+        public static float FlatDistanceToPath(List<Vector3> path, Vector3 p)
+        {
+            float best = float.PositiveInfinity;
+            for (int i = 1; i < path.Count; i++)
+            {
+                var a = path[i - 1];
+                var b = path[i];
+                float abx = b.X - a.X, abz = b.Z - a.Z, l2 = abx * abx + abz * abz;
+                float t = l2 > 1e-8f ? Math.Max(0f, Math.Min(1f, ((p.X - a.X) * abx + (p.Z - a.Z) * abz) / l2)) : 0f;
+                float dx = a.X + abx * t - p.X, dz = a.Z + abz * t - p.Z;
+                best = Math.Min(best, (float)Math.Sqrt(dx * dx + dz * dz));
+            }
+            return best;
+        }
         static string F(float v) => v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
         static string V(Vector3 v) => "(" + F(v.X) + ", " + F(v.Y) + ", " + F(v.Z) + ")";
     }

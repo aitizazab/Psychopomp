@@ -40,4 +40,41 @@ namespace JamKit.Skyline
             };
         }
     }
+
+    /// <summary>
+    /// Speed carried through a drop (the creator, 2026-10-18: room transitions were a teleport, so no speed came through
+    /// them). While you play a room it keeps the peak of your horizontal speed, fading <see cref="FadePerSecond"/> m/s each
+    /// second (so bumping the drop hole's far wall on the way down doesn't lose it); the next room's arrival (and the one after
+    /// a floor's shaft: the peak holds while you are out of a room) sends you in at that speed along the room's entry
+    /// direction, from <see cref="HellWorld.DropInHeight"/> above its vestibule, so you land running in the room. Capped at
+    /// <see cref="MaxSpeed"/> so the landing stays on every room's entry floor (about 9 m ahead of the vestibule's middle).
+    /// </summary>
+    public sealed class HellMomentum
+    {
+        public const float FadePerSecond = 2f, MaxSpeed = 16f, MinSpeed = 1f;
+
+        /// <summary>The faded peak of the horizontal speed (m/s).</summary>
+        public float Peak { get; private set; }
+
+        /// <summary>One step in a room: <paramref name="horizontalSpeed"/> is the player's speed this step.</summary>
+        public void Tick(float dt, float horizontalSpeed)
+        {
+            if (!(dt > 0f)) return;
+            Peak = Math.Max(horizontalSpeed, Math.Max(0f, Peak - FadePerSecond * dt));
+        }
+
+        /// <summary>The arrival velocity for a room entered facing <paramref name="entryYawDeg"/> (0 = +z, 90 = +x), and the
+        /// carry used up. Zero below <see cref="MinSpeed"/>.</summary>
+        public Vector3 Arrive(float entryYawDeg)
+        {
+            float v = Math.Min(Peak, MaxSpeed);
+            Peak = 0f;
+            if (v < MinSpeed) return Vector3.Zero;
+            double a = entryYawDeg * Math.PI / 180.0;
+            return new Vector3((float)Math.Sin(a) * v, 0f, (float)Math.Cos(a) * v);
+        }
+
+        /// <summary>A restart (a death, a new run): nothing carried.</summary>
+        public void Reset() => Peak = 0f;
+    }
 }

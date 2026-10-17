@@ -265,6 +265,8 @@ namespace JamKit.SkylineRepo
             _safe.Tick(dt, feet, _player.Yaw, grounded && !onHazard);
 
             if (feet.Y < Def.bounds.min.Y - 3f) Sank("fell");
+            // floorless lava (The Collapse's bridge): a fallen tile drops you in, and you sink at once (docs/HELL-ROOMS.md)
+            else if (LavaContact.SunkIn(Def, feet) && !HellAbilities.LavaImmune) Sank("lava");
         }
 
         void Update()
