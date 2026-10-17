@@ -263,54 +263,90 @@ namespace JamKit.Skyline
 
         // ------------------------------------------------------------------ 4. Hold the Brand
 
-        /// <summary>The brand circle on an island in a lava lake: stand in it until it is charged (the kit's tow circle, 10 s,
-        /// pausing when you step out), waves arriving every few seconds. Fast: collapsing stepping stones straight to the
-        /// island; safe: the west walkway and a long open bridge the imps can see all of.</summary>
+        /// <summary>The brand's centre (the ring's middle, over the lava pool) and the racing line's half size and corner cut.</summary>
+        public static readonly Vector3 BrandCentre = new Vector3(0f, 0f, 38f);
+        public const float BrandLoopHalf = 8f, BrandLoopCut = 4.5f;
+
+        /// <summary>The brand: a ring 20 m across (<see cref="HellBrandTuning.RingRadius"/>) on an island in a lava lake, round a
+        /// lava pool. Inside the ring it charges faster the faster you move (<see cref="HellBrandTuning"/>): stand behind a stone
+        /// and it takes 30 s, run laps round the pool (a racetrack with a wall-run wall on each long side) and it takes 10, while
+        /// the waves come every 5 s from the first touch. Fast in: collapsing stepping stones straight over the lake (or two dark
+        /// pillars for the Shadow Step); safe in: the west walkway and the open bridge, then a stone to stand behind.</summary>
         static HellRoomDef HoldBrand()
         {
             var k = new Kit(HellRoomKind.HoldBrand, "Hold the Brand");
             const float W = 26f, L = 70f;
+            var c = BrandCentre;
             k.Shell(-W, W, L, -2.5f, WallHeight, 0f, 0f);
             k.Floor(-W, 0, W, 10);
-            k.Floor(-W, 10, -20, 56);
-            k.Floor(-6, 30, 6, 42);                 // the island
-            k.Floor(-20, 34, -6, 38);               // the long bridge
-            k.Floor(-2, 42, 2, 56);                 // the north bridge
+            k.Floor(-W, 10, -20, 56);               // the west walkway
+            // the island: a 24 m square track round the 8 m lava pool
+            k.Floor(-12, 26, 12, 34);
+            k.Floor(-12, 42, 12, 50);
+            k.Floor(-12, 34, -4, 42);
+            k.Floor(4, 34, 12, 42);
+            k.Floor(-20, 44, -12, 48);              // the open bridge from the walkway
+            k.Floor(-2, 50, 2, 56);                 // the north bridge
             k.Floor(-W, 56, W, L);
-            k.Lava(-20, 10, W, 30);
-            k.Lava(-20, 30, -6, 34);
-            k.Lava(-20, 38, -6, 56);
-            k.Lava(-6, 42, -2, 56);
-            k.Lava(2, 42, W, 56);
-            k.Lava(6, 30, W, 42);
-            foreach (var z in new[] { 11.5f, 16f, 20.5f, 25f }) k.Collapse(-1.5f, z, 1.5f, z + 3f, 0f);
-            Pillar(k, 8, 15, 11, 18, 0.5f);
-            Pillar(k, 7, 24, 10, 27, 0.5f);
-            k.Stop("brand", V(0, 0, 36), FloorRules.CircleRadius);
+            k.Lava(-4, 34, 4, 42);                  // the pool inside the ring
+            k.Lava(-20, 10, W, 26);                 // the lake: entry to island
+            k.Lava(-20, 26, -12, 44);
+            k.Lava(-20, 48, -12, 56);
+            k.Lava(-12, 50, -2, 56);
+            k.Lava(2, 50, W, 56);
+            k.Lava(12, 26, W, 50);
+            // inside the ring: a wall-run wall on each long side of the track (the racing line's fast cue) and three stones
+            k.Wall(9.4f, 34f, 10f, 42f, 0f, 3.5f, true, "wallrun");
+            k.Wall(-10f, 34f, -9.4f, 42f, 0f, 3.5f, true, "wallrun");
+            k.Cover(-1.5f, c.Z - 10f, 1.5f, c.Z - 9.2f);            // south, on the ring's edge
+            k.Cover(4.6f, c.Z + 4.6f, 5.8f, c.Z + 5.8f);            // the pool's north-east corner
+            k.Cover(-5.8f, c.Z - 5.8f, -4.6f, c.Z - 4.6f);          // the pool's south-west corner
+            // the fast way in: stepping stones over the lake, or two dark pillars
+            foreach (var z in new[] { 11f, 15.5f, 20f }) k.Collapse(-1.5f, z, 1.5f, z + 3f, 0f);
+            Pillar(k, 8, 13, 11, 16, 0.5f);
+            Pillar(k, 7, 19, 10, 22, 0.5f);
+            k.Stop("brand", c, HellBrandTuning.RingRadius);
+            k.r.hold = new HellHoldRing { center = c, radius = HellBrandTuning.RingRadius, halfHeight = HellBrandTuning.RingHalfHeight };
+            float h = BrandLoopHalf, q = BrandLoopCut;
+            foreach (var p in new[] { V(h, 0, -q), V(h, 0, q), V(q, 0, h), V(-q, 0, h), V(-h, 0, q), V(-h, 0, -q), V(-q, 0, -h), V(q, 0, -h), V(h, 0, -q) })
+                k.r.hold.loop.Add(c + p);
             k.r.safePath.AddRange(new[]
             {
-                k.r.entry, V(0, 0, 5), V(-23, 0, 8), V(-23, 0, 36), V(-6, 0, 36), V(0, 0, 36), V(0, 0, 42), V(0, 0, 56), k.r.exit,
+                k.r.entry, V(0, 0, 5), V(-23, 0, 8), V(-23, 0, 46), V(-12, 0, 46), V(-7, 0, 44),
+                V(-6.6f, 0, 33), // behind the south-west stone, inside the ring: the 30 s charge
+                V(-7, 0, 44), V(0, 0, 48), V(0, 0, 56), k.r.exit,
             });
-            k.r.fastPath.AddRange(new[] { k.r.entry, V(0, 0, 36), k.r.exit });
+            k.r.fastPath.AddRange(new[] { k.r.entry, V(0, 0, 30), V(8, 0, 34), V(8, 0, 42), V(4.5f, 0, 46.5f), V(0, 0, 50), k.r.exit });
             k.Spawn(HellEnemyRole.Imp, V(12, 6, 20));
-            k.Spawn(HellEnemyRole.Imp, V(14, 5, 36), wave: 1);
-            k.Spawn(HellEnemyRole.Imp, V(-12, 6, 24), wave: 1);
-            k.Spawn(HellEnemyRole.Imp, V(0, 6, 50), wave: 2);
+            k.Spawn(HellEnemyRole.Imp, V(16, 5, 38), wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(-16, 6, 30), wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(0, 6, 53), wave: 2);
             k.Spawn(HellEnemyRole.Scythe, V(8, 0, 62), 180f, wave: 2, minFloor: 2);
             k.Spawn(HellEnemyRole.Imp, V(12, 5, 22), wave: 3);
             k.Spawn(HellEnemyRole.Scythe, V(-8, 0, 62), 180f, wave: 3, minFloor: 2);
-            k.Spawn(HellEnemyRole.Ooze, V(4, 0, 40), wave: 3, minFloor: 3);
-            k.r.tuning.radius = FloorRules.CircleRadius;
-            k.r.tuning.seconds = 5f;              // a wave every 5 s once the brand is first touched
+            k.Spawn(HellEnemyRole.Ooze, V(6, 0, 46), wave: 3, minFloor: 3);
+            k.r.tuning.radius = HellBrandTuning.RingRadius;
+            k.r.tuning.seconds = HellBrandTuning.WaveEvery;     // a wave every 5 s once the brand is first touched
             k.r.collapseReturnSeconds = 5f;
             return k.Done();
         }
 
         // ------------------------------------------------------------------ 5. The Collapse
 
+        /// <summary>The Collapse's walls between the safe lane's winding: their z (the near face), and the gap each leaves.</summary>
+        public const float CollapseBaffleFirstZ = 18f, CollapseBaffleSpacing = 12f;
+        public const int CollapseBaffleCount = 8;
+        /// <summary>The safe lane's running line through the baffles' gaps (alternating).</summary>
+        public const float CollapseSafeLineEast = -11f, CollapseSafeLineWest = -17f;
+        /// <summary>The fast lane's lava gaps (z ranges): a 4 m jump and the 12 m Shadow Step gap.</summary>
+        public static readonly float[][] CollapseFastGaps = { new[] { 30f, 34f }, new[] { 70f, 82f } };
+
         /// <summary>Reach the exit before the floor falls away behind you. The floor tiles fall on the room clock, row by row from
         /// the entry. The central lane is straight (a lava gap to jump, a beam to slide under, a 12 m gap for the Shadow Step)
-        /// and its front comes fast; the west lane is solid stone that winds between walls, and its front comes slower.</summary>
+        /// and its front comes at 10.5 m/s: a sprint (9.5) alone loses it, slides and hops win. The west lane is solid stone
+        /// that winds between stone fins (standing on the lava bed, so they stay when the tiles fall), and its front comes at
+        /// 8 m/s after 1.5 s: survivable at a sprint, with no room for mistakes. Debris falls on both lanes on a seeded timer
+        /// (its shadow glows 1 s before), and imps come at the walls every few seconds.</summary>
         static HellRoomDef Collapse()
         {
             var k = new Kit(HellRoomKind.Collapse, "The Collapse");
@@ -326,22 +362,22 @@ namespace JamKit.Skyline
                     k.Tile(-3, z, 3, Math.Min(z + 4f, s[1]), false);
             k.Beam(-3, 49.8f, 3, 50.2f, 0f, 2.5f, 0.5f, 0f);
             k.Dark(-3f, 0f, 82f, 3f, 3f, 90f);       // the landing past the 12 m gap
-            // the west lane's tiles and its winding walls
+            // the west lane's tiles and its winding fins (on the lava bed: they stand when their tiles fall)
             for (float z = 8; z < 112 - 0.01f; z += 4f) k.Tile(-W, z, -8, Math.Min(z + 4f, 112f), true);
-            var safe = new List<Vector3> { k.r.entry, V(0, 0, 4), V(-13, 0, 6) };
-            for (int i = 0; i < 9; i++)
+            var safe = new List<Vector3> { k.r.entry, V(0, 0, 2), V(CollapseSafeLineEast, 0, 9) };
+            for (int i = 0; i < CollapseBaffleCount; i++)
             {
-                float z = 16f + 10f * i;
+                float z = CollapseBaffleFirstZ + CollapseBaffleSpacing * i;
                 bool even = i % 2 == 0;
-                if (even) k.Wall(-W, z, -11f, z + 0.6f, 0f, 3f, false, "baffle");
-                else k.Wall(-15f, z, -8f, z + 0.6f, 0f, 3f, false, "baffle");
-                float gx = even ? -9.5f : -17.5f;
-                safe.Add(V(gx, 0, z - 1.5f));
-                safe.Add(V(gx, 0, z + 2.1f));
+                if (even) k.Wall(-W, z, -12f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
+                else k.Wall(-16f, z, -8f, z + 0.6f, LavaSurface - LavaDepth, 3f, false, "baffle");
+                safe.Add(V(even ? CollapseSafeLineEast : CollapseSafeLineWest, 0, z + 0.3f));
             }
-            safe.Add(V(-13, 0, 110));
-            safe.Add(V(-6, 0, 114));
-            safe.Add(V(0, 0, 116));
+            // off the tiles, the safe way rounds a wall on the end floor (the long way to the exit; the front no longer matters here)
+            k.Wall(-16f, 114.5f, -3.5f, 115.1f, 0f, 3f, false, "end-wall");
+            safe.Add(V(-18.5f, 0, 112.5f));
+            safe.Add(V(-18.5f, 0, 117));
+            safe.Add(V(-4, 0, 118.5f));
             safe.Add(k.r.exit);
             k.r.safePath.AddRange(safe);
             k.r.fastPath.AddRange(new[] { k.r.entry, V(0, 0, 32), V(0, 0, 50), V(0, 0.5f, 76), k.r.exit });
@@ -352,17 +388,102 @@ namespace JamKit.Skyline
             k.Spawn(HellEnemyRole.Imp, V(-12, 6, 90), minFloor: 2);
             k.Spawn(HellEnemyRole.Scythe, V(0, 0, 116), 180f, minFloor: 2);
             k.Spawn(HellEnemyRole.Ooze, V(12, 0, 116), minFloor: 3);
+            // imps at the walls on the clock (every CollapseWaveEvery s), ahead of a runner on pace
+            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 50), 270f, wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 55), 90f, wave: 1);
+            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 80), 270f, wave: 2);
+            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 85), 90f, wave: 2);
+            k.Spawn(HellEnemyRole.Imp, V(W - 1.5f, 5, 104), 270f, wave: 3);
+            k.Spawn(HellEnemyRole.Imp, V(-W + 1.5f, 5, 108), 90f, wave: 3);
+            k.r.tuning.seconds = CollapseWaveEvery;
             k.r.collapseReturnSeconds = -1f;
+            k.r.debris = CollapseDebris(k.r, 1UL, 1f);
             return k.Done();
         }
 
-        /// <summary>The Collapse's timeline: the room second a tile in a lane starts to shake, from its near edge.</summary>
-        public const float CollapseDelay = 4f, CollapseFastLaneSpeed = 7f, CollapseSafeLaneSpeed = 4f, CollapseStartZ = 8f;
+        /// <summary>The Collapse's numbers (docs/HELL-ROOMS.md, "Tuning"): each lane's front speed (m/s) and its delay (s): the
+        /// front sets off from the entry (<see cref="CollapseFrontOriginZ"/>, where you land) this long after the room starts,
+        /// and a row starts to shake when the front reaches its near edge. The tiles run from <see cref="CollapseStartZ"/> to
+        /// <see cref="CollapseEndZ"/>. The wall imps' wave interval.</summary>
+        public const float CollapseFastLaneSpeed = 10.5f, CollapseFastDelay = 0.5f;
+        public const float CollapseSafeLaneSpeed = 8f, CollapseSafeDelay = 1.5f;
+        public const float CollapseFrontOriginZ = -4f, CollapseStartZ = 8f, CollapseEndZ = 112f, CollapseWaveEvery = 3f;
 
-        public static float CollapseTileSeconds(float nearZ, bool safeLane, float speedScale = 1f)
+        /// <summary>The Collapse's timeline: the room second a tile in a lane starts to shake, from its near edge.</summary>
+        public static float CollapseTileSeconds(float nearZ, bool safeLane, float speedScale = 1f) =>
+            CollapseTileSeconds(nearZ, safeLane ? CollapseSafeDelay : CollapseFastDelay, (safeLane ? CollapseSafeLaneSpeed : CollapseFastLaneSpeed) * speedScale);
+
+        /// <summary>The same for any front: <paramref name="delay"/> s after the start from the entry, at <paramref name="speed"/>.</summary>
+        public static float CollapseTileSeconds(float nearZ, float delay, float speed) =>
+            delay + Math.Max(0f, nearZ - CollapseFrontOriginZ) / speed;
+
+        /// <summary>The z a lane's front (the row starting to shake) has reached at room second <paramref name="t"/>.</summary>
+        public static float CollapseFrontZ(float t, bool safeLane, float speedScale = 1f)
         {
             float v = (safeLane ? CollapseSafeLaneSpeed : CollapseFastLaneSpeed) * speedScale;
-            return CollapseDelay + Math.Max(0f, nearZ - CollapseStartZ) / v;
+            return CollapseFrontOriginZ + Math.Max(0f, t - (safeLane ? CollapseSafeDelay : CollapseFastDelay)) * v;
+        }
+
+        /// <summary>
+        /// The Collapse's falling debris, seeded (<see cref="HellDebris"/> has the numbers): in each lane a drop every
+        /// <see cref="HellDebris.MinGap"/>..<see cref="HellDebris.MaxGap"/> s, landing <see cref="HellDebris.MinLead"/>..
+        /// <see cref="HellDebris.MaxLead"/> m ahead of that lane's front (where a runner on pace is), on the lane's running line
+        /// (the fast lane's middle, the safe path's line) give or take <see cref="HellDebris.SideJitter"/> m, so it forces a
+        /// sidestep. Never on a lava gap or a fin. In the base frame (call before mirroring or turning the room).
+        /// </summary>
+        public static List<HellDebrisDrop> CollapseDebris(HellRoomDef r, ulong seed, float speedScale)
+        {
+            var all = new List<HellDebrisDrop>();
+            var rng = new Rng(seed * 0x9E3779B97F4A7C15UL + 0xD1B54A32D192ED03UL);
+            for (int lane = 0; lane < 2; lane++)
+            {
+                bool safeLane = lane == 1;
+                float t = 1.2f;
+                for (int guard = 0; guard < 64; guard++)
+                {
+                    t += HellDebris.MinGap + (HellDebris.MaxGap - HellDebris.MinGap) * rng.NextFloat();
+                    float front = CollapseFrontZ(t, safeLane, speedScale);
+                    if (front + HellDebris.MinLead > CollapseEndZ - 3f) break;
+                    float z = front + HellDebris.MinLead + (HellDebris.MaxLead - HellDebris.MinLead) * rng.NextFloat();
+                    float side = (rng.NextFloat() * 2f - 1f) * HellDebris.SideJitter;
+                    if (z > CollapseEndZ - 2f) continue;
+                    float x;
+                    if (safeLane)
+                    {
+                        bool onFin = false;
+                        for (int i = 0; i < CollapseBaffleCount; i++)
+                        {
+                            float bz = CollapseBaffleFirstZ + CollapseBaffleSpacing * i;
+                            if (z > bz - HellDebris.Radius && z < bz + 0.6f + HellDebris.Radius) onFin = true;
+                        }
+                        if (onFin) continue;
+                        x = LineXAt(r.safePath, z) + side;
+                    }
+                    else
+                    {
+                        bool onGap = false;
+                        foreach (var g in CollapseFastGaps)
+                            if (z > g[0] - HellDebris.Radius && z < g[1] + HellDebris.Radius) onGap = true;
+                        if (onGap) continue;
+                        x = side;
+                    }
+                    all.Add(new HellDebrisDrop { time = t, position = V(x, 0f, z), radius = HellDebris.Radius });
+                }
+            }
+            all.Sort((a, b) => a.time.CompareTo(b.time));
+            return all;
+        }
+
+        /// <summary>The x of a path (a polyline running north) where it crosses <paramref name="z"/>.</summary>
+        public static float LineXAt(List<Vector3> path, float z)
+        {
+            for (int i = 1; i < path.Count; i++)
+            {
+                var a = path[i - 1];
+                var b = path[i];
+                if ((z >= a.Z && z <= b.Z) && b.Z > a.Z) return a.X + (b.X - a.X) * (z - a.Z) / (b.Z - a.Z);
+            }
+            return path.Count > 0 ? path[path.Count - 1].X : 0f;
         }
 
         // ------------------------------------------------------------------ 6. The Ooze Wells

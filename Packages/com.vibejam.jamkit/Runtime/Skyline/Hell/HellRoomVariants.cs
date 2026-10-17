@@ -41,7 +41,7 @@ namespace JamKit.Skyline
             new HellFloorTuning
             {
                 name = "The Ember Gate", lavaDps = 10f, lavaSinkDamage = 30f, shakeSeconds = 0.9f, returnScale = 0.8f,
-                beamOnScale = 0.8f, collapseSpeedScale = 0.9f, mirror = false, quarterTurns = 0,
+                beamOnScale = 0.8f, collapseSpeedScale = 1f, mirror = false, quarterTurns = 0,
                 roles = new[] { HellEnemyRole.Imp },
             },
             new HellFloorTuning
@@ -53,7 +53,7 @@ namespace JamKit.Skyline
             new HellFloorTuning
             {
                 name = "The Black Glass", lavaDps = 22f, lavaSinkDamage = 60f, shakeSeconds = 0.65f, returnScale = 1.5f,
-                beamOnScale = 1.25f, collapseSpeedScale = 1.12f, mirror = false, quarterTurns = 1,
+                beamOnScale = 1.25f, collapseSpeedScale = 1.06f, mirror = false, quarterTurns = 1,
                 roles = new[] { HellEnemyRole.Imp, HellEnemyRole.Scythe, HellEnemyRole.Ooze },
             },
         };
@@ -80,6 +80,8 @@ namespace JamKit.Skyline
                 else if (h.Timeline)
                     h.timelineSeconds = HellRoomLayouts.CollapseTileSeconds(h.box.min.Z, h.id.StartsWith("tile-safe", StringComparison.Ordinal), t.collapseSpeedScale);
             }
+            // the debris follows the floor's fronts, and each floor drops its own (seeded by the floor)
+            if (b.kind == HellRoomKind.Collapse) b.debris = HellRoomLayouts.CollapseDebris(b, (ulong)(floor + 2), t.collapseSpeedScale);
             var kept = new List<HellSpawn>();
             foreach (var s in b.spawns)
             {
