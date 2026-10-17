@@ -221,6 +221,33 @@ namespace JamKit.Movement
             }
         }
 
+        /// <summary>A copy of every piece of the body's state (position, velocity, mode, every timer and buffer), for a rewind
+        /// (the Hell descent's Rewind, docs/HELL-ABILITIES.md). Opaque; give it back to <see cref="RestoreState"/>.</summary>
+        public object SaveState() => MemberwiseClone();
+
+        /// <summary>Puts the body back exactly as <see cref="SaveState"/> found it (the tuning, the world and the profile stay
+        /// as they are now). Stepping on from here gives the same path as stepping on from the save.</summary>
+        public void RestoreState(object state)
+        {
+            if (!(state is MoveSim s)) return;
+            _pos = s._pos; _vel = s._vel; _mode = s._mode; _height = s._height; _crouched = s._crouched; _yaw = s._yaw; _time = s._time;
+            _grounded = s._grounded; _groundNormal = s._groundNormal; _sinceGrounded = s._sinceGrounded; _jumpedSinceGround = s._jumpedSinceGround;
+            _jumpBuffer = s._jumpBuffer; _crouchBuffer = s._crouchBuffer; _landGrace = s._landGrace; _sinceJump = s._sinceJump; _sinceHop = s._sinceHop;
+            _groundedFor = s._groundedFor; _yawRate = s._yawRate; _lastYaw = s._lastYaw; _hasLastYaw = s._hasLastYaw; _jumpChain = s._jumpChain;
+            _doubleJump = s._doubleJump;
+            _slideTime = s._slideTime; _lastBoost = s._lastBoost; _slideFatigue = s._slideFatigue;
+            _sprintToggled = s._sprintToggled; _lastKick = s._lastKick;
+            _wallN = s._wallN; _wallT = s._wallT; _wallSide = s._wallSide; _wallTime = s._wallTime; _wallLost = s._wallLost; _sinceWall = s._sinceWall;
+            _wallCoyote = s._wallCoyote; _hasLastWall = s._hasLastWall; _lastWallN = s._lastWallN; _lastWallOffset = s._lastWallOffset;
+            _lastWallLeaveY = s._lastWallLeaveY; _groundSinceWall = s._groundSinceWall; _wallAway = s._wallAway; _catchBuffer = s._catchBuffer;
+            _catchMiss = s._catchMiss; _catchMissTime = s._catchMissTime; _catchMisses = s._catchMisses;
+            _mantleStart = s._mantleStart; _mantleUp = s._mantleUp; _mantleEnd = s._mantleEnd; _mantleLip = s._mantleLip; _mantleNormal = s._mantleNormal;
+            _crouchHeld = s._crouchHeld; _mantleT = s._mantleT; _mantleDur = s._mantleDur; _mantleExit = s._mantleExit; _mantleStuck = s._mantleStuck;
+            _recentSpeed = s._recentSpeed;
+            _events = default;
+            _push = s._push; _pushPending = s._pushPending;
+        }
+
         // ---------- The step ----------
 
         public void Step(in MoveInput input, float h)

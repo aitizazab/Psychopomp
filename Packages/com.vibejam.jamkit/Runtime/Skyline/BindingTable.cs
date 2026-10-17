@@ -6,7 +6,7 @@ namespace JamKit.Skyline
 {
     /// <summary>The buttons a player can rebind (the pause menu's Controls page). Moves and look stay on WASD / the left stick
     /// and the mouse / the right stick in this pass.</summary>
-    public enum BindAction { Jump, Crouch, Sprint, Fire, Aim, Reload, Swap, Inspect, Pause }
+    public enum BindAction { Jump, Crouch, Sprint, Fire, Aim, Reload, Swap, Inspect, Pause, ShadowStep, Rewind }
 
     /// <summary>Which half of the table a binding lives in: the keyboard and mouse, or a pad.</summary>
     public enum BindDevice { KeyboardMouse, Pad }
@@ -34,14 +34,14 @@ namespace JamKit.Skyline
     /// </summary>
     public sealed class BindingTable
     {
-        public const int ActionCount = 9;
+        public const int ActionCount = 11;
         public const char Alt = '|';
         public const string Header = "skyline-bindings 1";
 
         public static readonly BindAction[] AllActions =
         {
             BindAction.Jump, BindAction.Crouch, BindAction.Sprint, BindAction.Fire, BindAction.Aim,
-            BindAction.Reload, BindAction.Swap, BindAction.Inspect, BindAction.Pause,
+            BindAction.Reload, BindAction.Swap, BindAction.Inspect, BindAction.ShadowStep, BindAction.Rewind, BindAction.Pause,
         };
 
         readonly string[,] _paths = new string[2, ActionCount];
@@ -64,6 +64,8 @@ namespace JamKit.Skyline
                     case BindAction.Reload: return "<Keyboard>/r";
                     case BindAction.Swap: return "<Keyboard>/q";
                     case BindAction.Inspect: return "<Keyboard>/f";
+                    case BindAction.ShadowStep: return "<Keyboard>/e";
+                    case BindAction.Rewind: return "<Keyboard>/v";
                     default: return "<Keyboard>/escape";
                 }
             }
@@ -77,6 +79,8 @@ namespace JamKit.Skyline
                 case BindAction.Reload: return "<Gamepad>/buttonWest";
                 case BindAction.Swap: return "<Gamepad>/buttonNorth";
                 case BindAction.Inspect: return "<Gamepad>/dpad/up";
+                case BindAction.ShadowStep: return "<Gamepad>/rightShoulder";
+                case BindAction.Rewind: return "<Gamepad>/leftShoulder";
                 default: return "<Gamepad>/start";
             }
         }

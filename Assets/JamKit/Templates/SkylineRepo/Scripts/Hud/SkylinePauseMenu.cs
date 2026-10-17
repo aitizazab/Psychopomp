@@ -346,6 +346,7 @@ namespace JamKit.SkylineRepo
                 case BindAction.Crouch: return "Crouch / slide";
                 case BindAction.Swap: return "Swap gun";
                 case BindAction.Pause: return "Pause menu";
+                case BindAction.ShadowStep: return "Shadow Step";
                 default: return a.ToString();
             }
         }

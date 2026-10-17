@@ -66,6 +66,14 @@ namespace JamKit.Movement
             return _lastSteps;
         }
 
+        /// <summary>After the sim's state was replaced (a rewind): no interpolation across the jump, no stale presses.</summary>
+        public void Resync()
+        {
+            _prev = Sim.Position;
+            _acc = 0;
+            _jumpLatch = _crouchLatch = _sprintToggleLatch = false;
+        }
+
         /// <summary>Moves the body without interpolating across the jump (spawn, respawn).</summary>
         public void Teleport(Vector3 feet, float yaw, Vector3 velocity)
         {
