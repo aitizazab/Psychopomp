@@ -78,8 +78,10 @@ namespace JamKit.Skyline
             // A: an island, bridged from the west ring
             k.Deck(-22, 30, -14, 38, LavaSurface - LavaDepth, 0f);
             k.Floor(-Ring, 32, -22, 36);
-            // A-B: the wall-run wall
-            k.Wall(-12, 43, 10, 43.6f, LavaSurface - LavaDepth, 7f, true, "wallrun");
+            // A-B: the wall-run wall (9 m, so a wall-run sinking from a double jump's height leaves it above the landing), running off its end onto B's low landing (a hop and a
+            // mantle up onto B). Simulated: HellFastLines "A-B wall-run onto B".
+            k.Wall(-12, 43, -3, 43.6f, LavaSurface - LavaDepth, 7f, true, "wallrun");
+            k.Deck(-3, 41, 20, 48, LavaSurface - LavaDepth, 0.5f);
             // B: a raised island, a ramp from the east ring
             k.Deck(12, 48, 20, 56, LavaSurface - LavaDepth, 3f);
             k.Ramp(20, 50, Ring, 54, LavaSurface - LavaDepth, 3f, 0f, true);
@@ -88,33 +90,47 @@ namespace JamKit.Skyline
             {
                 float t = i / 6f;
                 float cx = 12f + (-12f - 12f) * t, cz = 56f + (76f - 56f) * t;
-                k.Collapse(cx - 1.5f, cz - 1.5f, cx + 1.5f, cz + 1.5f, 3f + 0.5f * i);
+                k.Collapse(cx - 2f, cz - 2f, cx + 2f, cz + 2f, 3f + 0.5f * i);
             }
             // C: a pillar, a ramp from the west ring
             k.Deck(-20, 76, -12, 84, LavaSurface - LavaDepth, 6f);
             k.Ramp(-Ring, 78, -20, 82, LavaSurface - LavaDepth, 0f, 6f, true);
-            // C-D: two dark perches
-            Pillar(k, -5.35f, 86.65f, -2.85f, 89.15f, 1f);
-            Pillar(k, 6.85f, 94.85f, 9.35f, 97.35f, 1f);
+            // C-D: two dark perches: jump down onto the first, Shadow Step to the second (keeping your speed), hop to D
+            Pillar(k, -6.25f, 86.75f, -1.75f, 91.25f, 1.5f);
+            Pillar(k, 5f, 97f, 9f, 101f, 1f);
             // D: an island, bridged from the east ring
-            k.Deck(16, 100, 24, 108, LavaSurface - LavaDepth, 0f);
-            k.Floor(24, 102, Ring, 106);
+            k.Deck(12, 100, 20, 108, LavaSurface - LavaDepth, 0f);
+            k.Floor(20, 102, Ring, 106);
             // D-E: the beam platform
-            k.Deck(2, 114, 20, 120, LavaSurface - LavaDepth, 0f);
+            k.Deck(2, 110, 20, 120, LavaSurface - LavaDepth, 0f);
             k.Beam(2, 116.8f, 20, 117.2f, 0f, 2.2f, 0.8f, 0f);
             // E: the pit (floor y -2), walled, a ramp up to the north terrace
             k.Floor(-10, 128, 6, 144, -2f);
             k.Ramp(-10, 144, 6, 160, -2.5f, -2f, 0f, false);
             k.Wall(-10.6f, 127.4f, -10f, 160, -2.5f, 0.5f, false, "pit");
-            k.Wall(6f, 127.4f, 6.6f, 160, -2.5f, 0.5f, false, "pit");
+            k.Wall(6f, 127.4f, 6.6f, 130, -2.5f, 0.5f, false, "pit");
+            k.Wall(6f, 133, 6.6f, 160, -2.5f, 0.5f, false, "pit");
             k.Wall(-10f, 127.4f, 6f, 128, -2.5f, 0.5f, false, "pit");
-            // E-F: the two tall runnable walls
-            k.Wall(-6f, 136, -5.4f, 146, -2.5f, 9f, true, "wallrun");
-            k.Wall(-13f, 144, -12.4f, 152, LavaSurface - LavaDepth, 9f, true, "wallrun");
+            // E-F: a tall runnable wall in the pit: run its west face north, wall-jump west over the pit wall onto a low block
+            // in the lava, then jump and mantle up onto F's ledge
+            k.Wall(-4f, 138, -3.4f, 150, -2.5f, 9f, true, "wallrun");
+            k.Deck(-14f, 146, -10.6f, 160, LavaSurface - LavaDepth, 0.5f);
             // F: the high ledge, a ramp up from the north terrace
             k.Deck(-Ring, 148, -14, 166, LavaSurface - LavaDepth, 4f);
             k.Ramp(-14, 162, 4, 166, 0f, 4f, 0f, true);
             k.Dark(-18, 4f, 148, -14, 7f, 152);
+            // the safe crossings (2026-10-17, the safe path was 931 m): stone walkways in the lava, kept off the fast lines
+            k.Floor(-20, 22, -16, 30);                       // the start terrace to A
+            k.Floor(-16, 26, 23, 29);                        // the south walkway east...
+            k.Floor(18, 29, 21, 41);                         // ...north onto B's landing...
+            k.Ramp(14, 44, 18, 48, 0f, 0.5f, 3f, false);      // ...and a ramp up onto B
+            k.Ramp(14, 56, 18, 62, 0f, 3f, 0f, false);        // B's north ramp down to the walkway to C
+            k.Floor(14, 62, 18, 78.5f);
+            k.Floor(-2, 78.5f, 25, 81.5f);                   // the crossing in front of C, and C's east ramp
+            k.Ramp(-12, 78.5f, -2, 81.5f, LavaSurface - LavaDepth, 6f, 0f, true);
+            k.Floor(22, 81.5f, 25, 130);                     // the east spine, past D's bridge to the pit
+            k.Floor(6.6f, 130, 25, 133);                     // the bridge into the pit (through a gap in its east wall)
+            k.Ramp(3, 130, 6.6f, 133, -2.5f, -2f, 0f, true);
             // cover on the ring's lava edge, gaps at the bridges and ramps
             for (float z = 26; z < 156; z += 14f)
             {
@@ -125,22 +141,26 @@ namespace JamKit.Skyline
             k.Stop("sigil-A", V(-18, 0, 34), 2f);
             k.Stop("sigil-B", V(16, 3, 52), 2f);
             k.Stop("sigil-C", V(-16, 6, 80), 2f);
-            k.Stop("sigil-D", V(20, 0, 104), 2f);
+            k.Stop("sigil-D", V(16, 0, 104), 2f);
             k.Stop("sigil-E", V(2, -2, 132), 2f);
             k.Stop("sigil-F", V(-22, 4, 154), 2f);
 
-            V3(k.r.safePath, k.r.entry, 0, 0, 10, -33, 0, 20, -33, 0, 34, -18, 0, 34,            // A
-                -33, 0, 34, -33, 0, 20, 33, 0, 20, 33, 0, 52, 30, 0, 52, 20, 3, 52, 16, 3, 52,   // B
-                20, 3, 52, 30, 0, 52, 33, 0, 52, 33, 0, 20, -33, 0, 20, -33, 0, 80, -30, 0, 80, -20, 6, 80, -16, 6, 80, // C
-                -20, 6, 80, -30, 0, 80, -33, 0, 80, -33, 0, 158, -33, 0, 168, 33, 0, 168, 33, 0, 104, 20, 0, 104,     // D
-                33, 0, 104, 33, 0, 168, 8, 0, 168, 8, 0, 161, -2, 0, 161, -2, 0, 160, -2, -2, 144, 2, -2, 132,       // E
-                -2, -2, 144, -2, 0, 160, -2, 0, 161, 5, 0, 161, 5, 0, 164, -14, 4, 164, -20, 4, 160, -22, 4, 154,   // F
+            V3(k.r.safePath, k.r.entry, 0, 0, 0, -18, 0, 21, -18, 0, 33,                                     // A
+                -18, 0, 27.5f, 19.5f, 0, 27.5f, 19.5f, 0, 40.8f, 19.5f, 0.5f, 41.4f, 16, 0.5f, 44.2f, 16, 3, 48, 16, 3, 51, // B
+                16, 3, 56, 16, 0, 62, 16, 0, 80, -2, 0, 80, -12, 6, 80, -14.5f, 6, 80,                     // C
+                -12, 6, 80, -2, 0, 80, 23.5f, 0, 80, 23.5f, 0, 104, 17.5f, 0, 104,                          // D
+                23.5f, 0, 104, 23.5f, 0, 131.5f, 6.6f, 0, 131.5f, 3, -2, 131.5f,                            // E
+                -2, -2, 144, -2, 0, 160, -2, 0, 161, 5, 0, 161, 5, 0, 164, -14, 4, 164, -20, 4, 160, -22, 4, 155.5f, // F
                 -20, 4, 160, -14, 4, 164, 5, 0, 164, 5, 0, 168, 0, 0, 168);
             k.r.safePath.Add(k.r.exit);
-            V3(k.r.fastPath, k.r.entry, -14, 0, 22, -18, 0, 34, -12, 1, 42.4f, 0, 2, 42.4f, 10, 2, 42.4f, 16, 3, 52,
-                8, 3.5f, 59.3f, 4, 4, 62.7f, 0, 4.5f, 66, -4, 5, 69.3f, -8, 5.5f, 72.7f, -16, 6, 80,
-                -4.1f, 1, 87.9f, 8.1f, 1, 96.1f, 20, 0, 104, 11, 0, 117, 4, -2, 130, 2, -2, 132,
-                -5.7f, 0, 140, -5.7f, 2, 145, -12.1f, 3, 148, -12.1f, 3.5f, 151, -22, 4, 154, -20, 4, 165.9f, -14, 0, 168);
+            // the fast line, leg by leg as simulated (HellFastLines.Sigils)
+            V3(k.r.fastPath, k.r.entry, -14, 0, 22, -18, 0, 34,                                         // A
+                -14.7f, 0, 37.4f, -10.7f, 2, 41.8f, -3, 0.5f, 42.4f, 10, 0.5f, 45.5f, 16, 3, 52,           // B: the wall-run
+                8, 3.5f, 59.3f, 4, 4, 62.7f, 0, 4.5f, 66, -4, 5, 69.3f, -8, 5.5f, 72.7f, -16, 6, 80,       // C: the collapse chain
+                -12.6f, 6, 83, -4, 1.5f, 89, 7, 1, 99, 16, 0, 104,                                          // D: perch, Shadow Step, hop
+                13, 0, 110.5f, 9, 0, 117, 5, -2, 128, 2, -2, 132,                                           // E: the beam slide, the pit
+                -7, -2, 134.5f, -4.4f, -1, 140, -4.4f, -0.5f, 143, -12, 0.5f, 152, -14, 4, 154, -22, 4, 154, // F: the wall-run out
+                -20, 4, 165.9f, -14, 0, 168);
             k.r.fastPath.Add(k.r.exit);
 
             k.Spawn(HellEnemyRole.Imp, V(0, 6, 34));
