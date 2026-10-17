@@ -13,6 +13,23 @@ namespace JamKit.SkylineRepo
         void RewoundBeforeSpawn();
     }
 
+    /// <summary>Snapshots without garbage: a rewindable takes its snapshot object from here each fixed step and fills it in.
+    /// The pool turns over more slowly than the Rewind's ring, so an object is reused only after its frame has left the ring.</summary>
+    public sealed class HellSnapPool<T> where T : class, new()
+    {
+        T[] _items;
+        int _i = -1;
+
+        public T Next()
+        {
+            if (_items == null) _items = new T[HellRewind.PoolSize];
+            _i = (_i + 1) % _items.Length;
+            var t = _items[_i];
+            if (t == null) _items[_i] = t = new T();
+            return t;
+        }
+    }
+
     /// <summary>
     /// The Rewind (docs/HELL-ABILITIES.md): every fixed step, a snapshot of every <see cref="IHellRewindable"/> in
     /// <see cref="HellRewindRegistry.All"/> goes into a ring a little over <see cref="seconds"/> long (game time); a rewind
@@ -28,6 +45,10 @@ namespace JamKit.SkylineRepo
     {
         public float seconds = 4f;
         public float cooldown = 20f;
+        /// <summary>The ring always holds this much (the longest rewind any skill gives).</summary>
+        public const float MaxSeconds = 6f;
+        /// <summary>The snapshot pools' size: more than the ring holds at the fixed step.</summary>
+        public static int PoolSize => SnapshotRing<int>.CapacityFor(MaxSeconds + 0.5f, Mathf.Max(0.005f, Time.fixedDeltaTime)) + 2;
 
         sealed class Frame
         {
@@ -52,7 +73,8 @@ namespace JamKit.SkylineRepo
         {
             Instance = this;
             Cooldown = new AbilityCooldown(cooldown);
-            _ring = new SnapshotRing<Frame>(SnapshotRing<Frame>.CapacityFor(seconds + 0.25f, Time.fixedDeltaTime));
+            // sized for the longest rewind a skill can ask for (Deeper Rewind: 6 s)
+            _ring = new SnapshotRing<Frame>(SnapshotRing<Frame>.CapacityFor(Mathf.Max(seconds, MaxSeconds) + 0.25f, Time.fixedDeltaTime));
         }
 
         void OnDestroy()

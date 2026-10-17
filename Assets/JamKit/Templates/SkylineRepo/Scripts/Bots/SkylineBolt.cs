@@ -215,7 +215,7 @@ namespace JamKit.SkylineRepo
                     if (IsTarget(c) && _target != null) _target.TakeAttack(_damage, _attackerId, _attackerPos);
                     // the zap where it struck: a few white-hot sparks (a bolt, not a bot)
                     Vector3 at = _hits[bi].point == Vector3.zero ? from : _hits[bi].point;
-                    if (_ember) HellFx.EmberHit(at, _hits[bi].normal);
+                    if (_ember) HellEnemyFx.EmberHit(at, _hits[bi].normal);
                     else SkylineSpark.Burst(at, _hits[bi].normal, 5, 3.5f);
                     Stop();
                     return;

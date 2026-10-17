@@ -202,7 +202,7 @@ namespace JamKit.Movement
         }
 
         /// <summary>The body's whole movement state (for a rewind; docs/HELL-ABILITIES.md). Null before Awake.</summary>
-        public object SaveSimState() => _sim != null ? _sim.SaveState() : null;
+        public object SaveSimState(object reuse = null) => _sim != null ? _sim.SaveState(reuse) : null;
 
         /// <summary>Puts the body back as <see cref="SaveSimState"/> found it: the sim, the capsule's size and position, no
         /// interpolation across the jump; then the look.</summary>

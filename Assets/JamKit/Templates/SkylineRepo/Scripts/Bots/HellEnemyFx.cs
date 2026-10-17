@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace JamKit.SkylineRepo
 {
-    /// <summary>The Hell enemies' effects (docs/HELL-ENEMIES.md): a death becomes a burst of fire and smoke with embers, a fire bolt
+    /// <summary>The Hell enemies' effects (docs/HELL-ENEMIES.md; named apart from the abilities' <see cref="HellFx"/>): a death becomes a burst of fire and smoke with embers, a fire bolt
     /// strikes with a small flare. Cosmetic (not rewound). Pooled, filled up front by <see cref="Prewarm"/> with the scythes and lava
     /// pools, so nothing is created mid-fight.</summary>
-    public static class HellFx
+    public static class HellEnemyFx
     {
         public static void Prewarm()
         {

@@ -18,7 +18,7 @@ namespace JamKit.SkylineRepo
     /// <item><b>Lava ooze</b> (the floor-care unit's id): the floor-care unit's drive, idle crawl and reach; it throbs
     /// (<see cref="OozePulse"/>), faster through its wind-up, and its attack slams a lava pool round itself (<see cref="HellLavaPool"/>),
     /// at most <c>poolMax</c> burning at once.</item>
-    /// <item><b>Death</b>: a burst of fire and smoke (<see cref="HellFx.DeathBurst"/>), plates thrown off, then the bot is DEACTIVATED,
+    /// <item><b>Death</b>: a burst of fire and smoke (<see cref="HellEnemyFx.DeathBurst"/>), plates thrown off, then the bot is DEACTIVATED,
     /// never destroyed, so the Rewind can bring it back.</item>
     /// <item><b>Rewind</b>: one snapshot path for every bot, in SkylineBot.HellRewind.cs (docs/HELL-INTEGRATION.md); the Hell attack
     /// state here (throb, pools, arm, stride, charge) is in it. A dead Hell enemy is reactivated by a restore.</item>
@@ -242,7 +242,7 @@ namespace JamKit.SkylineRepo
             if (_chargeBall != null) _chargeBall.SetActive(false);
             ClearFlash();
             Vector3 c = Center;
-            HellFx.DeathBurst(c, HellBodySize);
+            HellEnemyFx.DeathBurst(c, HellBodySize);
             for (int i = 0; i < Parts.plates.Length; i++)
             {
                 var t = Parts.plates[i];

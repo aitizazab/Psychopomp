@@ -23,22 +23,25 @@ namespace JamKit.SkylineRepo
 
         sealed class PoolRewind : IHellRewindable
         {
+            readonly HellSnapPool<List<HellBoltSnap>> _lists = new HellSnapPool<List<HellBoltSnap>>();
+
             public object Snapshot()
             {
                 Purge();
-                List<HellBoltSnap> list = null;
+                var list = _lists.Next();   // pooled: no garbage per fixed step
+                list.Clear();
                 for (int i = 0; i < _pool.Count; i++)
                 {
                     var b = _pool[i];
                     if (!b.gameObject.activeSelf) continue;
-                    (list ?? (list = new List<HellBoltSnap>())).Add(new HellBoltSnap
+                    list.Add(new HellBoltSnap
                     {
                         pos = b.transform.position, rot = b.transform.rotation, vel = b._vel, attackerPos = b._attackerPos, from = b._from,
                         radius = b._radius, damage = b._damage, age = b._age, attackerId = b._attackerId, target = b._target, owner = b._owner,
                         ember = b._ember,
                     });
                 }
-                return list;   // null: none in flight
+                return list;
             }
 
             public void Restore(object snapshot)

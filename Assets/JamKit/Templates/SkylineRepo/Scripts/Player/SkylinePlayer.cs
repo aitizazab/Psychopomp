@@ -101,6 +101,8 @@ namespace JamKit.SkylineRepo
         /// <summary>Asked when the Unit is wrecked, before <see cref="Wrecked"/>: true means a Hell skill undid it (it restored
         /// the armour, e.g. by a rewind) and nothing restarts.</summary>
         [NonSerialized] public Func<bool> WreckIntercept;
+        /// <summary>Multiplies each shot's damage, asked once a shot (a Hell skill: Ambush's triple first shot).</summary>
+        [NonSerialized] public Func<float> ShotDamageScale;
 
         // ISkylineTarget
         public Vector3 Chest => transform.position + Vector3.up * ChestHeight;
@@ -375,7 +377,8 @@ namespace JamKit.SkylineRepo
             var def = gun.Def;
             Vector3 aim = AimDirection;
             Vector3 muzzle = viewmodel != null ? viewmodel.MuzzleWorld() : EyePosition + aim * 0.5f;
-            var o = SkylineShooting.Fire(def, EyePosition, aim, muzzle, _rng, OnPelletHit, AimSpreadScale);
+            float damageScale = ShotDamageScale != null ? ShotDamageScale() : 1f;   // a Hell skill (Ambush: the first shot after a Shadow Step)
+            var o = SkylineShooting.Fire(def, EyePosition, aim, muzzle, _rng, OnPelletHit, AimSpreadScale, damageScale);
             Ledger.RecordShot(slot, o.hit, o.damage, o.range, o.killed);
             Kick.Kick(def.kick, _rng.NextFloat() * 2f - 1f);
             Shake.AddTrauma(def.shakePerShot);
@@ -469,15 +472,15 @@ namespace JamKit.SkylineRepo
             public int specialShots, specialKills;
         }
 
-        public RewindState SaveForRewind()
+        /// <summary>The Unit now, into <paramref name="into"/> when given (a pooled snapshot: no allocation).</summary>
+        public RewindState SaveForRewind(RewindState into = null)
         {
-            var s = new RewindState
-            {
-                sim = movement != null ? movement.SaveSimState() : null,
-                yaw = Yaw, pitch = Pitch, plating = Armor.Plating, chassis = Armor.Chassis, boostReady = Boost.Ready,
-                active = Loadout.ActiveIndex,
-                mag0 = Loadout[0].Ammo, res0 = Loadout[0].State.Reserve, mag1 = Loadout[1].Ammo, res1 = Loadout[1].State.Reserve,
-            };
+            var s = into ?? new RewindState();
+            s.sim = movement != null ? movement.SaveSimState(s.sim) : null;
+            s.yaw = Yaw; s.pitch = Pitch; s.plating = Armor.Plating; s.chassis = Armor.Chassis; s.boostReady = Boost.Ready;
+            s.active = Loadout.ActiveIndex;
+            s.mag0 = Loadout[0].Ammo; s.res0 = Loadout[0].State.Reserve; s.mag1 = Loadout[1].Ammo; s.res1 = Loadout[1].State.Reserve;
+            s.hasLedger = false;
             var ammo = SkylineAmmo.Instance;
             if (ammo != null)
             {

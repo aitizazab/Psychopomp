@@ -25,7 +25,7 @@ namespace JamKit.SkylineRepo
         void Start()
         {
             SkylineBot.HellRoster = true;
-            HellFx.Prewarm();
+            HellEnemyFx.Prewarm();
             SkylineBolt.Prewarm();
             _player = Object.FindAnyObjectByType<SkylinePlayer>();
             if (_player == null)

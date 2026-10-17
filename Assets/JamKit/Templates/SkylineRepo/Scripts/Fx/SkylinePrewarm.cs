@@ -30,7 +30,7 @@ namespace JamKit.SkylineRepo
             SkylineSpark.Prewarm();
             SkylineBolt.Prewarm();
             SkylinePuddle.Prewarm();
-            HellFx.Prewarm();   // the Hell enemies' flames, scythes and lava pools (docs/HELL-ENEMIES.md)
+            HellEnemyFx.Prewarm();   // the Hell enemies' flames, scythes and lava pools (docs/HELL-ENEMIES.md)
             SkylineSpotMarker.PrewarmLooks();
             SkylineBotLook.Lit(SkylineBotLook.White);
             SkylineBotLook.Lit(SkylineBotLook.Gold);

@@ -46,6 +46,7 @@ namespace JamKit.SkylineRepo
         }
 
         bool _hellRetired;
+        readonly HellSnapPool<HellSnap> _hellSnaps = new HellSnapPool<HellSnap>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetHellStatics()
@@ -66,7 +67,7 @@ namespace JamKit.SkylineRepo
         HellSnap SnapshotNow()
         {
             if (!_initialized || Body == null) return null;
-            var s = new HellSnap();
+            var s = _hellSnaps.Next();   // pooled (HellSnapPool): no new snapshot objects per fixed step
             s.active = gameObject.activeSelf; s.wrecked = Body.Wrecked; s.awake = IsAwake; s.sees = SeesTarget; s.everSeen = _everSeen;
             s.sawLast = _sawLastStep; s.hasGoal = _hasGoal; s.returning = _returning; s.charging = _charging; s.striding = _striding;
             s.pos = _pos; s.home = _home; s.kick = _kick; s.lastKnown = _lastKnown; s.goal = _goal;

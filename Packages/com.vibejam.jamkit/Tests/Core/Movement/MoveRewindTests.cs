@@ -51,6 +51,20 @@ namespace JamKit.Tests.Movement
         }
 
         [Test]
+        public void SaveIntoAnEarlierSaveReusesIt()
+        {
+            var sim = Standing(Flat(), Vector3.Zero);
+            var first = sim.SaveState();
+            Steps(sim, Forward(), 60);
+            var again = sim.SaveState(first);
+            Assert.That(again, Is.SameAs(first));
+            var at = sim.Position;
+            Steps(sim, Forward(), 60);
+            sim.RestoreState(again);
+            Assert.That(Vector3.Distance(sim.Position, at), Is.LessThan(1e-6f));
+        }
+
+        [Test]
         public void DriverResyncDropsInterpolation()
         {
             var sim = Standing(Flat(), Vector3.Zero);

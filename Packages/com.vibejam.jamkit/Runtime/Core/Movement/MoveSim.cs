@@ -225,6 +225,13 @@ namespace JamKit.Movement
         /// (the Hell descent's Rewind, docs/HELL-ABILITIES.md). Opaque; give it back to <see cref="RestoreState"/>.</summary>
         public object SaveState() => MemberwiseClone();
 
+        /// <summary>As <see cref="SaveState"/>, into <paramref name="reuse"/> (an earlier save, no allocation) when it is one.</summary>
+        public object SaveState(object reuse)
+        {
+            if (reuse is MoveSim r && r != this) { r.RestoreState(this); return r; }
+            return MemberwiseClone();
+        }
+
         /// <summary>Puts the body back exactly as <see cref="SaveState"/> found it (the tuning, the world and the profile stay
         /// as they are now). Stepping on from here gives the same path as stepping on from the save.</summary>
         public void RestoreState(object state)

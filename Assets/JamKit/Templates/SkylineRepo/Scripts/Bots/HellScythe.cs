@@ -203,10 +203,15 @@ namespace JamKit.SkylineRepo
             public float spin;
         }
 
-        public object Snapshot() => new Snap
+        readonly HellSnapPool<Snap> _snaps = new HellSnapPool<Snap>();
+
+        public object Snapshot()
         {
-            active = gameObject.activeSelf, beam = _beam, beamState = StateCopy.Capture(_beam), target = _target, attackerId = _attackerId, spin = _spin,
-        };
+            var s = _snaps.Next();   // pooled: no new snapshot objects per fixed step
+            s.beamState = StateCopy.Capture(_beam, s.beamState);
+            s.active = gameObject.activeSelf; s.beam = _beam; s.target = _target; s.attackerId = _attackerId; s.spin = _spin;
+            return s;
+        }
 
         public void Restore(object snapshot)
         {

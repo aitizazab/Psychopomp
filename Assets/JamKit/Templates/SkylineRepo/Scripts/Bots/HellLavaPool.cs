@@ -153,11 +153,15 @@ namespace JamKit.SkylineRepo
             public Vector3 position;
         }
 
-        public object Snapshot() => new Snap
+        readonly HellSnapPool<Snap> _snaps = new HellSnapPool<Snap>();
+
+        public object Snapshot()
         {
-            active = gameObject.activeSelf, lava = _lava, lavaState = StateCopy.Capture(_lava), target = _target, attackerId = _attackerId,
-            position = transform.position,
-        };
+            var s = _snaps.Next();   // pooled: no new snapshot objects per fixed step
+            s.lavaState = StateCopy.Capture(_lava, s.lavaState);
+            s.active = gameObject.activeSelf; s.lava = _lava; s.target = _target; s.attackerId = _attackerId; s.position = transform.position;
+            return s;
+        }
 
         public void Restore(object snapshot)
         {

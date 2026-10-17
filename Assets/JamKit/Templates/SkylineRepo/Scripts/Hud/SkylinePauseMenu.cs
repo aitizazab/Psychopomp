@@ -347,6 +347,7 @@ namespace JamKit.SkylineRepo
                 case BindAction.Swap: return "Swap gun";
                 case BindAction.Pause: return "Pause menu";
                 case BindAction.ShadowStep: return "Shadow Step";
+                case BindAction.Skill: return "Floor skill";
                 default: return a.ToString();
             }
         }

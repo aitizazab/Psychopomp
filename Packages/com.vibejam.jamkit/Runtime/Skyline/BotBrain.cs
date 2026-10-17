@@ -59,6 +59,13 @@ namespace JamKit.Skyline
         /// <summary>The brain's state and timers (a rewind, docs/HELL-ABILITIES.md; the seeded jitter stream runs on).</summary>
         public object SaveState() => MemberwiseClone();
 
+        /// <summary>As <see cref="SaveState"/>, into <paramref name="reuse"/> (an earlier save, no allocation) when it is one.</summary>
+        public object SaveState(object reuse)
+        {
+            if (reuse is BotBrain r && r != this) { r.RestoreState(this); return r; }
+            return MemberwiseClone();
+        }
+
         public void RestoreState(object state)
         {
             if (!(state is BotBrain s)) return;

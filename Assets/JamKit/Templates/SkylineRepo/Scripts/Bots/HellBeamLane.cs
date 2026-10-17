@@ -54,13 +54,22 @@ namespace JamKit.SkylineRepo
             HellScythe.Spawn(transform.TransformPoint(from), transform.TransformPoint(to), telegraph, beamSpeed, hold, hitRadius, damage, target, "beam-lane");
         }
 
-        public object Snapshot() => _clock != null ? StateCopy.Capture(_clock) : null;
+        sealed class Snap { public object clock; }
+        readonly HellSnapPool<Snap> _snaps = new HellSnapPool<Snap>();
+
+        public object Snapshot()
+        {
+            var s = _snaps.Next();   // pooled: no new snapshot objects per fixed step
+            s.clock = _clock != null ? StateCopy.Capture(_clock, s.clock) : null;
+            return s;
+        }
 
         public void Restore(object snapshot)
         {
-            if (snapshot == null) { _clock = null; return; }
+            if (!(snapshot is Snap s)) return;
+            if (s.clock == null) { _clock = null; return; }
             if (_clock == null) _clock = new BeamLane(period, offset);
-            StateCopy.Apply(_clock, snapshot);
+            StateCopy.Apply(_clock, s.clock);
         }
 
         void OnDrawGizmos()

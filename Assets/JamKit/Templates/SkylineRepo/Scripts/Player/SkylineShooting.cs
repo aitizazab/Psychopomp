@@ -91,7 +91,7 @@ namespace JamKit.SkylineRepo
         /// <paramref name="spreadScale"/> narrows (or widens) the gun's cone: aim down sights passes the gun's
         /// <c>aimSpreadScale</c> eased by how far it is aimed.</summary>
         public static SkylineShotOutcome Fire(GunDef gun, Vector3 eye, Vector3 aim, Vector3 muzzle, Rng rng,
-            Action<SkylineHitInfo, SkylineHitResult> onHit, float spreadScale = 1f)
+            Action<SkylineHitInfo, SkylineHitResult> onHit, float spreadScale = 1f, float damageScale = 1f)
         {
             var o = new SkylineShotOutcome { range = gun.range };
             if (aim.sqrMagnitude < 1e-8f) return o;
@@ -131,7 +131,7 @@ namespace JamKit.SkylineRepo
                         var info = new SkylineHitInfo
                         {
                             gun = gun,
-                            damage = gun.damage * gun.FalloffScale(shotDistance),
+                            damage = gun.damage * gun.FalloffScale(shotDistance) * damageScale,   // damageScale: a Hell skill (Ambush)
                             plate = -1,
                             point = hit.point,
                             normal = hit.normal,
