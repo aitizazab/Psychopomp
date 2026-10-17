@@ -129,6 +129,17 @@ namespace JamKit.Skyline
         public const string MenuHint = "ENTER / A  select      ↑ ↓ / D-PAD  move";
         public const string StatsTitle = "THE DESCENT";
 
+        /// <summary>The Vesper chapter's question (it skips the floors, so no jobs are offered): did you run the God of Death's
+        /// errands on the way down? The answer decides the spare ending (docs/HELL-ENDING.md). PLACEHOLDER WORDS: the creator
+        /// rewrites them (and her name isn't decided).</summary>
+        public const string ErrandsTitle = "ON THE WAY DOWN",
+            ErrandsBody = "Did you run the God of Death's errands through the floors, even if it meant reaching your sister later?",
+            ErrandsYes = "YES, I DID HER FAVOURS",
+            ErrandsNo = "NO, I WENT STRAIGHT FOR MY SISTER";
+        public const bool ErrandsPlaceholder = true;
+        /// <summary>The stats' jobs cell when the Vesper chapter's answer stood in for the jobs.</summary>
+        public const string StatsErrandsLabel = "JOBS (ASSUMED)", StatsErrandsYes = "YES", StatsErrandsNo = "NO";
+
         /// <summary>The placeholder story lines (for the docs and a test that keeps them marked).</summary>
         public static IEnumerable<HellCard> PlaceholderCards()
         {

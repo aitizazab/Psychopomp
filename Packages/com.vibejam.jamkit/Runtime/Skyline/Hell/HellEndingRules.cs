@@ -117,10 +117,15 @@ namespace JamKit.Skyline
         /// <summary>The ending: a kill is <see cref="HellEndings.Kill"/>; a spare is <see cref="HellEndings.SpareKept"/> when the God of
         /// Death's jobs were mostly done (<see cref="HellJobLedger.Favoured"/>'s rule: at least two-thirds of those offered, and at
         /// least 2), else <see cref="HellEndings.SpareCost"/>.</summary>
-        public static string Pick(bool killed, int jobsOffered, int jobsDone)
+        public static string Pick(bool killed, int jobsOffered, int jobsDone) => Pick(killed, jobsOffered, jobsDone, null);
+
+        /// <summary>As <see cref="Pick(bool, int, int)"/>, but with the Vesper chapter's answer (no jobs are offered there; the
+        /// title asks whether you ran her errands on the way down): a non-null <paramref name="assumedErrands"/> decides the
+        /// favour instead of the counts (true = favoured, false = not).</summary>
+        public static string Pick(bool killed, int jobsOffered, int jobsDone, bool? assumedErrands)
         {
             if (killed) return HellEndings.Kill;
-            bool favoured = jobsOffered > 0 && jobsDone >= HellJobLedger.Needed(jobsOffered);
+            bool favoured = assumedErrands ?? (jobsOffered > 0 && jobsDone >= HellJobLedger.Needed(jobsOffered));
             return favoured ? HellEndings.SpareKept : HellEndings.SpareCost;
         }
 

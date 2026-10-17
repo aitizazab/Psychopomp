@@ -50,8 +50,13 @@ namespace JamKit.SkylineRepo
         readonly List<KeylinedLabel> _menu = new List<KeylinedLabel>();
         readonly List<KeylinedLabel> _titleMenu = new List<KeylinedLabel>();
         readonly List<KeylinedLabel> _chapterMenu = new List<KeylinedLabel>();
-        VisualElement _mainBox, _chapterBox;
-        bool _chaptersOpen;
+        readonly List<KeylinedLabel> _errandMenu = new List<KeylinedLabel>();
+        VisualElement _mainBox, _chapterBox, _errandBox;
+        bool _chaptersOpen, _errandsOpen;
+
+        /// <summary>The answer to the Vesper chapter's question (true: ran her errands), set just before the title finishes
+        /// with <see cref="ChoiceChapter"/> + <see cref="HellFlow.VesperChapter"/>; null until answered.</summary>
+        public bool? VesperErrands { get; private set; }
         KeylinedLabel _cardSpeaker, _cardText, _floorNumber, _floorName, _floorTagline;
         Label _hint;
         int _sel;
@@ -159,6 +164,25 @@ namespace JamKit.SkylineRepo
             foreach (var word in HellFlowText.ChapterNames) _chapterMenu.Add(MenuItem(_chapterBox, word, 44f));
             _chapterMenu.Add(MenuItem(_chapterBox, HellFlowText.Back, 40f));
             _chapterBox.style.display = DisplayStyle.None;
+
+            // the Vesper chapter's question (no jobs are offered there: the answer decides the spare ending)
+            _errandBox = MenuBox(_title);
+            var q = new KeylinedLabel(44f, 3f, Display);
+            q.SetText(HellFlowText.ErrandsTitle);
+            q.SetColor(Ember);
+            foreach (var c in q.Children()) c.style.letterSpacing = 12f;
+            _errandBox.Add(q);
+            var body = new KeylinedLabel(34f, 2.5f, null);
+            body.SetWrap(true, TextAnchor.MiddleCenter);
+            body.SetText(HellFlowText.ErrandsBody);
+            body.SetColor(Ash);
+            body.style.maxWidth = 1100f;
+            body.style.marginTop = 14f;
+            body.style.marginBottom = 30f;
+            _errandBox.Add(body);
+            _errandMenu.Add(MenuItem(_errandBox, HellFlowText.ErrandsYes, 40f));
+            _errandMenu.Add(MenuItem(_errandBox, HellFlowText.ErrandsNo, 40f));
+            _errandBox.style.display = DisplayStyle.None;
         }
 
         static VisualElement MenuBox(VisualElement parent)
@@ -183,12 +207,28 @@ namespace JamKit.SkylineRepo
         void OpenChapters(bool open)
         {
             _chaptersOpen = open;
+            _errandsOpen = false;
             _mainBox.style.display = open ? DisplayStyle.None : DisplayStyle.Flex;
             _chapterBox.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+            _errandBox.style.display = DisplayStyle.None;
             _menu.Clear();
             _menu.AddRange(open ? _chapterMenu : _titleMenu);
             _sel = open ? 0 : 1;
             _hint.text = open ? HellFlowText.MenuHint + "      ESC / B  back" : HellFlowText.MenuHint;
+            SyncMenu();
+        }
+
+        /// <summary>The Vesper chapter's question over the chapter list (Escape / B goes back to the list, on Vesper).</summary>
+        void OpenErrands()
+        {
+            _chaptersOpen = false;
+            _errandsOpen = true;
+            _mainBox.style.display = _chapterBox.style.display = DisplayStyle.None;
+            _errandBox.style.display = DisplayStyle.Flex;
+            _menu.Clear();
+            _menu.AddRange(_errandMenu);
+            _sel = 0;
+            _hint.text = HellFlowText.MenuHint + "      ESC / B  back";
             SyncMenu();
         }
 
@@ -249,6 +289,7 @@ namespace JamKit.SkylineRepo
             Show(Screen.Title);
             _title.style.display = DisplayStyle.Flex;
             OpenChapters(false);
+            VesperErrands = null;
             _sel = 0;
             SyncMenu();
         }
@@ -316,7 +357,9 @@ namespace JamKit.SkylineRepo
             BigStat(mid, "REWINDS", s.Rewinds, Whole, 0.8f);
             BigStat(mid, "SHADOW STEPS", s.ShadowSteps, Whole, 0.8f);
             OutOf(mid, "FAST PATHS", s.FastPathsTaken, s.FastPathsOffered);
-            OutOf(mid, "JOBS DONE", s.JobsDone, s.JobsOffered);
+            if (HellJobs.AssumedErrands.HasValue)     // the Vesper chapter: the answer, not counts it never had
+                Word(mid, HellFlowText.StatsErrandsLabel, HellJobs.AssumedErrands.Value ? HellFlowText.StatsErrandsYes : HellFlowText.StatsErrandsNo);
+            else OutOf(mid, "JOBS DONE", s.JobsDone, s.JobsOffered);
 
             var floors = Row(_stats, 10f);
             for (int f = 0; f < HellRunStats.Floors; f++)
@@ -350,6 +393,21 @@ namespace JamKit.SkylineRepo
             foreach (var c in l.Children()) c.style.letterSpacing = 6f;
             cell.Add(l);
             _countUps.Add((n, value, format));
+        }
+
+        /// <summary>A stat cell that is a word (no count-up), sized like <see cref="OutOf"/>.</summary>
+        static void Word(VisualElement row, string label, string word)
+        {
+            var cell = Cell(row);
+            var n = new KeylinedLabel(77f, 4f, Numbers);
+            n.SetText(word);
+            n.SetColor(Ash);
+            cell.Add(n);
+            var l = new KeylinedLabel(24f, 2f, Display);
+            l.SetText(label);
+            l.SetColor(Ember);
+            foreach (var c in l.Children()) c.style.letterSpacing = 6f;
+            cell.Add(l);
         }
 
         void OutOf(VisualElement row, string label, int done, int offered)
@@ -513,14 +571,22 @@ namespace JamKit.SkylineRepo
             var mouse = Mouse.current;
             bool click = mouse != null && mouse.leftButton.wasPressedThisFrame && hovered >= 0;
             if (ConfirmPressed() || click) Activate(_sel);
+            else if (_errandsOpen && SkipPressed()) { OpenChapters(true); _sel = HellFlow.VesperChapter; SyncMenu(); }
             else if (_chaptersOpen && SkipPressed()) OpenChapters(false);
         }
 
         void Activate(int i)
         {
+            if (_errandsOpen)
+            {
+                VesperErrands = i == 0;
+                Finish(Screen.Title, ChoiceChapter + HellFlow.VesperChapter);
+                return;
+            }
             if (_chaptersOpen)
             {
-                if (i < HellFlowText.ChapterNames.Length) Finish(Screen.Title, ChoiceChapter + i);
+                if (i == HellFlow.VesperChapter) OpenErrands();           // no jobs in this chapter: ask instead
+                else if (i < HellFlowText.ChapterNames.Length) Finish(Screen.Title, ChoiceChapter + i);
                 else OpenChapters(false);
                 return;
             }

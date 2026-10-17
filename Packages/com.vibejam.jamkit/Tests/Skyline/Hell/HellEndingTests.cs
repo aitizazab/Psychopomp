@@ -194,6 +194,21 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void TheVesperChaptersAnswerStandsInForTheJobs()
+        {
+            Assert.That(HellEndingRules.Pick(false, 0, 0, true), Is.EqualTo(HellEndings.SpareKept), "yes, I did her favours");
+            Assert.That(HellEndingRules.Pick(false, 0, 0, false), Is.EqualTo(HellEndings.SpareCost), "no, straight for my sister");
+            Assert.That(HellEndingRules.Pick(true, 0, 0, true), Is.EqualTo(HellEndings.Kill));
+            Assert.That(HellEndingRules.Pick(true, 0, 0, false), Is.EqualTo(HellEndings.Kill));
+            Assert.That(HellEndingRules.Pick(false, 6, 0, true), Is.EqualTo(HellEndings.SpareKept), "the answer wins over the counts");
+            Assert.That(HellEndingRules.Pick(false, 6, 6, false), Is.EqualTo(HellEndings.SpareCost), "the answer wins over the counts");
+            for (int offered = 0; offered <= 6; offered++)
+                for (int done = 0; done <= offered; done++)
+                    Assert.That(HellEndingRules.Pick(false, offered, done, null), Is.EqualTo(HellEndingRules.Pick(false, offered, done)), "no answer: the counts");
+            Assert.That(HellFlowText.ErrandsPlaceholder, Is.True, "the question's words are the creator's to rewrite");
+        }
+
+        [Test]
         public void TheEndingAgreesWithTheJobLedger()
         {
             for (int offered = 0; offered <= 6; offered++)

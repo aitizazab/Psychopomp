@@ -198,6 +198,10 @@ namespace JamKit.SkylineRepo
             switch (screen)
             {
                 case HellScreens.Screen.Title:
+                    // the Vesper chapter's answer stands in for the jobs it skips; every other choice clears it
+                    if (choice == HellScreens.ChoiceChapter + HellFlow.VesperChapter && Screens != null && Screens.VesperErrands.HasValue)
+                        HellJobs.AssumeErrands(Screens.VesperErrands.Value);
+                    else HellJobs.ClearAssumedErrands();
                     if (choice == HellScreens.ChoiceStart) { Flow.StartGame(); HellRunEvents.RaiseChapterStarted(HellFlow.FullGame); }
                     else if (choice == HellScreens.ChoiceQuit) Flow.Quit();
                     else if (choice >= HellScreens.ChoiceChapter) BeginChapter(choice - HellScreens.ChoiceChapter);

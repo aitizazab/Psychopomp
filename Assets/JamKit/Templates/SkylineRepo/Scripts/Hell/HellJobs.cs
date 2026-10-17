@@ -25,6 +25,15 @@ namespace JamKit.SkylineRepo
 
         public static void ResetRun() => Ledger.Clear();
 
+        /// <summary>The Vesper chapter's answer to "did you run her errands on the way down?" (no jobs are offered there): the
+        /// ending's pick reads it instead of the counts (<see cref="HellEndingRules.Pick(bool, int, int, bool?)"/>). Null
+        /// (the default) in every other run. Not cleared by <see cref="ResetRun"/> (the job director resets the ledger when
+        /// the chapter's run starts, after the answer); the run director sets or clears it on every choice from the title.</summary>
+        public static bool? AssumedErrands { get; private set; }
+
+        public static void AssumeErrands(bool ranThem) => AssumedErrands = ranThem;
+        public static void ClearAssumedErrands() => AssumedErrands = null;
+
         internal static void RaiseOffered(HellJobDef j)
         {
             Ledger.Offer(j.id);
@@ -93,6 +102,7 @@ namespace JamKit.SkylineRepo
         static void ResetStatics()
         {
             Ledger.Clear();
+            AssumedErrands = null;
             Offered = null; Done = null; Failed = null;
         }
     }

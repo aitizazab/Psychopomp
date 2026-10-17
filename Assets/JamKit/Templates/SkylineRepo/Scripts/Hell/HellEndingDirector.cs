@@ -651,12 +651,13 @@ namespace JamKit.SkylineRepo
             _hud.Clear();
             HushVoice();
             SkylineDeviceInput.Paused = true;        // the game holds still under the cards
-            _endingId = HellEndingRules.Pick(_killed, HellJobs.OfferedCount, HellJobs.DoneCount);
+            _endingId = HellEndingRules.Pick(_killed, HellJobs.OfferedCount, HellJobs.DoneCount, HellJobs.AssumedErrands);
             _cardKeys = HellEndingRules.Sequence(_endingId);
             _cardIndex = -1;
             _phase = Phase.Cards;
             Debug.Log("HELL_ENDING ending " + _endingId + " (" + (_killed ? "killed" : "spared") + ", jobs " + HellJobs.DoneCount + "/" + HellJobs.OfferedCount
-                + (HellJobs.Favoured ? ", favoured" : "") + ")");
+                + (HellJobs.AssumedErrands.HasValue ? ", errands assumed " + (HellJobs.AssumedErrands.Value ? "yes" : "no")
+                    : HellJobs.Favoured ? ", favoured" : "") + ")");
             NextCard();
         }
 

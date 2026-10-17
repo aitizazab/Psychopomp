@@ -35,7 +35,8 @@ straight into the first room, show the floor names as HUD banners, and stop on t
 
 **CHAPTERS** on the title lists FLOOR 1, FLOOR 2, FLOOR 3, VESPER and BACK. All are open from the start.
 - **A chapter skips the opening.** Floor N starts at floor N's first room, with its card.
-- **Vesper** goes straight to the boss hook. With no boss merged, the credits roll.
+- **Vesper** first asks whether you ran the God of Death's errands on the way down (the chapter offers no jobs; the answer
+  decides the spare ending, docs/HELL-ENDING.md; Escape / B goes back to the list), then goes straight to the boss hook.
 - **Skills first:** a chapter first opens the normal skill pick once per floor it skips (Floor 2: one pick; Floor 3 and
   Vesper: two). This goes through `HellRunEvents.FloorCleared(0..)`, so a `FloorCleared` listener sees those floors
   "cleared" before a chapter starts. `HellRunEvents.ChapterStarted` tells a listener which chapter it was (-1 means the

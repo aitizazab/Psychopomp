@@ -122,9 +122,12 @@ Each card lasts its voice plus a second; Enter, Space, Escape, a click, A or B s
 | Spare, favoured: the God of Death respects the nerve, all of you walk out | `spare-kept` | `end-favour-01`, `end-favour-02`, `end-favour-card` | THE EVENING STAR SPARED |
 | Spare, not favoured: the time comes from you; your sister lives, you don't leave | `spare-cost` | `end-few-01`, `end-few-02`, `end-few-card` | SPARED, AT A PRICE |
 
-**Note for the judges' chapter:** the Vesper chapter skips the floors, so no job is offered and a spare always ends
-`spare-cost`. That is the rule as written (no favour without the jobs). If the creator wants the chapter to show the good
-spare, the switch is one line in `StartCards` (for example, treat 0 offered as favoured).
+**The Vesper chapter asks instead:** it skips the floors, so no job is offered. Picking VESPER under CHAPTERS opens a
+question first ("ON THE WAY DOWN": did you run the God of Death's errands through the floors, even if it meant reaching
+your sister later? YES, I DID HER FAVOURS / NO, I WENT STRAIGHT FOR MY SISTER; placeholder words in `HellFlowText.Errands*`;
+Escape / B goes back to the chapter list). The answer is `HellJobs.AssumedErrands` (null in every other run, set or cleared
+on every title choice), and `HellEndingRules.Pick(killed, offered, done, assumedErrands)` uses it instead of the counts: yes
+is `spare-kept`, no is `spare-cost` (a kill is still `kill`). The stats show JOBS (ASSUMED) YES / NO instead of 0 / 0.
 
 ## Words and voices (ALL PLACEHOLDERS)
 
@@ -198,7 +201,7 @@ The log shows `HELL_ENDING ...` and the flow's `HELL_STATS ... ending <id>`.
 7. **The endings:**
    - at the exit: black, two God of Death cards with her voice, the epilogue card, the title;
    - then the credits, and the stats showing the ending's name;
-   - check all three: kill; spare after doing most jobs (a full run); spare with few (the Vesper chapter).
+   - check all three: kill; spare after doing most jobs (a full run); spare with few (the Vesper chapter, answering NO); the Vesper chapter answering YES gives the favoured spare.
 8. **Clean picture:**
    - `-hell-clean` hides the prompt, the ring and the escape line;
    - the cards stay (like the opening's);
