@@ -66,12 +66,16 @@ changes game speed, the stand-in stubs deleted. A build command for a Hell-only 
   actions and replay, directable enemies and enemy cards.
 
 ### Where it stopped
-- **Unity's background build of the Hell scene was stopped by the memory guard.** It ran short of RAM during the first
-  project import (about 3 GB free then). Nothing broke and no Unity process is left. Free memory at the restart: about
-  5 GB; a first import wants 5 GB or more free, so closing Firefox and Discord first is still the safe move.
+- **2026-10-17 evening: the first Unity build passed.** Scene: `HELL_LINT 0 problems over 18 rooms`, `HELL_BUILD built`
+  (18 rooms, 852 solids; the scene under `Generated/` is gitignored and rebuilt from data). Player:
+  `HELL_PLAYER_BUILD OK`, `out\hell\build\HellDescent.exe`. No compile errors. Both ran through capped-run at
+  `--share 0.35` (5.3 GB cap) with about 5 GB free: the scene build (first import) took 3 min, the player 10 min.
+  Not yet played. (Earlier the same day the first attempt had been stopped by the memory guard at about 3 GB free.)
+- Unity's import also touched render-pipeline assets and made metas for VisitingHours art; left uncommitted (import
+  churn from the kit, not Hell work).
 
 ## Next steps (in order)
-1. **Build and play.** Run one at a time, from the HellDescent folder (`$U` = `C:\Program Files\Unity\Hub\Editor\6000.3.25f1\Editor\Unity.exe`):
+1. **Build and play** (built 2026-10-17 evening, see above; next: play the exe). To rebuild, run one at a time, from the HellDescent folder (`$U` = `C:\Program Files\Unity\Hub\Editor\6000.3.25f1\Editor\Unity.exe`):
    1. The scene: `& $U -batchmode -nographics -projectPath . -executeMethod JamKit.SkylineRepo.EditorTools.HellScene.BuildFromCommandLine -logFile out/hell/scene.log`
       (expect `HELL_LINT 0 problems` and `HELL_BUILD built`).
    2. The player: `& $U -batchmode -projectPath . -executeMethod JamKit.SkylineRepo.EditorTools.SkylineBuild.BuildHellFromCommandLine -logFile out/hell/build.log`

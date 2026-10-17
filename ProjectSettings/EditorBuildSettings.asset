@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/JamKit/Templates/SkylineRepo/Generated/HellDescent.unity
+    guid: e0d4b85d3f5766947ba95df46fcad171
+  - enabled: 1
     path: Assets/JamKit/Scenes/Boot.unity
     guid: 7e97e9efa99df2344b584c64c05bcc65
   - enabled: 1
