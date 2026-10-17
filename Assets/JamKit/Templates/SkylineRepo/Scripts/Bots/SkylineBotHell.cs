@@ -32,7 +32,7 @@ namespace JamKit.SkylineRepo
         Transform _wingL, _wingR, _armR, _legL, _legR, _blob;
         readonly List<Transform> _flames = new List<Transform>();
         readonly List<Vector3> _flameScale = new List<Vector3>();
-        Vector3 _blobScale = Vector3.one;
+        Vector3 _blobScale = Vector3.one, _coreScale = Vector3.one;
         MeshRenderer _blobR;
         Color _blobColor;
         static MaterialPropertyBlock _hellBlock;
@@ -70,6 +70,7 @@ namespace JamKit.SkylineRepo
                     _flames.Add(t);
                     _flameScale.Add(t.localScale);
                 }
+            if (Parts.weakPoint != null) _coreScale = Parts.weakPoint.localScale;
             if (Def.hell == HellKind.LavaOoze) _pulse = new OozePulse(Def, (float)(_seed % 1000UL) / 1000f);
             HellEnabled();
         }
@@ -136,7 +137,7 @@ namespace JamKit.SkylineRepo
                             _blobR.SetPropertyBlock(_hellBlock);
                         }
                     }
-                    if (Parts.weakPoint != null) Parts.weakPoint.localScale = Vector3.one * 0.4f * (1f + 0.15f * _pulse.Throb);
+                    if (Parts.weakPoint != null) Parts.weakPoint.localScale = _coreScale * (1f + 0.15f * _pulse.Throb);
                     for (int i = _pools.Count - 1; i >= 0; i--)
                         if (_pools[i] == null || !_pools[i].gameObject.activeSelf || _pools[i].Lava == null || _pools[i].Lava.Gone) _pools.RemoveAt(i);
                     break;
@@ -260,6 +261,7 @@ namespace JamKit.SkylineRepo
             Spots.Clear();
             _pendingStages.Clear();
             Wrecked?.Invoke(this);
+            Debug.Log("HELL_ENEMY " + Id + " died (deactivated, kept for the Rewind)");
             gameObject.SetActive(false);
         }
 
@@ -343,7 +345,11 @@ namespace JamKit.SkylineRepo
             StateCopy.Apply(_damageStates, s.damageStates);
             ApplyWear(true);
             if (!_charging && _chargeBall != null) _chargeBall.SetActive(false);
-            if (!gameObject.activeSelf) gameObject.SetActive(true);   // a bot that died since comes back (OnEnable re-lists it)
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);   // a bot that died since comes back (OnEnable re-lists it)
+                Debug.Log("HELL_ENEMY " + Id + " restored alive by the Rewind");
+            }
             else if (!Live.Contains(this) && Alive) Live.Add(this);
             _face.Show(Brain.Face);
             Pose(0f);

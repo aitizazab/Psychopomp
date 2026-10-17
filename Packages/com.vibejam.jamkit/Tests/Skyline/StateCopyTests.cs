@@ -99,6 +99,39 @@ namespace JamKit.Tests.Skyline
             Assert.That(b.Chassis, Is.EqualTo(chassis));
         }
 
+        sealed class Holder
+        {
+            public readonly List<Vector3> route = new List<Vector3>();
+            public List<Vector3> path;
+            public readonly float[] ring = new float[4];
+            public readonly EnemyDef def = HellEnemies.LavaOoze();
+            public int index;
+        }
+
+        [Test]
+        public void ListsAndArraysOfValuesAreCopiedAndSharedReferencesKept()
+        {
+            var h = new Holder { path = new List<Vector3> { Vector3.One } };
+            h.route.Add(new Vector3(1f, 2f, 3f));
+            h.ring[2] = 5f;
+            h.index = 3;
+            var snap = StateCopy.Capture(h);
+            var def = h.def;
+            h.route.Add(Vector3.Zero);
+            h.path = new List<Vector3>();
+            h.ring[2] = 9f;
+            h.index = 7;
+            StateCopy.Apply(h, snap);
+            Assert.That(h.route, Is.EqualTo(new[] { new Vector3(1f, 2f, 3f) }));
+            Assert.That(h.path, Is.EqualTo(new[] { Vector3.One }));
+            Assert.That(h.ring[2], Is.EqualTo(5f));
+            Assert.That(h.index, Is.EqualTo(3));
+            Assert.That(h.def, Is.SameAs(def));
+            h.route.Clear();
+            StateCopy.Apply(h, snap);   // the snapshot was not changed by the first restore
+            Assert.That(h.route.Count, Is.EqualTo(1));
+        }
+
         [Test]
         public void TheRandomStreamRewinds()
         {

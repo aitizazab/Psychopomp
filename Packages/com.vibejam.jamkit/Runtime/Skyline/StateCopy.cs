@@ -27,7 +27,7 @@ namespace JamKit.Skyline
         }
 
         sealed class ArrayCopy { public Array items; }
-        sealed class ListCopy { public object[] items; public Type listType; }
+        sealed class ListCopy { public IList items; public Type listType; }
 
         static FieldInfo[] Fields(Type t)
         {
@@ -87,7 +87,7 @@ namespace JamKit.Skyline
                         f.SetValue(obj, cur);
                     }
                     cur.Clear();
-                    for (int k = 0; k < lc.items.Length; k++) cur.Add(lc.items[k]);
+                    for (int k = 0; k < lc.items.Count; k++) cur.Add(lc.items[k]);
                     continue;
                 }
                 // a readonly field never changes after construction: left alone (no write to an init-only field)
@@ -110,10 +110,8 @@ namespace JamKit.Skyline
             }
             if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(List<>) && t.GetGenericArguments()[0].IsValueType)
             {
-                var l = (IList)v;
-                var items = new object[l.Count];
-                l.CopyTo(items, 0);
-                return new ListCopy { items = items, listType = t };
+                // a typed copy (List<T>(IEnumerable<T>)): no boxing per element on the hot path
+                return new ListCopy { items = (IList)Activator.CreateInstance(t, v), listType = t };
             }
             return v;
         }
