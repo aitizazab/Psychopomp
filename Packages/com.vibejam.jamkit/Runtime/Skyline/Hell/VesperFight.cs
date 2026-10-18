@@ -120,6 +120,26 @@ namespace JamKit.Skyline
         public float historyStep = 0.25f;
         public int historySamples = 32;
 
+        // the difficulty curve inside each phase (the creator, 2026-10-18: "once I figured out the attack pattern, each phase
+        // got trivially easy, but for the first 10-15 seconds, especially in the phase with the imps, I took heavy damage"):
+        // a soft opening, then heat that climbs so the phase never goes flat (docs/HELL-BOSS.md, "The curve inside a phase")
+        /// <summary>Each phase's opening: for this many seconds her tells and pauses are longer and her volleys a bolt shorter.</summary>
+        public float openingSeconds = 8f, openingTellScale = 1.5f, openingIdleScale = 1.5f;
+        public int openingBoltsLess = 1;
+        /// <summary>Summoned imps arrive one at a time, this many seconds apart (never two at once).</summary>
+        public float impStaggerSeconds = 5f;
+        /// <summary>Heat: 0 until this many seconds into a phase, rising to 1 over <see cref="escalateRampSeconds"/>.</summary>
+        public float escalateAfter = 20f, escalateRampSeconds = 30f;
+        /// <summary>At full heat: tells and pauses scaled by these, the cut's windup by <see cref="heatStrikeScale"/>, and
+        /// <see cref="heatExtraBolts"/> more bolts a volley.</summary>
+        public float heatTellScale = 0.7f, heatIdleScale = 0.7f, heatStrikeScale = 0.8f;
+        public int heatExtraBolts = 1;
+        /// <summary>The variants switch on at this heat. Phase 1: every second volley is a fan (<see cref="heatFanDegrees"/>).
+        /// Phase 2: she volleys almost at once after a blink (<see cref="heatBlinkIdle"/>), and resummons every
+        /// <see cref="heatResummonSeconds"/>. Phase 3: every second hunt is a double cut (she re-locks on you after the first
+        /// and cuts again).</summary>
+        public float variantHeat = 0.5f, heatFanDegrees = 8f, heatResummonSeconds = 10f, heatBlinkIdle = 0.15f;
+
         public PhaseTuning For(int phase) => phase <= 1 ? duel : phase == 2 ? undo : night;
     }
 
@@ -179,6 +199,16 @@ namespace JamKit.Skyline
             public float historyTimer;
             public ulong random;
             public bool defeatedRaised;
+            /// <summary>Seconds into the current phase (drives the opening and the heat).</summary>
+            public float phaseClock;
+            /// <summary>The length the current action was given (the Unity side animates against it).</summary>
+            public float actionSeconds;
+            /// <summary>Imps still to arrive from the last summon, and the time to the next.</summary>
+            public int pendingImps;
+            public float pendingImpTimer;
+            /// <summary>Volleys fired this phase; the hunt's second cut is under way.</summary>
+            public int volleysFired;
+            public bool secondCut;
         }
 
         /// <summary>A snapshot (the global Rewind keeps one per fixed step: reuse them).</summary>
@@ -290,11 +320,16 @@ namespace JamKit.Skyline
             S.damageAtPerch = 0f;
             S.rewindCooldown = phase == 2 ? T.rewindCooldown * 0.5f : 0f;
             S.hunts = 0;
+            S.phaseClock = 0f;
+            S.pendingImps = 0;
+            S.pendingImpTimer = 0f;
+            S.volleysFired = 0;
+            S.secondCut = false;
             Emit(events, VesperEventKind.PhaseBegan, phase, S.position, 0f);
             if (phase == 1)
             {
                 S.volleysLeft = T.duel.volleysPerPerch;
-                To(VesperAction.Idle, T.duel.idleSeconds);
+                To(VesperAction.Idle, T.duel.idleSeconds * IdleScale);
             }
             else if (phase == 2)
             {
@@ -306,7 +341,7 @@ namespace JamKit.Skyline
                 S.volleysLeft = 0;
                 S.perch = -1;
                 Emit(events, VesperEventKind.NightfallBegan, 3, S.position, 0f);
-                To(VesperAction.Hidden, T.hiddenSeconds);
+                To(VesperAction.Hidden, T.hiddenSeconds * IdleScale);
             }
         }
 
@@ -321,6 +356,18 @@ namespace JamKit.Skyline
             if (S.rewindCooldown > 0f) S.rewindCooldown = Math.Max(0f, S.rewindCooldown - dt);
             if (S.resummonTimer > 0f) S.resummonTimer = Math.Max(0f, S.resummonTimer - dt);
             if (S.mercyCooldown > 0f) S.mercyCooldown = Math.Max(0f, S.mercyCooldown - dt);
+            if (S.action != VesperAction.Shift && S.action != VesperAction.Kneel) S.phaseClock += dt;
+            if (S.pendingImps > 0 && S.phase == 2)
+            {
+                S.pendingImpTimer -= dt;
+                if (S.pendingImpTimer <= 0f)
+                {
+                    // the next imp out of the dark (never over the cap; one that can't come now is dropped)
+                    if (input.impsAlive < T.impCap) Emit(events, VesperEventKind.Summoned, 1, S.position, 0f);
+                    S.pendingImps--;
+                    S.pendingImpTimer = T.impStaggerSeconds;
+                }
+            }
             Record(dt);
 
             if (S.action == VesperAction.Volley)
@@ -334,6 +381,7 @@ namespace JamKit.Skyline
                 if (S.boltsLeft <= 0)
                 {
                     S.volleysLeft--;
+                    S.volleysFired++;
                     To(VesperAction.Idle, Pace(T.For(S.phase).idleSeconds, input));
                 }
                 return;
@@ -346,7 +394,7 @@ namespace JamKit.Skyline
                 case VesperAction.Idle: Decide(input, events); break;
                 case VesperAction.VolleyTell:
                     var pt = T.For(S.phase);
-                    S.boltsLeft = Math.Max(1, pt.volleyBolts);
+                    S.boltsLeft = Math.Max(1, VolleyBolts);
                     S.boltIndex = 0;
                     S.action = VesperAction.Volley;
                     S.timer = 0f;
@@ -355,6 +403,7 @@ namespace JamKit.Skyline
                     if (S.boltsLeft <= 0)
                     {
                         S.volleysLeft--;
+                        S.volleysFired++;
                         To(VesperAction.Idle, Pace(pt.idleSeconds, input));
                     }
                     break;
@@ -364,12 +413,17 @@ namespace JamKit.Skyline
                     S.damageAtPerch = 0f;
                     S.volleysLeft = T.For(S.phase).volleysPerPerch;
                     Emit(events, VesperEventKind.Blinked, S.perch, S.position, 0f);
-                    To(VesperAction.Idle, Pace(0.45f, input));
+                    // phase 2's variant: the blink-volley (she lands and fires almost at once)
+                    To(VesperAction.Idle, S.phase == 2 && Variant && input.playerHealth >= T.lowHealth ? T.heatBlinkIdle : Pace(0.45f, input));   // not while you are low (her mercy)
                     break;
                 case VesperAction.SummonTell:
                     int n = Math.Max(0, Math.Min(T.summonCount, T.impCap - input.impsAlive));
-                    Emit(events, VesperEventKind.Summoned, n, S.position, 0f);
-                    S.resummonTimer = T.resummonSeconds;
+                    // one at a time (the creator, 2026-10-18): the first now, the rest every impStaggerSeconds
+                    int now = T.impStaggerSeconds > 0f ? Math.Min(1, n) : n;
+                    Emit(events, VesperEventKind.Summoned, now, S.position, 0f);
+                    S.pendingImps = n - now;
+                    S.pendingImpTimer = T.impStaggerSeconds;
+                    S.resummonTimer = Variant ? T.heatResummonSeconds : T.resummonSeconds;
                     To(VesperAction.Idle, Pace(T.undo.idleSeconds, input));
                     break;
                 case VesperAction.RewindTell:
@@ -389,7 +443,7 @@ namespace JamKit.Skyline
                 case VesperAction.Hidden:
                     S.marked = HuntSpot(input);
                     Emit(events, VesperEventKind.HuntTell, 0, S.marked, 0f);
-                    To(VesperAction.HuntTell, T.huntTellSeconds);
+                    To(VesperAction.HuntTell, T.huntTellSeconds * TellScale);
                     break;
                 case VesperAction.HuntTell:
                     S.position = S.marked;
@@ -399,7 +453,7 @@ namespace JamKit.Skyline
                     Emit(events, VesperEventKind.Appeared, 0, S.position, 0f);
                     // the windup event carries the cut's far end (the line to draw)
                     Emit(events, VesperEventKind.StrikeWindup, 0, S.position + S.aim * T.strikeReach, T.strikeReach);
-                    To(VesperAction.StrikeWindup, T.strikeWindupSeconds);
+                    To(VesperAction.StrikeWindup, T.strikeWindupSeconds * StrikeScale);
                     break;
                 case VesperAction.StrikeWindup:
                     bool cut = VesperStrike.Hits(S.position, S.aim, input.player, T.strikeReach, T.strikeHalfWidth);
@@ -411,6 +465,19 @@ namespace JamKit.Skyline
                     }
                     if (cut) Emit(events, VesperEventKind.StrikeHit, 0, S.position, T.strikeDamage);
                     else Emit(events, VesperEventKind.StrikeMissed, 0, S.position, 0f);
+                    // phase 3's variant: every second hunt at heat is a double cut (she re-locks on you and cuts again, a
+                    // touch quicker), then she is open
+                    if (!S.secondCut && Variant && S.hunts % 2 == 0)
+                    {
+                        S.secondCut = true;
+                        var again = input.player - S.position;
+                        again.Y = 0f;
+                        if (again.LengthSquared() > 1e-6f) S.aim = Vector3.Normalize(again);
+                        Emit(events, VesperEventKind.StrikeWindup, 1, S.position + S.aim * T.strikeReach, T.strikeReach);
+                        To(VesperAction.StrikeWindup, T.strikeWindupSeconds * StrikeScale * 0.85f);
+                        break;
+                    }
+                    S.secondCut = false;
                     Emit(events, VesperEventKind.Exposed, 0, S.position, 0f);
                     To(VesperAction.Exposed, T.exposedSeconds);
                     break;
@@ -462,13 +529,13 @@ namespace JamKit.Skyline
         void StartVolleyTell(List<VesperEvent> events)
         {
             Emit(events, VesperEventKind.VolleyTell, 0, S.position, 0f);
-            To(VesperAction.VolleyTell, T.For(S.phase).volleyTellSeconds);
+            To(VesperAction.VolleyTell, T.For(S.phase).volleyTellSeconds * TellScale);
         }
 
         void StartSummon(List<VesperEvent> events)
         {
             Emit(events, VesperEventKind.SummonTell, 0, S.position, 0f);
-            To(VesperAction.SummonTell, T.summonTellSeconds);
+            To(VesperAction.SummonTell, T.summonTellSeconds * (Opening ? T.openingTellScale : 1f));
         }
 
         void StartBlink(in Input input, List<VesperEvent> events)
@@ -476,7 +543,7 @@ namespace JamKit.Skyline
             int to = PickPerch(input.player);
             S.marked = Perch(to);
             Emit(events, VesperEventKind.BlinkTell, to, S.marked, 0f);
-            To(VesperAction.BlinkTell, T.blinkTellSeconds);
+            To(VesperAction.BlinkTell, T.blinkTellSeconds * TellScale);
         }
 
         void FireBolt(List<VesperEvent> events)
@@ -485,16 +552,59 @@ namespace JamKit.Skyline
             // the fan: 0, +1, -1, +2, -2 ... steps of fanDegrees
             int i = S.boltIndex++;
             int side = i == 0 ? 0 : (i % 2 == 1 ? (i + 1) / 2 : -(i / 2));
-            Emit(events, VesperEventKind.Bolt, side, S.position, pt.fanDegrees * side);
+            Emit(events, VesperEventKind.Bolt, side, S.position, FanDegrees * side);
             S.boltsLeft--;
         }
 
-        float Pace(float seconds, in Input input) => input.playerHealth < T.lowHealth ? seconds * T.lowHealthPace : seconds;
+        float Pace(float seconds, in Input input)
+        {
+            seconds *= IdleScale;
+            return input.playerHealth < T.lowHealth ? seconds * T.lowHealthPace : seconds;   // the mercy pace stays on top
+        }
+
+        /// <summary>In the current phase's soft opening.</summary>
+        public bool Opening => S.phaseClock < T.openingSeconds;
+
+        /// <summary>0 (calm) to 1 (full heat), from <see cref="VesperTuning.escalateAfter"/> into the phase.</summary>
+        public float Heat => T.escalateRampSeconds > 0f
+            ? Math.Max(0f, Math.Min(1f, (S.phaseClock - T.escalateAfter) / T.escalateRampSeconds))
+            : (S.phaseClock >= T.escalateAfter ? 1f : 0f);
+
+        bool Variant => Heat >= T.variantHeat;
+
+        static float Lerp(float a, float b, float t) => a + (b - a) * t;
+        /// <summary>Her tells' length scale now (opening: longer; heat: shorter).</summary>
+        public float TellScale => Opening ? T.openingTellScale : Lerp(1f, T.heatTellScale, Heat);
+        float IdleScale => Opening ? T.openingIdleScale : Lerp(1f, T.heatIdleScale, Heat);
+        float StrikeScale => Opening ? T.openingTellScale : Lerp(1f, T.heatStrikeScale, Heat);
+
+        /// <summary>Bolts in the next volley: fewer in the opening, more with heat.</summary>
+        public int VolleyBolts
+        {
+            get
+            {
+                int n = T.For(S.phase).volleyBolts;
+                if (Opening) return Math.Max(2, n - T.openingBoltsLess);
+                return n + (int)Math.Round(T.heatExtraBolts * Heat);
+            }
+        }
+
+        /// <summary>Degrees between the bolts of the volley being fired (phase 1's variant fans every second volley).</summary>
+        float FanDegrees
+        {
+            get
+            {
+                float f = T.For(S.phase).fanDegrees;
+                if (S.phase == 1 && Variant && S.volleysFired % 2 == 1 && f < T.heatFanDegrees) return T.heatFanDegrees;
+                return f;
+            }
+        }
 
         void To(VesperAction a, float seconds)
         {
             S.action = a;
             S.timer = seconds;
+            S.actionSeconds = seconds;
         }
 
         // ------------------------------------------------------------------ damage

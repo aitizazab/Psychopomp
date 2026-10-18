@@ -118,7 +118,7 @@ namespace JamKit.Tests.Skyline
             Assert.That(Saw(VesperEventKind.VolleyTell), Is.True);
             int tells = _ev.Count(e => e.kind == VesperEventKind.VolleyTell);
             int bolts = _ev.Count(e => e.kind == VesperEventKind.Bolt);
-            Assert.That(bolts, Is.GreaterThanOrEqualTo(tells * 3 - 3), "three bolts per volley");
+            Assert.That(bolts, Is.GreaterThanOrEqualTo(tells * (f.T.duel.volleyBolts - f.T.openingBoltsLess) - 3), "two bolts a volley in the opening, three after");
             int tell = _ev.FindIndex(e => e.kind == VesperEventKind.BlinkTell);
             int blink = _ev.FindIndex(e => e.kind == VesperEventKind.Blinked);
             Assert.That(tell, Is.GreaterThanOrEqualTo(0));
@@ -168,9 +168,11 @@ namespace JamKit.Tests.Skyline
             Assert.That(f.S.phase, Is.EqualTo(2));
             Assert.That(_ev.Any(e => e.kind == VesperEventKind.PhaseBegan && e.index == 2), Is.True);
             Assert.That(f.S.action, Is.EqualTo(VesperAction.SummonTell), "phase 2 opens with a summon");
-            Run(f, f.T.summonTellSeconds + 0.05f, In());
+            Run(f, f.T.summonTellSeconds * f.T.openingTellScale + 0.05f, In());
             var s = _ev.Last(e => e.kind == VesperEventKind.Summoned);
-            Assert.That(s.index, Is.EqualTo(f.T.summonCount));
+            Assert.That(s.index, Is.EqualTo(1), "the first imp alone");
+            Run(f, f.T.impStaggerSeconds + 0.05f, In(imps: 1));
+            Assert.That(_ev.Where(e => e.kind == VesperEventKind.Summoned).Sum(e => e.index), Is.EqualTo(f.T.summonCount), "the rest after it");
         }
 
         [Test]
@@ -180,8 +182,10 @@ namespace JamKit.Tests.Skyline
             f.Begin(_ev);
             f.Hit(5000f, false, 2f, _ev);
             Run(f, f.T.shiftSeconds + 0.1f, In(imps: 2));
-            Run(f, f.T.summonTellSeconds + 0.05f, In(imps: 2));
+            Run(f, f.T.summonTellSeconds * f.T.openingTellScale + 0.05f, In(imps: 2));
             Assert.That(_ev.Last(e => e.kind == VesperEventKind.Summoned).index, Is.EqualTo(f.T.impCap - 2));
+            Run(f, f.T.impStaggerSeconds * 3f, In(imps: 3));
+            Assert.That(_ev.Count(e => e.kind == VesperEventKind.Summoned), Is.EqualTo(1), "none over the cap later either");
         }
 
         [Test]
@@ -200,13 +204,13 @@ namespace JamKit.Tests.Skyline
             Assert.That(f.Vulnerable, Is.False, "hidden in the dark");
             _ev.Clear();
             var player = new Vector3(0, 0, 8);
-            Run(f, f.T.hiddenSeconds + 0.05f, In(player: player));
+            Run(f, f.T.hiddenSeconds * f.T.openingIdleScale + 0.05f, In(player: player));
             var tell = _ev.Single(e => e.kind == VesperEventKind.HuntTell);
             float dist = Vector3.Distance(new Vector3(tell.position.X, 0, tell.position.Z), new Vector3(player.X, 0, player.Z));
             Assert.That(dist, Is.LessThanOrEqualTo(f.T.huntDistance + 0.01f), "the flare marks a spot near you");
             Assert.That(tell.position.Z, Is.LessThan(player.Z), "behind you (you face +Z)");
             Assert.That(f.Vulnerable, Is.False, "the flare is only a warning");
-            Run(f, f.T.huntTellSeconds + 0.05f, In(player: player));
+            Run(f, f.T.huntTellSeconds * f.T.openingTellScale + 0.05f, In(player: player));
             Assert.That(Saw(VesperEventKind.Appeared), Is.True);
             Assert.That(f.S.action, Is.EqualTo(VesperAction.StrikeWindup));
             Assert.That(f.Vulnerable, Is.True, "out of the dark she can be shot");
@@ -225,9 +229,9 @@ namespace JamKit.Tests.Skyline
                 f.Hit(5000f, false, 2f, _ev);
                 Run(f, f.T.shiftSeconds + 0.1f, In());
                 var player = new Vector3(0, 0, 8);
-                Run(f, f.T.hiddenSeconds + f.T.huntTellSeconds + 0.1f, In(player: player));
+                Run(f, f.T.hiddenSeconds * f.T.openingIdleScale + f.T.huntTellSeconds * f.T.openingTellScale + 0.1f, In(player: player));
                 var moved = stay ? player : player + new Vector3(3f, 0, 0);   // a sidestep out of the locked line
-                Run(f, f.T.strikeWindupSeconds + 0.05f, In(player: moved));
+                Run(f, f.T.strikeWindupSeconds * f.T.openingTellScale + 0.05f, In(player: moved));
                 Assert.That(Saw(VesperEventKind.StrikeHit), Is.EqualTo(stay), stay ? "standing still is cut" : "stepping away dodges");
                 Assert.That(f.S.action, Is.EqualTo(VesperAction.Exposed), "after the cut she is open");
             }
@@ -255,7 +259,7 @@ namespace JamKit.Tests.Skyline
             Run(f, f.T.shiftSeconds + 0.1f, In());
             f.Hit(5000f, false, 2f, _ev);
             Run(f, f.T.shiftSeconds + 0.1f, In());
-            Run(f, f.T.hiddenSeconds + f.T.huntTellSeconds + 0.1f, In());
+            Run(f, f.T.hiddenSeconds * f.T.openingIdleScale + f.T.huntTellSeconds * f.T.openingTellScale + 0.1f, In());   // the phase's soft opening
             Assert.That(f.Vulnerable, Is.True);
             f.Hit(5000f, false, 2f, _ev);
             Assert.That(f.S.health, Is.EqualTo(0f));
@@ -443,6 +447,105 @@ namespace JamKit.Tests.Skyline
             TestContext.WriteLine("first try " + first.ToString("0") + " s, skilled " + skilled.ToString("0") + " s");
             Assert.That(first, Is.InRange(120f, 240f), "a first try");
             Assert.That(skilled, Is.InRange(45f, 120f), "a skilled run");
+        }
+
+        // ------------------------------------------------------------------ the curve inside a phase (2026-10-18)
+
+        /// <summary>The first volley tell's length and its bolts, at <paramref name="seconds"/> into phase 1.</summary>
+        (float tell, int bolts) VolleyAt(VesperFight f, float seconds)
+        {
+            Run(f, seconds, In());
+            _ev.Clear();
+            RunUntil(f, VesperEventKind.VolleyTell, 20f, In());
+            float tell = f.S.actionSeconds;
+            _ev.Clear();
+            for (int i = 0; i < 500 && (f.S.action == VesperAction.VolleyTell || f.S.action == VesperAction.Volley); i++) f.Tick(In(), _ev);
+            return (tell, _ev.Count(e => e.kind == VesperEventKind.Bolt));
+        }
+
+        [Test]
+        public void EachPhaseOpensSoftly()
+        {
+            var f = NewFight();
+            f.Begin(_ev);
+            Assert.That(f.Opening, Is.True);
+            Assert.That(f.S.actionSeconds, Is.EqualTo(f.T.duel.idleSeconds * f.T.openingIdleScale).Within(1e-4f), "a longer first pause");
+            Assert.That(f.VolleyBolts, Is.EqualTo(f.T.duel.volleyBolts - f.T.openingBoltsLess), "a bolt fewer");
+            Assert.That(f.TellScale, Is.EqualTo(f.T.openingTellScale));
+            RunUntil(f, VesperEventKind.VolleyTell, 10f, In());
+            Assert.That(f.S.actionSeconds, Is.EqualTo(f.T.duel.volleyTellSeconds * f.T.openingTellScale).Within(1e-4f), "a longer first tell");
+            // phase 2: the first imp alone after a long summon tell, the second impStaggerSeconds later
+            var g = NewFight();
+            g.Begin(_ev);
+            g.Hit(5000f, false, 2f, _ev);
+            Run(g, g.T.shiftSeconds + 0.1f, In());
+            _ev.Clear();
+            float t = 0f;
+            var arrivals = new List<float>();
+            while (t < 12f)
+            {
+                int before = _ev.Count;
+                g.Tick(In(imps: arrivals.Count), _ev);
+                for (int i = before; i < _ev.Count; i++)
+                    if (_ev[i].kind == VesperEventKind.Summoned) for (int k = 0; k < _ev[i].index; k++) arrivals.Add(t);
+                t += Dt;
+            }
+            Assert.That(arrivals.Count, Is.EqualTo(g.T.summonCount));
+            Assert.That(arrivals[0], Is.GreaterThanOrEqualTo(g.T.summonTellSeconds * g.T.openingTellScale - 0.15f), "a full tell first (0.1 s of it ran before the clock)");
+            Assert.That(arrivals[1] - arrivals[0], Is.EqualTo(g.T.impStaggerSeconds).Within(0.05f), "never two at once");
+        }
+
+        [Test]
+        public void LaterInAPhaseSheEscalates()
+        {
+            var t = new VesperTuning { maxHealth = 1e6f, phase2At = 5e5f, phase3At = 1e5f };
+            var f = NewFight(t);
+            f.Begin(_ev);
+            var early = VolleyAt(f, 9f);
+            Run(f, t.escalateAfter + t.escalateRampSeconds, In());
+            Assert.That(f.Heat, Is.EqualTo(1f));
+            var late = VolleyAt(f, 0f);
+            Assert.That(late.tell, Is.LessThan(early.tell), "faster tells");
+            Assert.That(late.tell, Is.EqualTo(t.duel.volleyTellSeconds * t.heatTellScale).Within(1e-4f));
+            Assert.That(late.bolts, Is.GreaterThan(early.bolts), "more bolts a volley");
+            // the variant: a fanned volley every second volley
+            _ev.Clear();
+            Run(f, 20f, In());
+            Assert.That(_ev.Any(e => e.kind == VesperEventKind.Bolt && e.amount != 0f), Is.True, "phase 1's duel turns into fans");
+        }
+
+        [Test]
+        public void PhaseThreeAtHeatCutsTwice()
+        {
+            var f = NewFight();
+            f.Begin(_ev);
+            f.Hit(5000f, false, 2f, _ev);
+            Run(f, f.T.shiftSeconds + 0.1f, In());
+            f.Hit(5000f, false, 2f, _ev);
+            Run(f, f.T.shiftSeconds + 0.1f, In());
+            Assert.That(f.S.phase, Is.EqualTo(3));
+            Run(f, f.T.escalateAfter + f.T.escalateRampSeconds, In(player: new Vector3(3, 0, 8)));
+            Assert.That(f.Heat, Is.EqualTo(1f));
+            _ev.Clear();
+            Run(f, 30f, In(player: new Vector3(3, 0, 8)));
+            int windups = _ev.Count(e => e.kind == VesperEventKind.StrikeWindup);
+            int exposed = _ev.Count(e => e.kind == VesperEventKind.Exposed);
+            Assert.That(exposed, Is.GreaterThan(0));
+            Assert.That(windups, Is.GreaterThan(exposed), "some hunts are double cuts");
+            Assert.That(_ev.Any(e => e.kind == VesperEventKind.StrikeWindup && e.index == 1), Is.True);
+        }
+
+        [Test]
+        public void TheMercyRuleHoldsAtFullHeat()
+        {
+            var f = NewFight(new VesperTuning { maxHealth = 1e6f, phase2At = 5e5f, phase3At = 1e5f });
+            f.Begin(_ev);
+            Run(f, 60f, In());
+            Assert.That(f.Heat, Is.EqualTo(1f));
+            Assert.That(f.TryMercy(_ev), Is.True, "she still pulls the killing blow");
+            int bolts = _ev.Count(e => e.kind == VesperEventKind.Bolt);
+            Run(f, f.T.mercySeconds - 0.1f, In(health: 10f));
+            Assert.That(_ev.Count(e => e.kind == VesperEventKind.Bolt), Is.EqualTo(bolts), "and holds fire while you get up");
         }
 
         // ------------------------------------------------------------------ she never quite goes for the kill

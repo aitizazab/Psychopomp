@@ -8,7 +8,7 @@ check pass; the play checks are listed at the end.
 
 | Piece | Where | What it does |
 |---|---|---|
-| Shadow Step | `Scripts/Player/HellAbilities.cs`, planner in `Runtime/Skyline/HellAbilities.cs` (`BlinkPlanner`, `BlinkRules`) | Hold to aim: a marker shows the landing (violet = valid, red = not). Release: you arrive at once with your velocity kept. Landing = ground hit, a ledge top when you aim at a wall (up to 2.2 m above the hit), the foot of a taller wall, or the ground under the end of the aim (up to 6 m down); within 18 m, in sight, the body must fit. **It must be dark** (`HellDarkness`), or lava with Ashwalker. Charges: 1 (2 with Ambush), 6 s each. Dark smoke at both ends. Blocked while `HellAbilities.ShadowStepBlocked`. |
+| Shadow Step | `Scripts/Player/HellAbilities.cs`, planner in `Runtime/Skyline/HellAbilities.cs` (`BlinkPlanner`, `BlinkRules`) | Hold to aim: a marker shows the landing (violet = valid, red = not). Release: you arrive at once with your velocity kept. Landing = ground hit, a ledge top when you aim at a wall (up to 2.2 m above the hit), the foot of a taller wall, or the ground under the end of the aim (up to 6 m down); within 18 m, in sight, the body must fit. **Shadow at either end** (the creator, 2026-10-18): the landing OR the spot you step from must be dark (`HellDarkness.IsDark`; a fire-lit spot is not shadow; Nightfall's sphere counts for either), or the landing is lava with Ashwalker (lava without Ashwalker is always refused). `BlinkRules.Apply(plan, destDark, startDark, lava, ashwalker)`. Charges: 1 (2 with Ambush), 6 s each. Dark smoke at both ends. Blocked while `HellAbilities.ShadowStepBlocked`. |
 | Rewind | `Scripts/Player/HellRewind.cs` | Every fixed step, a snapshot of every `IHellRewindable` in `HellRewindRegistry.All`, stored as (object, snapshot) pairs in a ring sized for 6 s. Use: restores the snapshot from 4 s ago (6 with Deeper Rewind), calling `Restore` on that frame's own objects (registered or not), then clears the ring. Cooldown 20 s. A 0.3 s desaturated flash. |
 | Time Dilation | `HellAbilities.TickDilation`, `TimeDilationState`, `DilationCurve` | Pressing aim down sights slows time for 3 s after the press, by your speed at the press: none below 2.5 m/s, 0.35x from 10.5 m/s (walk 5 = 0.80x, sprint 9.5 = 0.43x, slide 13 = 0.35x). Ease 0.15 s in and out (smoothstep), on real time. The look stays real-time (the player reads the mouse per frame and the stick on unscaled time). A violet screen edge, a pitch hook. |
 | One time-scale owner | `Scripts/Player/HellTime.cs` | `HellTime.Request(key, scale)`: the smallest request wins. The player's hit stop now goes through it (`hitstop`), Time Dilation is `dilation`, the pick screen `skillpick`. The pause menu still holds 0 while open. Physics keeps its fixed step (the game logic runs in Update on `deltaTime`; the ring records in game time). |
@@ -36,7 +36,7 @@ check pass; the play checks are listed at the end.
 | Umbral Chain | Shadow | After a step, one more step within 1 s is free (it doesn't chain again). | flag (`HellSkillPassive`) |
 | Ambush | Shadow | +1 charge; the first shot after a step does 3x damage (`SkylinePlayer.ShotDamageScale`). | `HellSkillAmbush` |
 | Shade | Shadow | A step leaves your shadow at the start; bots target it for 4 s; their bolts strike it. | `HellSkillShade` |
-| Nightfall | Shadow | Skill button: a dark sphere (6 m radius, 8 s, cooldown 22 s) where you aim, up to 30 m. Bots inside or looking through lose you; you can Shadow Step into it. | `HellSkillNightfall` |
+| Nightfall | Shadow | Skill button: a dark sphere (6 m radius, 8 s, cooldown 22 s) where you aim, up to 30 m. **Enemies caught in it take 20 on the cast, then 15 a second while inside** (0.25 s ticks; 140 over the full 8 s; an imp's 60 hp chassis goes in about 2.7 s), **and are blind** (no seeing, telegraphing or attacking you) while inside and for 1.5 s after they leave. Bots looking through it lose you too. You can Shadow Step into it or out of it. (`NightfallPayoff`) | `HellSkillNightfall` |
 | Deeper Rewind | Time | Rewind goes back 6 s. | `HellSkillDeeperRewind` |
 | Momentum Bank | Time | Dilation holds 3 s standing up to 6 s at 13 m/s (`MomentumBank`). | flag |
 | Borrowed Time | Time | Each kill: -1.5 s on the Shadow Step recharge, -3 s on the Rewind. | `HellSkillBorrowedTime` |
@@ -89,7 +89,7 @@ Hooks a skill can use: `HellAbilities.Stepped(from, to)`, `StepCharges` (charges
 Shadow Step: range 18 m, ledge reach 2.2 m, drop 6 m, recharge 6 s (`blink`). Rewind: 4 s, cooldown 20 s. Dilation:
 `dilationCurve` (noneBelow 2.5, fullAt 10.5, minScale 0.35, exponent 1), hold 3 s, ease 0.15 s; `momentumBank` (3 to 6 s
 from 2.5 to 13 m/s). Umbral window 1 s; Ashwalker 6 s; lava hop window 0.15 s, height 1.4 m. Nightfall radius 6, 8 s,
-cooldown 22 s. Combustion radius 5, damage 45, burn 3 s at 10/s.
+cooldown 22 s, 20 burst + 15/s, blind linger 1.5 s (`NightfallPayoff`). Combustion radius 5, damage 45, burn 3 s at 10/s.
 
 ## Setup
 

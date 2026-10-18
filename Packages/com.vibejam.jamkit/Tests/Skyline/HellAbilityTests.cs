@@ -359,6 +359,56 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void ShadowStepNeedsShadowAtEitherEnd()
+        {
+            // the creator, 2026-10-18: the destination OR the starting point in shadow (Nightfall counts for either)
+            var ok = new BlinkPlan { valid = true, kind = BlinkKind.Ground };
+            Assert.That(BlinkRules.Apply(ok, true, false, false, false).valid, Is.True, "into shadow from the light");
+            Assert.That(BlinkRules.Apply(ok, false, true, false, false).valid, Is.True, "out of shadow into the light");
+            Assert.That(BlinkRules.Apply(ok, true, true, false, false).valid, Is.True, "shadow to shadow");
+            var none = BlinkRules.Apply(ok, false, false, false, false);
+            Assert.That(none.valid, Is.False, "light to light");
+            Assert.That(none.reason, Is.EqualTo("no shadow at either end"));
+            Assert.That(BlinkRules.Apply(ok, false, true, true, false).valid, Is.False, "lava without Ashwalker even from shadow");
+            Assert.That(BlinkRules.Apply(ok, false, false, true, true).valid, Is.True, "lava with Ashwalker");
+            var geo = new BlinkPlan { valid = false, reason = "out of range" };
+            Assert.That(BlinkRules.Apply(geo, true, true, false, false).reason, Is.EqualTo("out of range"), "range and sight still rule");
+
+            // a fire-lit start is not shadow; a Nightfall sphere is, at either end
+            var f = new DarknessField();
+            f.AddZone(new Vector3(-5, -1, -5), new Vector3(5, 4, 5));
+            int l = f.AddLight(new Vector3(3, 0, 3), 1.5f);
+            var litStart = new Vector3(3, 0.5f, 3);
+            var lightLanding = new Vector3(40, 0.5f, 0);
+            Assert.That(BlinkRules.Apply(ok, f.IsDark(lightLanding), f.IsDark(litStart), false, false).valid, Is.False, "a fire-lit start doesn't count");
+            Assert.That(BlinkRules.Apply(ok, f.IsDark(lightLanding), f.IsDark(new Vector3(-3, 0.5f, -3)), false, false).valid, Is.True, "a dark start does");
+            f.AddSphere(new Vector3(60, 0, 0), 6f, 8.0);
+            Assert.That(BlinkRules.Apply(ok, f.IsDark(lightLanding, 1.0), f.IsDark(new Vector3(58, 0.5f, 0), 1.0), false, false).valid, Is.True, "stepping out of Nightfall");
+            Assert.That(BlinkRules.Apply(ok, f.IsDark(new Vector3(62, 0.5f, 0), 1.0), f.IsDark(lightLanding, 1.0), false, false).valid, Is.True, "stepping into Nightfall");
+            f.RemoveLight(l);
+        }
+
+        [Test]
+        public void NightfallHurtsAndBlindsWhatItCatches()
+        {
+            // the creator, 2026-10-18: "Nightfall does no damage"
+            var clock = NightfallPayoff.Clock();
+            float total = NightfallPayoff.CastBurst, first = 0f;
+            for (int i = 0; i < 600 && clock.Burning; i++)
+            {
+                float due = clock.Tick(1f / 60f);
+                if (first == 0f && due > 0f) first = i;
+                total += due;
+            }
+            Assert.That(total, Is.EqualTo(NightfallPayoff.DamageFor(8f)).Within(0.01f));
+            Assert.That(total, Is.EqualTo(140f).Within(0.01f), "20 on the cast + 15/s for 8 s");
+            Assert.That(first, Is.LessThan(16), "the first tick comes within a quarter second");
+            Assert.That(NightfallPayoff.DamageFor(2.7f), Is.GreaterThanOrEqualTo(60f), "an imp's 60 hp chassis goes in under 3 s inside");
+            Assert.That(NightfallPayoff.Blind(10f, 11.4f), Is.True, "still blind just after leaving");
+            Assert.That(NightfallPayoff.Blind(10f, 11.6f), Is.False, "sees again after 1.5 s");
+        }
+
+        [Test]
         public void BurnTicksItsDamageAndEnds()
         {
             var b = new BurnStatus();

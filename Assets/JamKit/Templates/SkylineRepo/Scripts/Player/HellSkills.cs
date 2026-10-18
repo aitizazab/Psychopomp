@@ -25,7 +25,7 @@ namespace JamKit.SkylineRepo
             new HellSkillDef { id = Shade, name = "Shade", flavour = HellFlavour.Shadow, icon = "@",
                 description = "A Shadow Step leaves your shadow behind. Enemies go after it for 4 seconds." },
             new HellSkillDef { id = Nightfall, name = "Nightfall", flavour = HellFlavour.Shadow, icon = "( )",
-                description = "Floor skill button: a sphere of darkness for 8 seconds where you aim. Enemies inside lose you, and you can Shadow Step into it." },
+                description = "Floor skill button: a sphere of darkness for 8 seconds where you aim. Enemies caught in it burn in the dark (20 on the cast, then 15 a second) and are blind to you. Shadow Step into it or out of it." },
             new HellSkillDef { id = DeeperRewind, name = "Deeper Rewind", flavour = HellFlavour.Time, icon = "6s",
                 description = "Rewind goes back 6 seconds instead of 4." },
             new HellSkillDef { id = MomentumBank, name = "Momentum Bank", flavour = HellFlavour.Time, icon = ">>",
@@ -119,15 +119,32 @@ namespace JamKit.SkylineRepo
             Abilities.Stepped += (from, to) => Abilities.Targeting.LeaveShade(from, Abilities.Player.Yaw, Seconds);
     }
 
-    /// <summary>Nightfall: the floor skill button throws a sphere of darkness where you aim (within 30 m): radius 6 m, 8 s, cooldown 22 s.</summary>
+    /// <summary>Nightfall: the floor skill button throws a sphere of darkness where you aim (within 30 m): radius 6 m, 8 s, cooldown
+    /// 22 s. The payoff (<see cref="NightfallPayoff"/>): enemies inside when it lands take 20, then 15 a second while inside, and
+    /// stay blind while inside and 1.5 s after (<see cref="Blinded"/>, read by <see cref="HellTargeting"/>).</summary>
     public sealed class HellSkillNightfall : HellSkill
     {
-        public float radius = 6f, seconds = 8f, range = 30f;
-        public AbilityCooldown Cooldown { get; } = new AbilityCooldown(22f);
+        public float radius = NightfallPayoff.Radius, seconds = NightfallPayoff.Seconds, range = NightfallPayoff.Range;
+        public AbilityCooldown Cooldown { get; } = new AbilityCooldown(NightfallPayoff.Cooldown);
+
+        /// <summary>Bots the dark touched, and when it last held them (game time).</summary>
+        static readonly Dictionary<SkylineBot, float> _lastInside = new Dictionary<SkylineBot, float>();
+        static readonly List<SkylineBot> _scratch = new List<SkylineBot>();
+
+        /// <summary>A bot inside a live Nightfall, or out of one for less than <see cref="NightfallPayoff.BlindLinger"/> s.</summary>
+        public static bool Blinded(SkylineBot bot) =>
+            bot != null && _lastInside.TryGetValue(bot, out var t) && NightfallPayoff.Blind(t, Time.time);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => _lastInside.Clear();
+
+        struct Live { public Vector3 c; public float r; public BurnStatus clock; }
+        readonly List<Live> _live = new List<Live>();
 
         void Update()
         {
             Cooldown.Tick(Time.deltaTime);
+            TickSpheres(Time.deltaTime);
             if (!HellAbilities.SkillPressed() || !HellAbilityWheel.Binding.Fires(HellSkills.Nightfall)) return;   // the wheel binds the Skill button
             if (!Cooldown.TryUse()) { HellAbilityAudio.Play("nightfall_denied", transform.position); return; }
             var p = Abilities.Player;
@@ -136,7 +153,44 @@ namespace JamKit.SkylineRepo
             HellDarkness.AddSphere(c, radius, seconds);
             HellFx.NightfallSphere(c, radius, seconds);
             HellAbilityAudio.Play("nightfall", c);
-            Debug.Log("HELL_SKILL nightfall at " + c.ToString("F1"));
+            _live.Add(new Live { c = c, r = radius, clock = NightfallPayoff.Clock(seconds) });
+            int caught = Hurt(c, radius, NightfallPayoff.CastBurst);
+            Debug.Log("HELL_SKILL nightfall at " + c.ToString("F1") + " caught " + caught);
+        }
+
+        void TickSpheres(float dt)
+        {
+            for (int i = _live.Count - 1; i >= 0; i--)
+            {
+                var s = _live[i];
+                float due = s.clock.Tick(dt);
+                Hurt(s.c, s.r, due);
+                if (!s.clock.Burning) _live.RemoveAt(i);
+            }
+        }
+
+        /// <summary>Marks every live bot inside the sphere blind (now) and hits it for <paramref name="damage"/> (0: mark only).</summary>
+        static int Hurt(Vector3 c, float r, float damage)
+        {
+            _scratch.Clear();
+            _scratch.AddRange(SkylineBot.Live);
+            int n = 0;
+            float r2 = r * r, now = Time.time;
+            foreach (var bot in _scratch)
+            {
+                if (bot == null || !bot.Alive) continue;
+                var at = bot.Center;
+                if ((at - c).sqrMagnitude > r2) continue;
+                n++;
+                _lastInside[bot] = now;
+                if (damage > 0f)
+                    bot.TakeHit(new SkylineHitInfo
+                    {
+                        gun = null, damage = damage, zone = HitZone.Body, plate = -1, point = at, normal = Vector3.up, direction = Vector3.down,
+                        fromWrit = false, knockback = 0f, time = now,
+                    });
+            }
+            return n;
         }
     }
 

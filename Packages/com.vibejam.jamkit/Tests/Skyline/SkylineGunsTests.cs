@@ -93,6 +93,27 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void TheBreacherOwnsCloseRangeAndTheWritOwnsRange()
+        {
+            // the creator, 2026-10-18: "the Breacher is an absolute joke; the Writ clears it in every way"
+            var b = SkylineGuns.Breacher();
+            var w = SkylineGuns.Writ();
+            float bShot = b.damage * b.pellets, bDps = bShot / b.weapon.fireInterval;
+            float wDps = w.damage / w.weapon.fireInterval, wWeakDps = wDps * w.weakPointMultiplier;
+            Assert.That(bShot, Is.GreaterThanOrEqualTo(75f), "one point-blank shell wrecks an imp (60 chassis + 15 horns)");
+            Assert.That(bDps, Is.GreaterThan(wWeakDps * 1.25f), "up close it out-damages the Writ even on weak points");
+            Assert.That(b.plateDamageScale, Is.GreaterThanOrEqualTo(2f), "it strips armour");
+            Assert.That(w.plateDamageScale, Is.EqualTo(1f));
+            Assert.That(b.staggerSeconds, Is.GreaterThan(0.5f), "a full hit staggers");
+            Assert.That(w.staggerSeconds, Is.EqualTo(0f));
+            Assert.That(b.StaggerFor(b.damage), Is.EqualTo(b.staggerSeconds).Within(1e-5f));
+            Assert.That(b.StaggerFor(b.damage * b.FalloffScale(20f)), Is.LessThan(0.15f), "a stray pellet at range barely staggers");
+            // at range the Writ wins: the Breacher's full shell at 20 m is under two Writ shots
+            Assert.That(bShot * b.FalloffScale(20f), Is.LessThan(2f * w.damage));
+            Assert.That(b.range, Is.LessThan(w.range));
+        }
+
+        [Test]
         public void AReloadFromEmptyTakesLongerAndDoesMore()
         {
             foreach (var g in SkylineGuns.All())

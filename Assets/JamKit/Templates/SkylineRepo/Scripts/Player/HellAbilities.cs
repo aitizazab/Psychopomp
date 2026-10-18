@@ -261,8 +261,9 @@ namespace JamKit.SkylineRepo
             }
             Vector3 feet = U(plan.feet);
             bool lava = LavaQuery != null && LavaQuery(feet);
-            bool dark = HellDarkness.IsDark(feet + Vector3.up * 0.5f);
-            plan = BlinkRules.Apply(plan, dark, lava, Has(HellSkills.Ashwalker));
+            bool dark = HellDarkness.IsDark(feet + Vector3.up * 0.5f);                  // the landing in shadow
+            bool startDark = HellDarkness.IsDark(transform.position + Vector3.up * 0.5f);   // or the spot you step from (either end counts)
+            plan = BlinkRules.Apply(plan, dark, startDark, lava, Has(HellSkills.Ashwalker));
             if (ShadowStepBlocked) { plan.valid = false; plan.reason = "blocked"; }
             return plan;
         }
