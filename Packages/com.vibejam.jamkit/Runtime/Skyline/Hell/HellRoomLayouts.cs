@@ -360,13 +360,29 @@ namespace JamKit.Skyline
 
         // ------------------------------------------------------------------ 5. The Collapse
 
-        /// <summary>The run-up hall's hanging stalactites (the speed route: wall-kick from one to the next): each is a thin
-        /// rock slab along z, its face this far either side of the centre line, hanging from the hall's rock roof down to
-        /// <see cref="CollapseStalactiteBottom"/> (a runner, 1.7 m, passes below), the first starting at
-        /// <see cref="CollapseStalactiteFirstZ"/>, one every <see cref="CollapseStalactiteSpacing"/> m, alternating sides.</summary>
-        public const float CollapseStalactiteHalfGap = 1.5f, CollapseStalactiteBottom = 2.1f, CollapseStalactiteLength = 7.5f;
-        public const float CollapseStalactiteFirstZ = 30f, CollapseStalactiteSpacing = 8f, CollapseStalactiteStagger = 2f, CollapseRoofY = 12f;
-        public const int CollapseStalactiteCount = 2;   // per side
+        /// <summary>The run-up hall's rock formations (the speed route: wall-kick from one to the next, zig-zag). Two rows of
+        /// separate kick columns, their inner faces this far either side of the centre line (4.5 m apart: a kick's 5.2 m/s out
+        /// carries you across in about half a second, long enough to read), alternating sides; each column is a stalagmite
+        /// rising from the floor or a stalactite hanging from the hall's rock roof at <see cref="CollapseRoofY"/> nearly to the
+        /// floor. The runner's lane between the rows stays clear (a 1.7 m runner passes between and below them). Around them,
+        /// shorter rocks that are only scenery: stalactites hanging from the roof, stalagmites on the floor outside the rows.
+        /// Every formation is a <see cref="HellRock"/>: a box collider here, a tapered faceted cone in the Unity builder.</summary>
+        public const float CollapseStalactiteHalfGap = 2.25f, CollapseRoofY = 12f;
+        /// <summary>The kick columns in the order you kick them: (z of the centre, east row?, hangs from the roof?, root radius
+        /// along the hall). The z spacing grows with the speed (each kick carries you further), from the traversal simulator's
+        /// kick points; each column is 3.6 m long so a kick 0.1 s early or late, or at 90% speed, still meets it, and the last one
+        /// (the long run off the hall onto the bridge) 4.8 m.</summary>
+        public static readonly (float z, bool east, bool hangs, float rz)[] CollapseKickColumns =
+        {
+            (22.7f, true, false, 2.4f), (28.7f, false, true, 2.4f), (36.3f, true, false, 2.4f), (44.8f, false, true, 2.4f), (53f, true, true, 3.2f),
+        };
+        /// <summary>A kick column's footprint radius across the hall at its root, and how low the hanging ones reach
+        /// (their tips) and how high the standing ones rise.</summary>
+        public const float CollapseColumnRx = 1.3f, CollapseStalactiteTipY = 0.5f, CollapseStalagmiteTipY = 7.8f;
+        /// <summary>The hall's roof spans this along z.</summary>
+        public const float CollapseRoofZ0 = 18f, CollapseRoofZ1 = 56f;
+        /// <summary>The shade under the roof ends here (short of the bridge, so its lava lights keep their reach).</summary>
+        public const float CollapseDarkZ1 = 50f;
         /// <summary>The safe lane's fins on the bridge: their z (the near face), the gap each leaves, and the running line
         /// through the gaps (alternating east and west).</summary>
         public const float CollapseBaffleFirstZ = 60f, CollapseBaffleSpacing = 9f;
@@ -394,18 +410,7 @@ namespace JamKit.Skyline
             k.Floor(-W, 0, W, 8);
             // the run-up hall (stone, never falls): the stalactites hang over its middle from a rock roof
             k.Floor(-W, 8, W, CollapseStartZ);
-            float roofZ0 = CollapseStalactiteFirstZ - 2f, roofZ1 = CollapseStalactiteFirstZ + CollapseStalactiteStagger + CollapseStalactiteSpacing * (CollapseStalactiteCount - 1) + CollapseStalactiteLength + 2f;
-            k.Add("roof", "wall", -6f, CollapseRoofY, roofZ0, 6f, CollapseRoofY + 1.5f, roofZ1);
-            for (int i = 0; i < CollapseStalactiteCount; i++)
-            {
-                for (int side = 0; side < 2; side++)
-                {
-                    float z = CollapseStalactiteFirstZ + CollapseStalactiteSpacing * i + side * CollapseStalactiteStagger;
-                    float x = side == 0 ? CollapseStalactiteHalfGap : -CollapseStalactiteHalfGap - 0.6f;
-                    k.Wall(x, z, x + 0.6f, z + CollapseStalactiteLength, CollapseStalactiteBottom, CollapseRoofY, true, "stalactite");
-                }
-            }
-            k.Dark(-6f, 0f, roofZ0, 6f, CollapseStalactiteBottom, roofZ1);   // the hall's shade under the roof
+            CollapseHallRocks(k);
             // the bridge: lava under it all (no floor: a fallen tile drops you in), the end floor beyond
             k.Floor(-W, CollapseEndZ, W, L);
             k.Lava(-W, CollapseStartZ, W, CollapseEndZ);
@@ -616,6 +621,39 @@ namespace JamKit.Skyline
             }
         }
 
+        /// <summary>The Collapse's run-up hall: its rock roof, the kick columns (runnable: the speed route zig-zags between them)
+        /// and the scenery rocks round them (not runnable), and the shade under the roof.</summary>
+        static void CollapseHallRocks(Kit k)
+        {
+            const float H = CollapseStalactiteHalfGap, roofX = 8.5f;
+            k.Add("roof", "wall", -roofX, CollapseRoofY, CollapseRoofZ0, roofX, CollapseRoofY + 1.5f, CollapseRoofZ1);
+            foreach (var c in CollapseKickColumns)
+            {
+                // the column's inner face (its collider's) on the row line; the cone stands behind it
+                float cx = H + HellRock.ColliderWidth * CollapseColumnRx;
+                if (!c.east) cx = -cx;
+                if (c.hangs) k.Rock(cx, c.z, CollapseRoofY, CollapseStalactiteTipY, CollapseColumnRx, c.rz, true);
+                else k.Rock(cx, c.z, 0f, CollapseStalagmiteTipY, CollapseColumnRx, c.rz, true);
+            }
+            // scenery: stalactites from the roof outside the rows (tips 5.5-8 m) and a few high over the runner's lane (tips
+            // 8.5 m and up: above any kick), stalagmites on the floor outside the rows (1.8-3.6 m)
+            float[][] hanging =
+            {
+                new[] { 4.6f, 20f, 6.5f, 0.9f }, new[] { 6.5f, 26f, 8f, 0.7f }, new[] { 4.8f, 33f, 5.5f, 1f }, new[] { 6.8f, 40f, 7.5f, 0.8f },
+                new[] { 4.7f, 49f, 6f, 0.9f }, new[] { -5f, 22.5f, 7f, 0.8f }, new[] { -6.6f, 30f, 6f, 0.9f }, new[] { -4.7f, 37.5f, 7.5f, 0.7f },
+                new[] { -6.4f, 44f, 5.8f, 1f }, new[] { -5.2f, 52f, 7f, 0.8f },
+                new[] { 0.3f, 27f, 8.6f, 0.6f }, new[] { -0.4f, 41f, 8.9f, 0.6f }, new[] { 0.2f, 50f, 8.6f, 0.55f },
+            };
+            foreach (var a in hanging) k.Rock(a[0], a[1], CollapseRoofY, a[2], a[3], a[3] * 1.15f, false);
+            float[][] standing =
+            {
+                new[] { 5.2f, 21f, 2.5f, 0.8f }, new[] { 7.5f, 30f, 3.5f, 1f }, new[] { 5f, 41f, 1.8f, 0.7f }, new[] { 7.2f, 50f, 3f, 0.9f },
+                new[] { -5.4f, 26f, 3f, 0.9f }, new[] { -7.4f, 35f, 2.2f, 0.8f }, new[] { -5f, 47f, 3.6f, 1f }, new[] { -7f, 54f, 2f, 0.7f },
+            };
+            foreach (var a in standing) k.Rock(a[0], a[1], 0f, a[2], a[3], a[3] * 1.2f, false);
+            k.Dark(-6f, 0f, CollapseRoofZ0, 6f, 2.1f, CollapseDarkZ1);   // the hall's shade under the roof
+        }
+
         // ------------------------------------------------------------------ the kit
 
         sealed class Kit
@@ -649,6 +687,15 @@ namespace JamKit.Skyline
 
             /// <summary>A raised block you stand on (a ledge, a balcony).</summary>
             public void Deck(float x0, float z0, float x1, float z1, float yBottom, float top) => Add(Id("deck"), "deck", x0, yBottom, z0, x1, top, z1);
+
+            /// <summary>A rock formation (<see cref="HellRock"/>): a cone from <paramref name="rootY"/> (the roof or the floor) to its
+            /// tip at <paramref name="tipY"/>, root radii <paramref name="rx"/> / <paramref name="rz"/>; the collider is the box
+            /// <see cref="HellRock.Collider"/> gives (the visual is rebuilt from it).</summary>
+            public void Rock(float cx, float cz, float rootY, float tipY, float rx, float rz, bool runnable)
+            {
+                HellRock.Collider(cx, cz, rootY, tipY, rx, rz, out var mn, out var mx);
+                Add(Id(tipY < rootY ? "stalactite" : "stalagmite"), "wall", mn.X, mn.Y, mn.Z, mx.X, mx.Y, mx.Z, runnable);
+            }
 
             public void Wall(float x0, float z0, float x1, float z1, float yb, float yt, bool runnable, string prefix = "wall") =>
                 Add(Id(prefix), "wall", x0, yb, z0, x1, yt, z1, runnable);
@@ -910,6 +957,77 @@ namespace JamKit.Skyline
                 r.exitYaw = 0f;
                 r.bounds = new CoverBox { min = V(minX - t, Math.Min(baseY, exitY - DropDepth), -8f - t), max = V(maxX + t, topY, h1 + t) };
             }
+        }
+    }
+
+    /// <summary>
+    /// A rock formation (The Collapse's stalactites and stalagmites): a tapered, faceted cone from its root (the roof or the
+    /// floor) to a point, its radius <c>root x (1 - s)^0.5</c> along its length s (full at the root, a quick point at the tip),
+    /// with seeded noise on every ring. The collider is a box round the cone's thick part: <see cref="ColliderWidth"/> of the
+    /// root radii across (the cone's own width about 40% of the way down) and <see cref="ColliderEnd"/> of the length from the
+    /// root (the last thin point has no collider). The Unity builder rebuilds the visual from that box alone
+    /// (<see cref="Mesh"/>), so a mirrored or turned room keeps its rocks over their colliders.
+    /// </summary>
+    public static class HellRock
+    {
+        public const float Exponent = 0.5f, ColliderEnd = 0.85f, ColliderWidth = 0.75f;
+        public const int Sides = 8, Rings = 9;
+
+        public static bool IsRock(string id) => id != null && (id.StartsWith("stalactite") || id.StartsWith("stalagmite"));
+        public static bool Hangs(string id) => id != null && id.StartsWith("stalactite");
+
+        /// <summary>The cone's radius at <paramref name="s"/> (0 the root, 1 the tip), as a fraction of the root's.</summary>
+        public static float Radius(float s) => (float)Math.Pow(Math.Max(0f, 1f - s), Exponent);
+
+        public static void Collider(float cx, float cz, float rootY, float tipY, float rx, float rz, out Vector3 min, out Vector3 max)
+        {
+            float end = rootY + (tipY - rootY) * ColliderEnd;
+            min = new Vector3(cx - rx * ColliderWidth, Math.Min(rootY, end), cz - rz * ColliderWidth);
+            max = new Vector3(cx + rx * ColliderWidth, Math.Max(rootY, end), cz + rz * ColliderWidth);
+        }
+
+        /// <summary>The visual for the collider box <paramref name="min"/>-<paramref name="max"/> of a rock (hanging or
+        /// standing): flat-shaded triangles in world space (three vertices each), seeded by the rock's id.</summary>
+        public static void Mesh(Vector3 min, Vector3 max, bool hangs, string id, List<Vector3> verts, List<int> tris)
+        {
+            float rx = (max.X - min.X) * 0.5f / ColliderWidth, rz = (max.Z - min.Z) * 0.5f / ColliderWidth;
+            float len = (max.Y - min.Y) / ColliderEnd, dir = hangs ? -1f : 1f;
+            float rootY = hangs ? max.Y + 0.4f : min.Y - 0.2f;   // sunk a little into the roof / the floor
+            len += 0.4f;
+            var c = new Vector3((min.X + max.X) * 0.5f, 0f, (min.Z + max.Z) * 0.5f);
+            uint seed = 2166136261u;
+            foreach (char ch in id) seed = (seed ^ ch) * 16777619u;
+            var rng = new Random((int)(seed & 0x7fffffff));
+            float R() => (float)rng.NextDouble();
+            // a slight lean and a crooked tip, kept small so the rock stays over its collider
+            var lean = new Vector3(R() - 0.5f, 0f, R() - 0.5f) * Math.Min(rx, rz) * 0.35f;
+            var pts = new Vector3[Rings + 1, Sides];
+            float twist = R() * 6.2832f;
+            for (int k = 0; k <= Rings; k++)
+            {
+                float s = k / (float)Rings;
+                // rings bunch toward the tip so the point stays sharp and faceted
+                float sk = 1f - (1f - s) * (1f - s * 0.35f);
+                float r = k == Rings ? 0f : Radius(sk);
+                var centre = c + new Vector3(0f, rootY + dir * len * sk, 0f) + lean * sk * sk;
+                for (int j = 0; j < Sides; j++)
+                {
+                    float a = twist + (j + (R() - 0.5f) * 0.45f) / Sides * 6.2832f;
+                    float jr = r * (0.78f + R() * 0.4f);
+                    pts[k, j] = centre + new Vector3((float)Math.Cos(a) * rx * jr, (R() - 0.5f) * len * 0.035f * (k == Rings ? 0f : 1f), (float)Math.Sin(a) * rz * jr);
+                }
+            }
+            for (int k = 0; k < Rings; k++)
+                for (int j = 0; j < Sides; j++)
+                {
+                    int j1 = (j + 1) % Sides;
+                    Vector3 a = pts[k, j], b = pts[k, j1], cc = pts[k + 1, j1], d = pts[k + 1, j];
+                    int i0 = verts.Count;
+                    // outward winding for Unity (clockwise seen from outside): a standing cone's rings go up, a hanging one's down
+                    if (hangs) { verts.Add(a); verts.Add(b); verts.Add(cc); verts.Add(a); verts.Add(cc); verts.Add(d); }
+                    else { verts.Add(a); verts.Add(cc); verts.Add(b); verts.Add(a); verts.Add(d); verts.Add(cc); }
+                    for (int q = 0; q < 6; q++) tris.Add(i0 + q);
+                }
         }
     }
 }

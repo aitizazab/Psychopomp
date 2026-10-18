@@ -65,11 +65,21 @@ but standing in it for 1 s sinks you.
    south-west corner.
 5. **The Collapse** (40 x 120; redesigned on `hell-rooms3`, 2026-10-18, the creator: "that section should be only half of
    the room"). **The first half (z 0-56) is a stone run-up hall** that never falls, with two ways through it, the same
-   length: two staggered rows of hanging **stalactites** over its middle (rock slabs from a rock roof at 12 m down to
-   2.1 m, faces 3 m apart, z 30-49.5), which you can **wall-kick** between (jump up into the first, then kick across to
-   the other row and back: each kick within the wall-kick window keeps your speed and adds along the wall; four kicks take
-   a sprint's 9.5 m/s to about 20 m/s), or simply run below them (a 1.7 m runner passes under; no speed gained). The hall
-   is dark under the roof (the room's dark zone). **The second half (z 56-112) is the collapsing bridge**, its tiles
+   length: **rock formations** under a rock roof at 12 m (z 18-56; rebuilt on `hell-stal`, 2026-10-18, the creator: "two
+   sets of walls way too close to each other ... continuous walls ... they don't even look like rough stalagmites"). Two
+   rows of five separate **kick columns**, their inner faces 4.5 m apart (x +/-2.25), alternating sides in a zig-zag at z
+   22.7 (east, a stalagmite), 28.7 (west, a stalactite), 36.3 (east, stalagmite), 44.8 (west, stalactite) and 53 (east, a
+   long stalactite to run off), each 3.6 m long (the last 4.8 m) with open gaps between them along each row; the
+   stalactites hang from the roof nearly to the floor (tips at 0.5 m), the stalagmites rise to 7.8 m. Around them, 13
+   shorter stalactites hang from the roof (outside the rows, tips 5.5-8 m; three high over the lane, tips 8.6 m and up)
+   and 8 stalagmites (1.8-3.6 m) stand on the floor outside the rows. You can **wall-kick** up the columns (jump up into
+   the first stalagmite, then kick across to the next column on the other row and back: each kick within the wall-kick
+   window keeps your speed and adds along the wall; four kicks take a sprint's 9.5 m/s to 20.6 m/s; the kick's 5.2 m/s out
+   carries you across the 4.5 m in about half a second, and the columns are spaced where each kick lands: 6, 7.6 and 8.5 m
+   apart as you speed up), or simply run between the rows (the lane between them is clear; no speed gained). Every rock is
+   a `HellRock`: a box collider round its thick part (runnable on the kick columns) and, in Unity, a tapered faceted cone
+   with seeded noise built from that box (8 sides, 9 rings bunching to a sharp point past the collider's end; the wall's
+   rock material, so the look's triplanar rock texture). The hall is dark under the roof (the room's dark zone, z 18-50). **The second half (z 56-112) is the collapsing bridge**, its tiles
    falling on the room clock row by row from the bridge's start. The central lane is straight (one 4 m lava gap); its front
    sets off from the bridge's start at 5.0 s and comes at 13 m/s, so it is already falling when a sprinter arrives (about
    6.5 s), and only the kick route's speed outruns it. The west lane winds between 6 stone fins (on the lava bed: they
@@ -198,9 +208,15 @@ clock, dropped in standing from 4 m as the run does; the bridge's tiles really f
 
 | Floor | Kick route (stalactites, then the central lane) | Sprint below, central lane | Slide and hops below, central lane | Sprint, safe lane |
 |---|---|---|---|---|
-| 1 | made it in 8.95 s, 20.6 m/s out of the hall, smallest lead 0.49 s | loses at z 59.8 (lead -0.68 s), 9.5 m/s | loses (lead -0.01 s), 10.1 m/s | 14.6 s, smallest lead 0.80 s |
-| 2 | 8.95 s, lead 0.39 s | loses (-0.78 s) | loses (-0.10 s) | 14.6 s, lead 0.70 s |
-| 3 | 8.95 s, lead 0.22 s | loses (-0.93 s) | loses (-0.25 s) | 14.6 s, lead 0.55 s |
+| 1 | made it in 8.58 s, 20.6 m/s out of the hall, smallest lead 0.90 s | loses at z 59.8 (lead -0.68 s), 9.5 m/s | loses (lead -0.01 s), 10.1 m/s | 14.6 s, smallest lead 0.80 s |
+| 2 | 8.58 s, lead 0.80 s | loses (-0.78 s) | loses (-0.10 s) | 14.6 s, lead 0.70 s |
+| 3 | 8.58 s, lead 0.60 s | loses (-0.93 s) | loses (-0.25 s) | 14.6 s, lead 0.55 s |
+
+The kicks in the simulator (`hell-stal`; the speed-route test logs every catch): the first stalagmite caught at z 20.2,
+feet 1.3 m, 9.5 m/s; kicks off the columns at z 20.3, 26.7, 34.2 and 42.7 (feet 1.3, 2.0, 2.9, 3.9 m), 12.5, 15.4, 18.0
+and 20.6 m/s; the last column caught at z 51.9 (feet 4.9 m) and left at 58 onto the bridge. Each catch is near a column's
+near end, so a kick 0.1 s early or late, or a run at 90% speed, still meets the next column (the fast-line margin test
+"the stalactite kicks" holds on every floor). The old slabs (rooms3) made it in 8.95 s with leads 0.49 / 0.39 / 0.22 s.
 
 The base layout's safe lane: lead 0.70 s. A 2 s fumble at the start loses the safe lane on every floor. Both routes
 through the hall are the same ground (`BothRoutesThroughTheHallAreTheSameLength`); the difference is speed only: the
@@ -309,7 +325,7 @@ plays with floor 1's handedness. Its difference is in the numbers and the enemy 
 | Per-room numbers | The layout's `k.r.*`: `collapseReturnSeconds`, `tuning.radius`, `tuning.seconds` (wells' seal time, the brand's wave interval), `tuning.spawnEvery` and `spawnCap` (oozes), `tuning.anchorHealth` and `wardRadius`, `tuning.carryMoveScale` |
 | Lava | `HellRoomDef.lavaDps`, `lavaSinkDamage`, `lavaSinkSeconds` (set per floor) |
 | Hold the Brand | `HellBrandTuning` (`HellObjectives.cs`), all in one place: `RingRadius` 10 (20 m across), `RingHalfHeight` 4.5, `SlowSeconds` 30 (standing), `FastRate` 3 (so 10 s), `SlowSpeed` 3 m/s (at or below: the slow rate), `FullSpeed` 8.5 m/s (at or above: the fast rate; linear between, a 5 m/s walk is about 1.7x), `WaveEvery` 5. Geometry: `HellRoomLayouts.BrandCentre`, `BrandLoopHalf` 8, `BrandLoopCut` 4.5 (the racing line). Glow: `HellRoom.BrandPulseSlowHz` 0.6, `BrandPulseFastHz` 3.4; HUD halo `SkylineHudObjective.RingGlowSlowHz` / `RingGlowFastHz` |
-| The Collapse | `HellRoomLayouts`: the hall (`CollapseStartZ` 56: the bridge starts here; the stalactites `CollapseStalactiteFirstZ` 30, `CollapseStalactiteSpacing` 8, `CollapseStalactiteStagger` 2, `CollapseStalactiteLength` 7.5, `CollapseStalactiteCount` 2 per side, `CollapseStalactiteHalfGap` 1.5, `CollapseStalactiteBottom` 2.1, `CollapseRoofY` 12), the fronts (`CollapseFastLaneSpeed` 13, `CollapseFastDelay` 5.0, `CollapseSafeLaneSpeed` 5.5 along the room, `CollapseSafeDelay` 7.3, both from `CollapseFrontOriginZ` = the bridge start), `CollapseWaveEvery` 3 (wall imps), the fins (`CollapseBaffleFirstZ` 60, `CollapseBaffleSpacing` 9, `CollapseBaffleCount` 6, running lines x -9.5 / -18.5); floors scale both fronts (`collapseSpeedScale` 1 / 1 / 1.06). More stalactites = more kicks = more speed (each kick adds about 2.7 m/s) |
+| The Collapse | `HellRoomLayouts`: the hall (`CollapseStartZ` 56: the bridge starts here; the rocks `CollapseKickColumns` (z, row, hanging, root radius along the hall: 22.7 / 28.7 / 36.3 / 44.8 / 53), `CollapseStalactiteHalfGap` 2.25 (the kick faces), `CollapseColumnRx` 1.3, `CollapseStalactiteTipY` 0.5, `CollapseStalagmiteTipY` 7.8, `CollapseRoofY` 12, the roof `CollapseRoofZ0`-`CollapseRoofZ1` 18-56, the shade to `CollapseDarkZ1` 50; the scenery rocks are listed in `CollapseHallRocks`; `HellRock` (`Exponent` 0.5, `ColliderEnd` 0.85, `ColliderWidth` 0.75, `Sides` 8, `Rings` 9) shapes them all), the fronts (`CollapseFastLaneSpeed` 13, `CollapseFastDelay` 5.0, `CollapseSafeLaneSpeed` 5.5 along the room, `CollapseSafeDelay` 7.3, both from `CollapseFrontOriginZ` = the bridge start), `CollapseWaveEvery` 3 (wall imps), the fins (`CollapseBaffleFirstZ` 60, `CollapseBaffleSpacing` 9, `CollapseBaffleCount` 6, running lines x -9.5 / -18.5); floors scale both fronts (`collapseSpeedScale` 1 / 1 / 1.06). More kick columns = more kicks = more speed (each kick adds about 2.7 m/s) |
 | The Collapse's debris | `HellDebris` (`HellHazards.cs`): `TelegraphSeconds` 1, `FallSeconds` 0.45, `RubbleSeconds` 0.6, `Damage` 30, `Radius` 1.5, `DropHeight` 12, `MinGap`/`MaxGap` 1.3-2.1 s per lane, `MinLead`/`MaxLead` 7-24 m ahead of the front, `SideJitter` 0.7 m off the running line; seeded per floor in `HellRoomVariants.Build` (`CollapseDebris(room, floor + 2, scale)`) |
 | Geometry | Edit the layout in `HellRoomLayouts`, then run the tests: the lint says what broke |
 | Lights | `HellRoomLayouts.LightSpacing`, `LightRadius` |
@@ -453,14 +469,21 @@ Rewind can bring one back). See `docs/HELL-INTEGRATION.md`.
     the pit wall;
   - Break the Chains: the west wall's wall jump onto the middle pillar (jump off by about z 19.5);
   - the Brand's dark pillars: step onto the first at a run, then two hops on landing (3 m pillars).
+- The Collapse's rocks (`hell-stal`) are unseen in Unity: check the cones read as rough pointed rock (not too smooth or
+  too spiky at 8 sides), that the triplanar texture sits well on the facets, that the kick columns read as the way up
+  (they are the only big rocks inside x +/-4.2), and that the box colliders don't feel like invisible walls near the thin
+  points (the collider stops at 85% of a rock's length, at about 40% of its root width).
 - The Collapse (rooms3) and the Brand's racing line ARE simulated, in the pure movement engine on `BoxWorld` (not Unity's
-  CharacterController), with scripted inputs. The Collapse's margins (see its table): the kick route keeps 0.22 s on
-  floor 3 at the bridge's start; a slide-and-hop runner (no kicks) misses the fast lane by only 0.01 s on floor 1, so a
+  CharacterController), with scripted inputs. The Collapse's margins (see its table): the kick route keeps 0.60 s on
+  floor 3 at the bridge's start (0.22 s with the old slabs: the rocks made it easier; raise the fast front or lower
+  `CollapseFastDelay` to tighten); a slide-and-hop runner (no kicks) misses the fast lane by only 0.01 s on floor 1, so a
   better slide-hopper may make it there (lower `CollapseFastDelay` or raise the fast front to tighten; each 0.1 s off
   the delay costs the kick route 0.1 s of its lead). The kicks are the stiffest input in the game: each must be pressed
-  within the wall-kick window of touching the next stalactite (a press 0.1 s early is a double jump, not a kick: the fast-
+  within the wall-kick window of touching the next column (a press 0.1 s early is a double jump, not a kick: the fast-
   line margin test only proves that a fumbled chain still lands you safely in the hall). If kicking in Unity feels too
-  hard, widen the rows' gap (`CollapseStalactiteHalfGap`) or add a stalactite pair.
+  hard, lengthen the columns (`CollapseKickColumns`' root radius along the hall) or add a column; the rows' gap
+  (`CollapseStalactiteHalfGap`) changes where every kick lands, so re-run the speed route and move the columns to its
+  logged catches.
 - The Collapse's race sims don't play the debris sidesteps; each costs a little.
 - The Brand's wall-run walls are not run in the sims (the lap is a sprint on the ground); a wall-run there counts at
   8.64 m/s (full rate), and the ring reaches 4.5 m up.

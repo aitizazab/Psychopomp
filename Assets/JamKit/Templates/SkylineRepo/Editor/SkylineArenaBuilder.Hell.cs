@@ -139,6 +139,24 @@ namespace JamKit.SkylineRepo.EditorTools
             EditorBuildSettings.scenes = list.ToArray();
         }
 
+        /// <summary>A rock formation's visual (<see cref="HellRock.Mesh"/>), world-space vertices under an unrotated group.</summary>
+        static GameObject RockMesh(Transform parent, FloorSolid s, Material m)
+        {
+            var nv = new List<NVec3>();
+            var tris = new List<int>();
+            HellRock.Mesh(s.box.min, s.box.max, HellRock.Hangs(s.id), s.id, nv, tris);
+            var mesh = new Mesh { name = "Rock " + s.id };
+            mesh.SetVertices(nv.Select(U).ToList());
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            var go = new GameObject(s.id + " Rock");
+            if (parent != null) go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = m;
+            return go;
+        }
+
         // ------------------------------------------------------------------ one room
 
         static int BuildHellRoom(Transform parent, HellRoomDef d, int floor, HellRoomKind kind, HellMats m)
@@ -162,6 +180,14 @@ namespace JamKit.SkylineRepo.EditorTools
                 var go = s.ramp ? FloorRamp(solidsRoot, s, mat) : Box(solidsRoot, s.id, U(s.box.min), U(s.box.max), mat, true, s.runnable);
                 go.name = s.id;
                 n++;
+                if (HellRock.IsRock(s.id))
+                {
+                    // The Collapse's stalactites and stalagmites: the box stays as the (invisible) collider, the rock you see
+                    // is a tapered faceted cone with noise rebuilt from that box (HellRock.Mesh), in the wall's rock material
+                    Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
+                    Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+                    RockMesh(solidsRoot, s, mat);
+                }
                 if (s.id.StartsWith("wallrun"))
                 {
                     // an ember stripe along a wall-run wall's top: the fast line's cue

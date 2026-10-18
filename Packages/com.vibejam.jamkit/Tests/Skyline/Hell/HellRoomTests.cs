@@ -233,6 +233,9 @@ namespace JamKit.Tests.Skyline
             /// <summary>The smallest lead (s) the runner had on the ground over a bridge tile (before it fell); the speed when
             /// reaching the bridge (z 56) and the most speed seen.</summary>
             public float minLead = float.PositiveInfinity, bridgeSpeed = -1f, maxSpeed;
+            /// <summary>Each wall caught and left on the way (where, when, how fast): the kicks, for the log.</summary>
+            public readonly List<string> walls = new List<string>();
+            public bool onWall;
         }
 
         /// <summary>Where the speed out of the run-up hall is measured: past the stalactites, before the bridge.</summary>
@@ -247,6 +250,12 @@ namespace JamKit.Tests.Skyline
                 var v = p.Sim.HorizontalSpeed;
                 if (v > race.maxSpeed) race.maxSpeed = v;
                 if (race.bridgeSpeed < 0f && p.Pos.Z >= HallEndZ) race.bridgeSpeed = v;
+                if (p.Wallrunning != race.onWall)
+                {
+                    race.onWall = p.Wallrunning;
+                    race.walls.Add((p.Wallrunning ? "catch" : "leave") + " at (" + p.Pos.X.ToString("0.0") + ", " + p.Pos.Y.ToString("0.0") + ", "
+                        + p.Pos.Z.ToString("0.0") + ") t " + p.Time.ToString("0.00") + " s, " + v.ToString("0.0") + " m/s");
+                }
                 if (!p.Grounded) return;
                 float falls = FallsAt(b, p.Pos, floor);
                 if (!float.IsPositiveInfinity(falls)) race.minLead = System.Math.Min(race.minLead, falls - p.Time);
@@ -265,7 +274,7 @@ namespace JamKit.Tests.Skyline
         public void TheSpeedRouteKicksUpToSpeedAndOutrunsTheFastLane(int floor)
         {
             var r = Race(HellFastLines.CollapseSpeedRoute(), floor);
-            TestContext.WriteLine("floor " + floor + ": the kick route " + Describe(r));
+            TestContext.WriteLine("floor " + floor + ": the kick route " + Describe(r) + "\n  " + string.Join("\n  ", r.walls));
             Assert.That(r.result.ok, Is.True, Describe(r) + "\n" + string.Join("\n", r.result.log));
             Assert.That(r.bridgeSpeed, Is.GreaterThan(new MoveDef().sprintSpeed + 3f), "the kicks build speed well past a sprint");
             Assert.That(r.minLead, Is.GreaterThan(0.2f), "a lead on the fast front all the way");
@@ -295,15 +304,63 @@ namespace JamKit.Tests.Skyline
             var a = new Vector3(0.6f, 0, 8f);
             var c = new Vector3(0.6f, 0, HellRoomLayouts.CollapseStartZ);
             var r = HellRoomLayouts.Build(HellRoomKind.Collapse);
-            var stal = r.solids.Where(s => s.id.StartsWith("stalactite")).ToList();
-            Assert.That(stal.Count, Is.EqualTo(HellRoomLayouts.CollapseStalactiteCount * 2));
-            foreach (var s in stal)
+            var rocks = r.solids.Where(s => HellRock.IsRock(s.id)).ToList();
+            float H = HellRoomLayouts.CollapseStalactiteHalfGap, stand = new MoveDef().standHeight;
+            foreach (var s in rocks)
             {
-                Assert.That(s.box.min.Y, Is.GreaterThan(new MoveDef().standHeight + 0.2f), "a runner passes below " + s.id);
-                Assert.That(s.runnable, Is.True, s.id + " can be kicked off");
                 Assert.That(s.box.min.Z > a.Z && s.box.max.Z < c.Z, Is.True, s.id + " is in the run-up hall");
+                // the runner's lane between the rows is clear up to well over head height (kick height for the high ones)
+                bool inLane = s.box.min.X < H - 1e-3f && s.box.max.X > -H + 1e-3f;
+                if (inLane) Assert.That(s.box.min.Y, Is.GreaterThan(8f), s.id + " hangs over the lane high above any runner or kick");
+                Assert.That(s.box.max.Y - s.box.min.Y, Is.GreaterThan(0.5f), s.id);
+            }
+            var kicks = rocks.Where(s => s.runnable).OrderBy(s => s.box.min.Z).ToList();
+            Assert.That(kicks.Count, Is.EqualTo(HellRoomLayouts.CollapseKickColumns.Length), "the kick columns are the runnable rocks");
+            Assert.That(rocks.Count(s => s.id.StartsWith("stalactite") && s.runnable), Is.GreaterThan(0), "hanging kick columns");
+            Assert.That(rocks.Count(s => s.id.StartsWith("stalagmite") && s.runnable), Is.GreaterThan(0), "standing kick columns");
+            for (int i = 0; i < kicks.Count; i++)
+            {
+                var s = kicks[i];
+                bool east = s.box.min.X > 0f;
+                Assert.That(east ? s.box.min.X : -s.box.max.X, Is.EqualTo(H).Within(1e-3), s.id + "'s kick face is on its row");
+                Assert.That(s.box.min.Y, Is.LessThan(2.3f), s.id + " is kickable from a first jump's height");
+                Assert.That(s.box.max.Y, Is.GreaterThan(6f), s.id + " is kickable up to the last kick's height");
+                if (i > 0)
+                {
+                    var p = kicks[i - 1];
+                    Assert.That(p.box.min.X > 0f, Is.Not.EqualTo(east), s.id + " zig-zags: the next column is on the other row");
+                    Assert.That(s.box.min.Z - p.box.max.Z, Is.GreaterThan(1f), s.id + " is a separate rock, with a gap along the hall");
+                }
             }
             Assert.That(r.hazards.Where(h => h.Timeline).All(h => h.box.min.Z >= HellRoomLayouts.CollapseStartZ - 1e-3f), Is.True, "the hall never falls");
+        }
+
+        [Test]
+        public void TheHallsRocksArePointedConesOverTheirColliders()
+        {
+            foreach (int floor in new[] { 0, 1, 2 })
+            {
+                var r = HellRoomVariants.Build(HellRoomKind.Collapse, floor);
+                foreach (var s in r.solids.Where(x => HellRock.IsRock(x.id)))
+                {
+                    var v = new List<Vector3>();
+                    var t = new List<int>();
+                    bool hangs = HellRock.Hangs(s.id);
+                    HellRock.Mesh(s.box.min, s.box.max, hangs, s.id, v, t);
+                    Assert.That(t.Count, Is.EqualTo(HellRock.Sides * HellRock.Rings * 6), s.id);
+                    float sx = s.box.max.X - s.box.min.X, sz = s.box.max.Z - s.box.min.Z;
+                    var c = (s.box.min + s.box.max) * 0.5f;
+                    // the point reaches past the collider's end (the thin tip has none), the root sits in the roof / floor
+                    float tip = hangs ? v.Min(p => p.Y) : v.Max(p => p.Y);
+                    Assert.That(hangs ? tip < s.box.min.Y : tip > s.box.max.Y, Is.True, s.id + " ends in a point past its collider");
+                    // and the rock stays over its collider (never more than a root radius and a bit outside it)
+                    foreach (var p in v)
+                    {
+                        Assert.That(System.Math.Abs(p.X - c.X), Is.LessThan(sx * 0.5f / HellRock.ColliderWidth * 1.3f), s.id);
+                        Assert.That(System.Math.Abs(p.Z - c.Z), Is.LessThan(sz * 0.5f / HellRock.ColliderWidth * 1.3f), s.id);
+                    }
+                }
+            }
         }
 
         /// <summary>Runs the safe lane in the movement engine through the room's real solids (the floors, the fins, the tiles as
