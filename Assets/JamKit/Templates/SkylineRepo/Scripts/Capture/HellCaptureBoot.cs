@@ -64,6 +64,9 @@ namespace JamKit.SkylineRepo
             _take = null;
             _replay = null;
             _args = HellCapture.Parse(Environment.GetCommandLineArgs());
+            HellCaptureCheats.SetCurrent(null);   // read this launch's command line afresh (domain reload off in the editor)
+            var cheats = HellCaptureCheats.Current;
+            if (cheats.Any || cheats.problems.Count > 0) Debug.Log("HELL_CAPTURE cheats: " + cheats.Describe());
             try { ReadTake(); }
             catch (Exception e) { Debug.LogError("HELL_CAPTURE could not read the editor's take: " + e.Message); }
 

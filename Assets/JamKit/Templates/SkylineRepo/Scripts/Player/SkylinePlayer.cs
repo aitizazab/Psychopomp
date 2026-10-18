@@ -421,6 +421,12 @@ namespace JamKit.SkylineRepo
         {
             if (Armor.Wrecked) return;
             var hit = Armor.Damage(damage);
+            if (hit.wrecked && HellCaptureCheats.Current.invulnerable)
+            {
+                // CAPTURE-ONLY -hellInvulnerable (docs/HELL-CAPTURE.md): the hit still shows, the wreck never comes
+                Armor = new PlayerArmor();
+                hit.wrecked = false;
+            }
             SkylineDamageFeedback.Hurt(this, hit, attackerPosition);   // judge round 1: hurt sound, knock, vignette, plating-break beat
             var hud = SkylineHud.Instance;
             if (hud != null)

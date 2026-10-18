@@ -98,6 +98,8 @@ namespace JamKit.SkylineRepo
             Defeated = null;
         }
 
+        bool _cheatScaled;
+
         void Awake() { Instance = this; }
 
         void OnDestroy()
@@ -118,6 +120,13 @@ namespace JamKit.SkylineRepo
             Def = HellVesperArena.World();
             if (_arena == null) _arena = HellVesperArenaView.Build(transform, Def);
             if (_arena.exitGate != null) _arena.exitGate.SetActive(true);
+            var cheats = HellCaptureCheats.Current;   // CAPTURE-ONLY -hellBossHealth (docs/HELL-CAPTURE.md), scaled once per component
+            if (cheats.bossHealth < 1f && !_cheatScaled)
+            {
+                _cheatScaled = true;
+                HellCaptureCheats.ScaleBoss(tuning, cheats.bossHealth);
+                Debug.Log("HELL_CAPTURE cheats: Vesper's health x" + cheats.bossHealth.ToString("0.###") + " (" + tuning.maxHealth.ToString("0") + ")");
+            }
             Fight = new VesperFight(tuning, seed);
             var perches = HellVesperArena.Perches(Def);
             Fight.SetArena(perches, Def.bounds);

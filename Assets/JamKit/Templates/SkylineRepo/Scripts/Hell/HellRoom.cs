@@ -359,12 +359,18 @@ namespace JamKit.SkylineRepo
 
         /// <summary>A sink in lava (or a fall out of the room): back to the last safe spot; the lantern goes home. In The
         /// Collapse the floor behind is gone, so the room starts over instead.</summary>
+        float _cheatSankAt = -10f;
+
         public void Sank(string why)
         {
             if (_player == null) return;
             Debug.Log("HELL_ROOM sank (" + why + ") in " + Def.name);
             if (Objective is LanternCarry lantern && lantern.Drop()) { CarryLantern(false); SyncViews(); }
-            if (kind == HellRoomKind.Collapse)
+            // CAPTURE-ONLY -hellInvulnerable (docs/HELL-CAPTURE.md): The Collapse too goes back to the safe spot, unless that
+            // spot has fallen as well (a second sink within 1.5 s): then it starts over as usual
+            bool cheatSafe = kind == HellRoomKind.Collapse && HellCaptureCheats.Current.invulnerable && Time.time - _cheatSankAt > 1.5f;
+            _cheatSankAt = Time.time;
+            if (kind == HellRoomKind.Collapse && !cheatSafe)
             {
                 Restart();
                 _player.Movement.Teleport(U(Def.entry), Def.entryYaw, Vector3.zero);

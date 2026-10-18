@@ -137,6 +137,35 @@ but not the player. A third-person stand-in model is needed before chase shots c
 - Log lines: `HELL_PERF start|room <id>: ...|wrote|FAILED`. It also works in the editor (`-hell-perf` on the editor's
   command line, then press Play), but only a build's numbers count.
 
+## 7. Capture cheats: the autopilot to the end of the game (CAPTURE-ONLY)
+
+Added 2026-10-18 for the trailer: so the autopilot reaches the end of the Vesper fight, the decision and the escape. They
+exist **only on the command line** (no menu, no save, nothing in normal play), and the log says so at start:
+`HELL_CAPTURE cheats: invulnerable, boss health 0.35` (no line when none is given; a bad value is logged as `ignored`).
+
+| Switch | What it does |
+|---|---|
+| `-hellInvulnerable` | No death. A hit that would wreck you leaves you whole (the armour refills); every hit still plays its hurt sound, knock, vignette and plating flash, so the footage reads. A sink in lava or a fall goes back to the last safe spot without a restart, The Collapse (and the escape) included; only a second sink within 1.5 s there (the safe spot fell too) restarts it as usual. Vesper's arena already sends you back to safety. |
+| `-hellBossHealth 0..1` | Scales Vesper's health and both phase thresholds together (e.g. `0.35`: 560 instead of 1600), so the three phases pass quickly. Values under 0.05 count as 0.05. The log adds `HELL_CAPTURE cheats: Vesper's health x0.35 (560)` when the fight starts. |
+
+**To the credits:** with `-hellAutopilot` and `-hellChapter 4` the autopilot strafes and shoots in the fight, holds fire
+while she kneels (the ending director makes the `-hellEnding spare|kill` choice by itself after 2 s), then **plays the
+escape** (the Collapse, run like a room on its plan; before this, scripted runs skipped it), lets the ending's comic turn
+its own pages, and presses on through the credits to `HELL_STATS`.
+
+```powershell
+& $exe -logFile out/hell/cap-vesper.log -hellAutopilot safe -hellSeed 1 -hellChapter 4 -hellErrands no -hellEnding spare `
+  -hellInvulnerable -hellBossHealth 0.35 -hell-clean -hell-rec cap-vesper
+```
+
+A replay of such a recording needs the same cheats on its command line (`-hell-replay cap-vesper -hellInvulnerable
+-hellBossHealth 0.35`): they are not stored in the file, and without them the boss and the hits play out differently.
+
+Code: `HellCaptureCheats` in `Runtime/Skyline/Hell/Capture/HellCaptureArgs.cs` (parse, `ScaleBoss`, the log text; tests
+`Cheats_*` in `Tests/Skyline/HellCaptureTests.cs`); used in `SkylinePlayer.TakeAttack`, `HellRoom.Sank`,
+`HellVesperFight.Begin`, `HellCaptureBoot` (the log line); the escape in `HellEndingDirector.ScriptedPlaysEscape` /
+`EscapeRoom` and `HellAutopilot.Update`. Not run in Unity yet: the pure tests and the Unity-side compile check pass.
+
 ## Audit items fixed on the way
 
 - **The shot setting only named the file.** Shots are now real cameras (section 4).

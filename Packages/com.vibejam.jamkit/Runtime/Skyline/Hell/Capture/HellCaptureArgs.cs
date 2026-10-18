@@ -139,6 +139,70 @@ namespace JamKit.Skyline
     }
 
     /// <summary>
+    /// CAPTURE-ONLY cheats (docs/HELL-CAPTURE.md, "Capture cheats"), so the autopilot can reach the end of the Vesper fight, the
+    /// decision and the escape for trailer footage. They exist only on the command line (no menu, no save):
+    /// <c>-hellInvulnerable</c> (no death: a hit that would wreck you leaves you whole; a sink or a fall goes back to the last
+    /// safe spot, The Collapse included, without a restart; the hit effects still play) and <c>-hellBossHealth 0..1</c>
+    /// (Vesper's health and phase thresholds scaled, e.g. 0.35).
+    /// </summary>
+    public sealed class HellCaptureCheats
+    {
+        public const string InvulnerableSwitch = "-hellInvulnerable", BossHealthSwitch = "-hellBossHealth";
+        /// <summary>The smallest boss scale (a phase still has some health to take off).</summary>
+        public const float MinBossHealth = 0.05f;
+
+        public bool invulnerable;
+        /// <summary>Vesper's health scale (1: as tuned).</summary>
+        public float bossHealth = 1f;
+        public readonly List<string> problems = new List<string>();
+
+        public bool Any => invulnerable || bossHealth < 1f;
+
+        static HellCaptureCheats _current;
+        /// <summary>This launch's cheats (read once from the process's command line).</summary>
+        public static HellCaptureCheats Current => _current ?? (_current = Parse(Environment.GetCommandLineArgs()));
+        /// <summary>Tests and the editor: set the cheats (null reads the command line again).</summary>
+        public static void SetCurrent(HellCaptureCheats c) { _current = c; }
+
+        public static HellCaptureCheats Parse(string[] args)
+        {
+            var r = new HellCaptureCheats();
+            if (args == null) return r;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == InvulnerableSwitch) r.invulnerable = true;
+                else if (args[i] == BossHealthSwitch)
+                {
+                    string v = i + 1 < args.Length ? (args[i + 1] ?? "").Trim() : "";
+                    if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float k) && k > 0f && k <= 1f)
+                        r.bossHealth = Math.Max(MinBossHealth, k);
+                    else r.problems.Add(BossHealthSwitch + " " + v + ": a number above 0, up to 1");
+                }
+            }
+            return r;
+        }
+
+        /// <summary>Scales Vesper's health and her phase thresholds together (the phases keep their proportions).</summary>
+        public static void ScaleBoss(VesperTuning t, float k)
+        {
+            if (t == null || !(k > 0f) || k >= 1f) return;
+            t.maxHealth *= k;
+            t.phase2At *= k;
+            t.phase3At *= k;
+        }
+
+        /// <summary>The start-up log line's body: "invulnerable, boss health 0.35" or "none".</summary>
+        public string Describe()
+        {
+            var parts = new List<string>();
+            if (invulnerable) parts.Add("invulnerable");
+            if (bossHealth < 1f) parts.Add("boss health " + bossHealth.ToString("0.###", CultureInfo.InvariantCulture));
+            foreach (var p in problems) parts.Add("ignored " + p);
+            return parts.Count == 0 ? "none" : string.Join(", ", parts);
+        }
+    }
+
+    /// <summary>
     /// The Hell capture tools' command line and numbers (docs/HELL-CAPTURE.md), ported from the Skyline trailer capture
     /// (<c>VibeJamKit-capture</c>, docs/SKYLINE-TRAILER-CAPTURE.md) with only what Hell needs: the fixed capture rate, size,
     /// codec and bitrate; the clean picture; recording and replaying play; camera shots; the frame-time check.

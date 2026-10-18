@@ -248,7 +248,7 @@ the per-assembly check are green.
   - It doesn't use Time Dilation, Nightfall or the other floor skills' buttons.
   - The skill pick is a random card (seeded).
 - **The boss** (with `-hellAutopilotToCredits`): it stands, strafes and shoots, but doesn't move round the arena. The
-  ending's decision scene and anything that needs a hold-Use press are not handled.
+  decision is the ending director's scripted choice (`-hellEnding`); it holds fire while she kneels, then plays the escape like a room and lets the ending's comic turn its own pages (docs/HELL-CAPTURE.md section 7, with `-hellInvulnerable` and `-hellBossHealth` for footage).
 - **Skips are teleports.** They keep a sweep going past a softlock. Use `-hellAutopilotNoSkip` when a softlock should
   stop the run.
 - **Frame times** in `-batchmode` aren't the windowed game's. Use a windowed run for the 120 fps check.

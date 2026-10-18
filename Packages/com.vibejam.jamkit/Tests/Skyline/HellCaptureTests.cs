@@ -266,6 +266,43 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void Cheats_OnlyFromTheCommandLine()
+        {
+            var none = HellCaptureCheats.Parse(new[] { "-hellChapter", "4", "-hellAutopilot", "safe" });
+            Assert.That(none.Any, Is.False);
+            Assert.That(none.invulnerable, Is.False);
+            Assert.That(none.bossHealth, Is.EqualTo(1f));
+            Assert.That(none.Describe(), Is.EqualTo("none"));
+
+            var on = HellCaptureCheats.Parse(new[] { "-hellInvulnerable", "-hellBossHealth", "0.35" });
+            Assert.That(on.invulnerable, Is.True);
+            Assert.That(on.bossHealth, Is.EqualTo(0.35f).Within(1e-6f));
+            Assert.That(on.Describe(), Is.EqualTo("invulnerable, boss health 0.35"));
+
+            var tiny = HellCaptureCheats.Parse(new[] { "-hellBossHealth", "0.001" });
+            Assert.That(tiny.bossHealth, Is.EqualTo(HellCaptureCheats.MinBossHealth));
+
+            var bad = HellCaptureCheats.Parse(new[] { "-hellBossHealth", "2", "-hellBossHealth" });
+            Assert.That(bad.bossHealth, Is.EqualTo(1f));
+            Assert.That(bad.problems.Count, Is.EqualTo(2));
+            Assert.That(bad.Any, Is.False);
+        }
+
+        [Test]
+        public void Cheats_ScaleBossKeepsThePhasesInProportion()
+        {
+            var t = new VesperTuning();
+            float r2 = t.phase2At / t.maxHealth, r3 = t.phase3At / t.maxHealth, max = t.maxHealth;
+            HellCaptureCheats.ScaleBoss(t, 0.35f);
+            Assert.That(t.maxHealth, Is.EqualTo(max * 0.35f).Within(1e-3f));
+            Assert.That(t.phase2At / t.maxHealth, Is.EqualTo(r2).Within(1e-5f));
+            Assert.That(t.phase3At / t.maxHealth, Is.EqualTo(r3).Within(1e-5f));
+            var u = new VesperTuning();
+            HellCaptureCheats.ScaleBoss(u, 1f);
+            Assert.That(u.maxHealth, Is.EqualTo(max));
+        }
+
+        [Test]
         public void ChapterStart_PicksOnePerSkippedFloor()
         {
             Assert.That(HellChapterStart.PicksBefore(0, 3), Is.EqualTo(0));

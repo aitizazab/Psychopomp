@@ -141,6 +141,8 @@ namespace JamKit.SkylineRepo
             // -hellChapter 4 starts at the Vesper fight, past the rooms: there is nothing to play unless it plays on to the credits
             _toCredits = SkylineRunArgs.Has("-hellAutopilotToCredits")
                 || HellChapterStart.Parse(Environment.GetCommandLineArgs()).chapter == HellFlow.VesperChapter;
+            // playing on to the credits: the ending's escape is played (a scripted player otherwise skips it)
+            HellEndingDirector.ScriptedPlaysEscape = _toCredits;
             _logPath = SkylineRunArgs.Value("-hellAutopilotLog") ?? "out/hell/autopilot.json";
             int seed = (int)ArgF("-hellSeed", 1);
             _rng = new System.Random(seed * 7919 + 17);
@@ -384,6 +386,30 @@ namespace JamKit.SkylineRepo
             // the skill pick: read the cards a moment, then press a number
             if (HellSkillPick.Open) { TickPick(); return; }
             _pickSeenAt = -1f;
+
+            // the ending (docs/HELL-ENDING.md): hold fire through the decision (the director makes the -hellEnding choice by
+            // itself after 2 s), run the escape's Collapse like a room, and let the ending's comic turn its own pages
+            if (_toCredits && HellEndingDirector.Active)
+            {
+                var end = HellEndingDirector.Instance;
+                var esc = end.EscapeRoom;
+                if (esc != null)
+                {
+                    if (esc != _room && director.Run != null) BindRoom(esc);
+                    if (_room == null || _plan == null) return;
+                    try { TickRoom(); }
+                    catch (Exception e)
+                    {
+                        string m = e.GetType().Name + ": " + e.Message;
+                        if (_internal.Add(m)) Debug.LogWarning("HELL_AUTO internal (escape) " + m + " @ " + FirstLine(e.StackTrace ?? ""));
+                    }
+                    return;
+                }
+                _calmPitch = 10f;
+                if (end.Stage == HellEndingDirector.Phase.Cards && HellComicPlayer.Playing) return;
+                if (Time.timeScale < 0.01f) TickScreens();
+                return;
+            }
 
             var run = director.Run;
             if (run == null) { TickScreens(); return; }

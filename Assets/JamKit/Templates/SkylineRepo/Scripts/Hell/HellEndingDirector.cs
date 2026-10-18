@@ -44,6 +44,11 @@ namespace JamKit.SkylineRepo
 
         public Phase Stage => _phase;
         public HellDecision Decision => _decision;
+        /// <summary>The escape's Collapse while it runs (null otherwise): the autopilot plays it like a room.</summary>
+        public HellRoom EscapeRoom => _phase == Phase.Escape ? _room : null;
+        /// <summary>Set by the autopilot when it plays on to the credits (docs/HELL-AUTOPILOT.md): a scripted run then plays the
+        /// escape instead of skipping it, for the trailer's footage.</summary>
+        public static bool ScriptedPlaysEscape;
 
         static readonly Color VesperSoul = new Color(1.6f, 0.6f, 3.6f);
         static readonly Color SisterSoul = new Color(3.4f, 2.7f, 1.5f);
@@ -94,7 +99,7 @@ namespace JamKit.SkylineRepo
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { Instance = null; }
+        static void ResetStatics() { Instance = null; ScriptedPlaysEscape = false; }
 
         static void OnEndingRequested() => Request();
 
@@ -354,10 +359,11 @@ namespace JamKit.SkylineRepo
 
         void StartEscape()
         {
-            _room = _scripted ? null : FindEscapeRoom();
+            bool skip = _scripted && !ScriptedPlaysEscape;
+            _room = skip ? null : FindEscapeRoom();
             if (_room == null)
             {
-                if (!_scripted) Debug.LogWarning("HELL_ENDING no escape room (floor " + (HellEscapeRoute.Floor + 1) + " " + HellEscapeRoute.Kind + ") in the scene: straight to the ending");
+                if (!skip) Debug.LogWarning("HELL_ENDING no escape room (floor " + (HellEscapeRoute.Floor + 1) + " " + HellEscapeRoute.Kind + ") in the scene: straight to the ending");
                 _phase = Phase.Out;
                 _cards.Fade(1f, 0.4f);
                 return;
