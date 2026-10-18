@@ -274,7 +274,7 @@ namespace JamKit.SkylineRepo
                     var dir = U(s.aim);
                     float len = tuning.strikeReach;
                     _cutLine.transform.SetPositionAndRotation(from + dir * (len * 0.5f), Quaternion.LookRotation(dir));
-                    _cutLine.transform.localScale = new Vector3(tuning.strikeHalfWidth * 2f * Mathf.Lerp(0.2f, 1f, 1f - s.timer / Mathf.Max(0.01f, tuning.strikeWindupSeconds)), 0.03f, len);
+                    _cutLine.transform.localScale = new Vector3(tuning.strikeHalfWidth * 2f * Mathf.Lerp(0.2f, 1f, 1f - s.timer / Mathf.Max(0.01f, s.actionSeconds)), 0.03f, len);
                 }
             }
             SetNightfall(s.phase >= 3 && !Fight.Defeated);

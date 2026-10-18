@@ -56,7 +56,7 @@ namespace JamKit.Skyline
 
             // ---------------------------------------------------------------- the God of Death's tutorials (PLACEHOLDER)
             new HellLine("tut.shadowstep.1", HellSpeakers.Death, "The shadows are yours now. Don't make it weird. Step into that dark patch."),
-            new HellLine("tut.shadowstep.hint", HellSpeakers.Hint, "HOLD {ShadowStep} TO AIM   RELEASE TO STEP   DARK GROUND ONLY"),
+            new HellLine("tut.shadowstep.hint", HellSpeakers.Hint, "HOLD {ShadowStep} TO AIM   RELEASE TO STEP   IN OR OUT OF SHADOW"),
             new HellLine("tut.shadowstep.done", HellSpeakers.Death, "Look at you. A little shadow. Adorable."),
 
             new HellLine("tut.rewind.1", HellSpeakers.Death, "Ooh, that looked fatal. Take four seconds back. I have plenty."),

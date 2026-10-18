@@ -50,8 +50,9 @@ Nightfall stays hers). Nightfall's sphere and the Shade work as before everywher
 ## 2. Fire kills shadow, live
 
 Fire passing near darkness lights it for a moment (`FireExposure`, `HellShadowFire`): inside that light the dark is not
-dark, so you're **not hidden** (and revealed for 1.5 s after) and **a Shadow Step can't land there** (the marker turns red;
-it uses the same `HellDarkness.IsDark`).
+dark, so you're **not hidden** (and revealed for 1.5 s after) and **that spot doesn't count as shadow for a Shadow Step**
+(it uses the same `HellDarkness.IsDark`). Since 2026-10-18 the step needs shadow at **either end** (the landing or the spot
+you step from), so a step aimed into a flash is refused (the marker turns red) unless you are standing in unlit shadow.
 
 | Fire | Radius | For |
 |---|---|---|

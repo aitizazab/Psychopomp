@@ -140,7 +140,7 @@ namespace JamKit.SkylineRepo
                 bool ours = ReferenceEquals(t, player) || ReferenceEquals(t, _blind) || (_shade != null && ReferenceEquals(t, _shade));
                 if (!ours) { if (bot.targetHidden) bot.targetHidden = false; continue; }
                 var c = bot.Center;
-                bool blind = HellDarkness.InDarkSphere(c) || HellDarkness.SightThroughDark(c, want.Chest);
+                bool blind = HellDarkness.InDarkSphere(c) || HellDarkness.SightThroughDark(c, want.Chest) || HellSkillNightfall.Blinded(bot);   // + 1.5 s after Nightfall let go
                 var next = blind ? (ISkylineTarget)_blind : want;
                 if (!ReferenceEquals(t, next)) bot.target = next;
                 bool sawYou = ReferenceEquals(t, player) && bot.SeesTarget;

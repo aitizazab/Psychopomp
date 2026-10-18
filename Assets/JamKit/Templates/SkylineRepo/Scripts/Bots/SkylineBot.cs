@@ -496,7 +496,7 @@ namespace JamKit.SkylineRepo
             bool live = TargetLive(target) && target.Root != null && target.Root.gameObject.activeInHierarchy;
             if (live && Def.aimLagSeconds > 0f) _chestTrail.Record(_clock, N(target.Chest));
             Vector3 aimAt = Vector3.zero;
-            bool sees = live && !targetHidden && Sees(out aimAt);   // Shadow hides you (SkylineBot.HellShadow.cs)
+            bool sees = live && !targetHidden && !Staggered && Sees(out aimAt);   // Shadow hides you (SkylineBot.HellShadow.cs); a Breacher stagger blinds it a moment
             SeesTarget = sees;
             if (sees) HellNoteSeen();
             if (sees && !_everSeen)
@@ -790,7 +790,7 @@ namespace JamKit.SkylineRepo
             float dx = feet.x - _pos.x, dz = feet.z - _pos.z;
             float flat = Mathf.Sqrt(dx * dx + dz * dz);
             Vector3 nozzle = _pos + new Vector3(0f, 0.2f, 0f), ankle = new Vector3(feet.x, _pos.y + 0.2f, feet.z);
-            bool reach = live && !targetHidden && IsAwake && flat <= d.sweepRadius && Clear(nozzle, ankle);
+            bool reach = live && !targetHidden && !Staggered && IsAwake && flat <= d.sweepRadius && Clear(nozzle, ankle);
             // a door-spawned unit works on one level at a time: it does not sweep under a gallery at the Unit above
             if (_arrival != null && live && Mathf.Abs(feet.y - _pos.y) > BotArrival.FloorEngageHeight) reach = false;
             Brain.Tick(dt, reach, _cues);
@@ -1157,6 +1157,11 @@ namespace JamKit.SkylineRepo
 
         // ------------------------------------------------------------------ hits
 
+        /// <summary>Staggered until this time (a Breacher hit): it doesn't see its target, so it doesn't telegraph or attack,
+        /// and an attack winding up is called off.</summary>
+        [System.NonSerialized] public float StaggeredUntil = float.NegativeInfinity;
+        public bool Staggered => Time.time < StaggeredUntil;
+
         public SkylineHitResult TakeHit(in SkylineHitInfo hit)
         {
             var r = new SkylineHitResult();
@@ -1167,7 +1172,10 @@ namespace JamKit.SkylineRepo
             r.writ = Writ.Resolve(Spots, hit.zone, N(local), now, hit.fromWrit, hit.gun != null ? hit.gun.weakPointMultiplier : 1f, _writ);
             int plate = hit.zone == HitZone.Plate ? hit.plate : -1;
             bool plateWasOn = plate >= 0 && Body.PlateOn(plate);
-            r.damage = Body.Damage(hit.damage * r.writ.multiplier, plate);
+            float plateScale = plateWasOn && hit.gun != null ? hit.gun.plateDamageScale : 1f;   // the Breacher strips armour
+            r.damage = Body.Damage(hit.damage * r.writ.multiplier * plateScale, plate);
+            if (hit.gun != null && hit.gun.staggerSeconds > 0f)                                   // the Breacher staggers
+                StaggeredUntil = Mathf.Max(StaggeredUntil, now + hit.gun.StaggerFor(hit.damage));
             Wake(group, this);
             _hitCues.Clear();
             Brain.OnDamaged(_hitCues);

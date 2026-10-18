@@ -137,19 +137,26 @@ namespace JamKit.Skyline
                 id = BreacherId,
                 displayName = "Breacher",
                 special = true,
-                weapon = new WeaponDef { magazineSize = 4, fireMode = FireMode.Semi, fireInterval = 0.75f },
-                damage = 9f,
-                pellets = 9,
+                // The Hell balance pass (the creator, 2026-10-18: "the Breacher is an absolute joke; the Writ clears it in every
+                // way"; docs/SKYLINE-GUN-BREACHER.md "Balance pass"): the close-range devastator. 10 x 15 = 150 at point blank (an
+                // imp with its horns in one shell, an ooze's chassis in one), 250 a second against the Writ's 92 (183 on weak
+                // points); plates take double (it strips armour); every full hit staggers for 0.8 s (the attack winding up is
+                // called off); a harder shove. At range it falls off fast: past 16 m it is 15%, and the Writ owns that.
+                weapon = new WeaponDef { magazineSize = 4, fireMode = FireMode.Semi, fireInterval = 0.6f },
+                damage = 15f,
+                pellets = 10,
                 spreadDeg = 5f,
-                range = 30f,
-                falloffStart = 6f,
-                falloffEnd = 18f,
-                falloffMinScale = 0.25f,
+                range = 24f,
+                falloffStart = 7f,
+                falloffEnd = 16f,
+                falloffMinScale = 0.15f,
                 weakPointMultiplier = 1.25f,
-                // Judge round 2 (N3): 9 m/s read small (a drone hit by three pellets at 6.5 m slid 0.4-0.6 m, under the camera
-                // kick). 15 m/s, shared by the pellets that land: about 1 m at 6.5 m, about 3 m at point blank (the bots'
-                // slide decays at rate 5, so slide = speed / 5), plus SkylineShoveLurch's tilt and spin on the bot.
-                enemyKnockback = 15f,
+                plateDamageScale = 2f,
+                staggerSeconds = 0.8f,
+                // Judge round 2 (N3): 9 m/s read small; 15 m/s (judge round 2) still read small next to the new damage, so 24 m/s,
+                // shared by the pellets that land: about 1.6 m at 6.5 m, about 4.8 m at point blank (the bots' slide decays at
+                // rate 5, so slide = speed / 5), plus SkylineShoveLurch's tilt and spin on the bot.
+                enemyKnockback = 24f,
                 hitStopSeconds = 0.05f,
                 killHitStopSeconds = 0.1f,
                 // Task 19: "the camera kicks hard" (2.2). 8 degrees up, recovered to 0.5% by the next shot (0.75 s at rate 7).

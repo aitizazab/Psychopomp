@@ -474,7 +474,7 @@ namespace JamKit.Tests.Skyline
                         var target = w.ToWorld(stepAt);
                         var plan = BlinkPlanner.Plan(eye, target - eye, new BlinkDef(), w);
                         var geometric = plan;
-                        if (plan.valid) plan = BlinkRules.Apply(plan, w.Dark.IsDark(plan.feet + new Vector3(0f, 0.5f, 0f)), w.LavaTouched(plan.feet) != null, false);
+                        if (plan.valid) plan = BlinkRules.Apply(plan, w.Dark.IsDark(plan.feet + new Vector3(0f, 0.5f, 0f)), w.Dark.IsDark(sim.Position + new Vector3(0f, 0.5f, 0f)), w.LavaTouched(plan.feet) != null, false);   // either end in shadow
                         if (!plan.valid)
                         {
                             res.why = "the Shadow Step at " + V(stepAt) + " from " + V(w.ToLocal(sim.Position)) + " was refused: " + plan.reason + " (" + geometric.kind + " at " + V(w.ToLocal(geometric.feet)) + ", eye " + V(w.ToLocal(eye)) + ")";

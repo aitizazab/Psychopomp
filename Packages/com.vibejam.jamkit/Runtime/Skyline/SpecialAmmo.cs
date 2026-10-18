@@ -8,7 +8,7 @@ namespace JamKit.Skyline
     /// together in play): a wreck from a kill by a primary weapon gives <see cref="perPrimaryKill"/> special shots; kills by
     /// special weapons give 1 shot per <see cref="killsPerShot"/> kills; the run starts with <see cref="start"/> shots in
     /// reserve and the reserve holds at most <see cref="max"/>.</summary>
-    public sealed class SpecialAmmoDef { public int perPrimaryKill = 1, killsPerShot = 3, start = 2, max = 8; }
+    public sealed class SpecialAmmoDef { public int perPrimaryKill = 1, killsPerShot = 3, start = 4, max = 8; }   // start was 2 (the Hell balance pass, 2026-10-18: a full cell to try it)
 
     /// <summary>
     /// The special weapons' shared reserve (a primary weapon, the Writ, has none: infinite reserve). <see cref="Shots"/> is

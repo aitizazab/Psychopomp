@@ -179,7 +179,7 @@ namespace JamKit.SkylineRepo
         void DemonVolley(bool sees)
         {
             _armTarget = 0f;
-            if (!TargetLive(target) || target.Root == null || targetHidden) return;   // lost you in the dark: the swing lands on nothing
+            if (!TargetLive(target) || target.Root == null || targetHidden || Staggered) return;   // lost you in the dark (or staggered by the Breacher): the swing lands on nothing
             ScytheVolley.Plan(N(_pos), N(target.Root.position), Def, _rng, _volley);
             for (int i = 0; i < _volley.Count; i++) HellScythe.Spawn(_volley[i], Def, target, Def.id);
             Sound("attack");

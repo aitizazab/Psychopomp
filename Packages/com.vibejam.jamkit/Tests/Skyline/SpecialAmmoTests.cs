@@ -31,9 +31,9 @@ namespace JamKit.Tests.Skyline
             var d = new SpecialAmmoDef();
             Assert.That(d.perPrimaryKill, Is.EqualTo(1));
             Assert.That(d.killsPerShot, Is.EqualTo(3));
-            Assert.That(d.start, Is.EqualTo(2));
+            Assert.That(d.start, Is.EqualTo(4), "a full cell to start (the Hell balance pass, 2026-10-18; was 2)");
             Assert.That(d.max, Is.EqualTo(8));
-            Assert.That(new SpecialAmmoLedger().Shots, Is.EqualTo(2), "the run starts with the start value");
+            Assert.That(new SpecialAmmoLedger().Shots, Is.EqualTo(4), "the run starts with the start value");
         }
 
         [Test]

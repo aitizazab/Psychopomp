@@ -54,7 +54,8 @@ Breacher 1.25x). Health stops at each phase's floor (one big hit can't skip a ph
   with your own Shadow Step is the counter.
 
 ### Phase 2, Undo (1100 to 600)
-- Opens with a **summon** (tell 1.2 s): 2 fire imps out of the dark (at most 3 alive; again every 16 s while fewer than 2).
+- Opens with a **summon** (tell 1.2 s, 1.8 s at the phase's opening): 2 fire imps out of the dark, **one at a time, 5 s
+  apart** (at most 3 alive; again every 16 s while fewer than 2, every 10 s once the phase heats up).
 - Volleys of 4 bolts fanned 6 degrees.
 - **Her Rewind:** when you have done at least 70 damage in the last 4 s (and it is off its 10 s cooldown), she raises her
   arm, her **heart turns cold cyan, a clock ring spins round it, the health bar turns cyan** (tell 1.6 s, rooted, she
@@ -76,6 +77,30 @@ Breacher 1.25x). Health stops at each phase's floor (one big hit can't skip a ph
 ### Her defeat
 At 0 she **drops to her knees** (3 s, the line), the imps go, then the fight ends: the exit gate opens, she stays kneeling
 in the arena (`HellVesperFight.VesperPosition`), `HellVesperFight.Defeated` fires and `onDefeated` is called once.
+
+## The curve inside a phase (2026-10-18)
+
+The creator: "Once I figured out the attack pattern, each phase got trivially easy, but for the first 10-15 seconds,
+especially in the phase with the drones (imps), I took heavy damage." So each phase now opens softly and heats up
+(`VesperFight.Opening`, `Heat`; tuning in `VesperTuning`):
+
+| | Opening (first 8 s of a phase) | Calm (8-20 s) | Heat (ramps 0 to 1 from 20 s to 50 s) |
+|---|---|---|---|
+| Tells (volley, blink, hunt flare) | x1.5 | x1 | down to x0.7 |
+| Her cut's windup (phase 3) | x1.5 (0.9 s) | 0.6 s | down to x0.8 (0.48 s) |
+| Pauses between attacks | x1.5 | x1 | down to x0.7 |
+| Bolts a volley | one fewer (P1 2, P2 3, P3 4) | 3 / 4 / 5 | +1 at full heat |
+| Phase 2's summon tell | x1.5 (1.8 s) | 1.2 s | 1.2 s |
+
+- **Imps arrive one at a time:** a summon brings the first imp at once and the next every **5 s** (never two together,
+  still capped at 3 alive). Resummons every 16 s, every 10 s at heat 0.5+.
+- **Variants at heat 0.5+ (35 s into a phase):** phase 1, every second volley is a **fan** (8 degrees between bolts);
+  phase 2, the **blink-volley** (she lands and fires after 0.15 s instead of 0.45 s); phase 3, every second hunt is a
+  **double cut** (after the first cut she re-locks the line on you and cuts again, 15% quicker, then she is open).
+- **The mercy rule is unchanged** and wins over the heat: pulled blows once per 30 s, and while you are under 50 health
+  her pauses are still x1.6 (on top of the heat), and the blink-volley waits its normal pause.
+- The opening and the heat restart with each phase (and with a restart after a death). The state is in the snapshot, so
+  the global Rewind puts the curve back too.
 
 ## She never quite goes for the kill
 - **Pulled blows:** a hit of hers (bolt or cut) that would kill you is pulled short **once per 30 s**: you're left on 10

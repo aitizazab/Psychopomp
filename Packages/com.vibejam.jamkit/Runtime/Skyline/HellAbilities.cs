@@ -594,18 +594,56 @@ namespace JamKit.Skyline
         }
     }
 
-    /// <summary>Shadow Step's landing rule on top of the geometry: the landing must be dark, or lava when the player owns
-    /// Ashwalker.</summary>
+    /// <summary>Shadow Step's shadow rule on top of the geometry (the creator, 2026-10-18: "you can only Shadow Step if
+    /// EITHER the destination OR the starting point is in shadow"): the step is allowed when the landing is dark OR the spot
+    /// you step from is dark (Nightfall's sphere counts for either; a fire-lit spot is not shadow), or onto lava when the
+    /// player owns Ashwalker. Lava without Ashwalker is always refused, even from shadow (it would kill you).</summary>
     public static class BlinkRules
     {
-        public static BlinkPlan Apply(BlinkPlan geometric, bool dark, bool lava, bool ashwalker)
+        public static BlinkPlan Apply(BlinkPlan geometric, bool destDark, bool startDark, bool lava, bool ashwalker)
         {
             if (!geometric.valid) return geometric;
-            if (dark || (lava && ashwalker)) return geometric;
+            if (lava && !ashwalker)
+            {
+                geometric.valid = false;
+                geometric.reason = "lava (needs Ashwalker)";
+                return geometric;
+            }
+            if (destDark || startDark || (lava && ashwalker)) return geometric;
             geometric.valid = false;
-            geometric.reason = lava ? "lava (needs Ashwalker)" : "not dark";
+            geometric.reason = "no shadow at either end";
             return geometric;
         }
+
+        /// <summary>The landing-only form (the old rule's shape, start not in shadow).</summary>
+        public static BlinkPlan Apply(BlinkPlan geometric, bool destDark, bool lava, bool ashwalker) =>
+            Apply(geometric, destDark, false, lava, ashwalker);
+    }
+
+    /// <summary>Nightfall's payoff (the creator, 2026-10-18: "Nightfall does no damage"). Every enemy inside the sphere when it
+    /// lands takes <see cref="CastBurst"/>; every enemy inside it after that takes <see cref="Dps"/> in <see cref="Tick"/>-second
+    /// ticks for as long as the sphere lives; and an enemy the dark touched stays blind (can't see you, can't attack you) while
+    /// inside and for <see cref="BlindLinger"/> seconds after it leaves. An imp (60 hp chassis) that stays inside dies in
+    /// about 2.7 s; the whole 8 s is 140 damage.</summary>
+    public static class NightfallPayoff
+    {
+        public const float Radius = 6f, Seconds = 8f, Cooldown = 22f, Range = 30f;
+        public const float CastBurst = 20f, Dps = 15f, Tick = 0.25f, BlindLinger = 1.5f;
+
+        /// <summary>The damage clock for one sphere: a <see cref="BurnStatus"/> running <see cref="Dps"/> for the sphere's life;
+        /// each tick's due damage goes to every enemy inside at that moment.</summary>
+        public static BurnStatus Clock(float seconds = Seconds)
+        {
+            var b = new BurnStatus { tick = Tick };
+            b.Apply(seconds, Dps);
+            return b;
+        }
+
+        /// <summary>What an enemy that sits inside for <paramref name="seconds"/> (from the cast) takes in all.</summary>
+        public static float DamageFor(float seconds) => CastBurst + Dps * Math.Max(0f, Math.Min(seconds, Seconds));
+
+        /// <summary>Still blind at <paramref name="now"/> after last being inside at <paramref name="lastInside"/>.</summary>
+        public static bool Blind(float lastInside, float now) => now - lastInside <= BlindLinger;
     }
 
     /// <summary>A burn on an enemy: <see cref="dps"/> for <see cref="Remaining"/> seconds; a new burn refreshes to the longer

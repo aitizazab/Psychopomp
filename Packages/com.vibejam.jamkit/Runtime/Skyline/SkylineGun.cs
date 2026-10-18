@@ -31,6 +31,11 @@ namespace JamKit.Skyline
         public float weakPointMultiplier = 1.5f;
         /// <summary>m/s a hit pushes a bot (the Breacher's identity); 0 for none.</summary>
         public float enemyKnockback;
+        /// <summary>Damage on a plate that is still on is multiplied by this (the Breacher strips armour; 1 for none).</summary>
+        public float plateDamageScale = 1f;
+        /// <summary>Seconds a full-damage hit staggers a bot (it can't see you, telegraph or attack; an attack winding up is
+        /// called off), scaled by the hit's share of full damage (so falloff shortens it); 0 for none.</summary>
+        public float staggerSeconds;
         /// <summary>A dry fire starts the from-empty reload when its clip ends.</summary>
         public bool reloadAfterDryFire = true;
         public float hitStopSeconds = 0.03f, killHitStopSeconds = 0.08f;
@@ -53,6 +58,11 @@ namespace JamKit.Skyline
             float t = (distance - falloffStart) / (falloffEnd - falloffStart);
             return 1f + (falloffMinScale - 1f) * t;
         }
+
+        /// <summary>The stagger a hit of <paramref name="hitDamage"/> gives (its share of a full-damage pellet, up to 1, times
+        /// <see cref="staggerSeconds"/>). Several pellets landing together don't stack: the longest wins.</summary>
+        public float StaggerFor(float hitDamage) =>
+            staggerSeconds > 0f && damage > 0f ? staggerSeconds * Math.Min(1f, Math.Max(0f, hitDamage / damage)) : 0f;
 
         /// <summary>Null when the gun is usable; otherwise what's wrong, naming the gun and the clip.</summary>
         public string Validate()

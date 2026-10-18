@@ -14,6 +14,29 @@ rocket jump in TF2 (the soldier fires a rocket at his own feet and rides the bla
 grenade launchers. Between shots its yellow pressure cell vents with a hiss and its window glows with what charge is
 left.
 
+## Balance pass (HellDescent, 2026-10-18)
+
+The creator, after a full playthrough: "The Breacher is an absolute joke; the Writ clears it in every way." The Writ did
+22 a shot every 0.24 s (92 a second, 183 on weak points) with infinite ammo; the Breacher did 81 a shell at point blank
+every 0.75 s (108 a second) from a scarce reserve, with a weak 1.25x on weak points: worse than the Writ at every range.
+Its role now: **the close-range devastator** (a shell wrecks an imp, strips armour, staggers whatever it hits, throws
+bots across the room), and the Writ keeps range and weak points.
+
+| Number | Before | After | Why |
+| --- | --- | --- | --- |
+| Pellets x damage | 9 x 9 = 81 | **10 x 15 = 150** | One point-blank shell wrecks an imp (60 chassis + 15 horns) or an ooze's 90 chassis. |
+| Fire interval | 0.75 s (80 RPM) | **0.6 s (100 RPM)** | 250 a second up close against the Writ's 92 (183 on weak points). |
+| Falloff | full to 6 m, 25% by 18 m | **full to 7 m, 15% by 16 m** | Close range only: at 20 m a whole shell (22) is under two Writ shots (44). |
+| Range | 30 m | **24 m** | |
+| Plate damage | x1 | **x2** (`plateDamageScale`) | It strips armour: the scythe demon's 40 hp pauldrons and the ooze's 35 hp crust go in a shell. |
+| Stagger | none | **0.8 s a full hit** (`staggerSeconds`, scaled by falloff) | A staggered bot can't see you, telegraph or attack; an attack winding up is called off (the demon's volley, the ooze's sweep). |
+| Bot knockback | 15 m/s | **24 m/s** | About 1.6 m at 6.5 m, about 4.8 m at point blank. |
+| Boost (lift 1 m, push 6 m/s) | unchanged | unchanged | The boost rules are the creator's calls of 2026-10-13 (below) and their tests pin them; raising the lift is the creator's to make. |
+| Special reserve at the start | 2 shells | **4 shells** (`SpecialAmmoDef.start`) | A full cell to try it with. Writ kills still pay 1 shell each, Breacher kills 1 per 3. |
+| Weak point | x1.25 | x1.25 | Unchanged: the Writ owns weak points. |
+
+Tested in `SkylineGunsTests.TheBreacherOwnsCloseRangeAndTheWritOwnsRange`.
+
 ## The verbs
 
 - **Shove:** a hit pushes a bot back (15 m/s shared across the pellets that land), tipping and spinning it; a shed plate flies off along the shot.
