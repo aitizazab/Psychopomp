@@ -203,7 +203,12 @@ namespace JamKit.SkylineRepo
             switch (to)
             {
                 case HellFlowStage.Opening:
-                    if (Screens != null) Screens.ShowOpening(HellFlowText.Opening);
+                    // the opening is a comic flip-through now (docs/HELL-COMIC.md); the screens step aside for it
+                    if (Screens != null)
+                    {
+                        Screens.Hide();
+                        HellComicPlayer.Play(HellComics.Opening(), () => Flow.OpeningDone(), true);
+                    }
                     else Flow.OpeningDone();
                     break;
                 case HellFlowStage.FloorIntro:

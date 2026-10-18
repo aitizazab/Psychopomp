@@ -67,6 +67,14 @@ namespace JamKit.SkylineRepo
         /// (<see cref="HellFlow.Chapter"/>). A chapter's skill picks are granted before it, through <see cref="FloorCleared"/>.</summary>
         public static event Action<int> ChapterStarted;
 
+        /// <summary>The comic player turned to a page: (sequence id, 0-based page). The opening's id is
+        /// <see cref="HellComics.OpeningId"/>; the endings' are "ending-" + the ending id (docs/HELL-COMIC.md).</summary>
+        public static event Action<string, int> ComicPage;
+        /// <summary>The opening's comic turned to a page (0-based): the music director follows it (sister, hall, wait, idea).</summary>
+        public static event Action<int> OpeningPage;
+        /// <summary>A comic sequence ended (played through or skipped): its id.</summary>
+        public static event Action<string> ComicFinished;
+
         /// <summary>True between <see cref="FloorCleared"/> and <see cref="ContinueAfterPick"/>.</summary>
         public static bool WaitingForPick { get; private set; }
 
@@ -151,6 +159,14 @@ namespace JamKit.SkylineRepo
             HellRunStats.Current?.RecordJobFailed();
             JobFailed?.Invoke(jobId);
         }
+        public static void RaiseComicPage(string sequenceId, int page)
+        {
+            ComicPage?.Invoke(sequenceId, page);
+            if (sequenceId == HellComics.OpeningId) OpeningPage?.Invoke(page);
+        }
+
+        public static void RaiseComicFinished(string sequenceId) => ComicFinished?.Invoke(sequenceId);
+
         public static void RaiseRunStarted() => RunStarted?.Invoke();
         public static void RaiseRunFinished() => RunFinished?.Invoke();
 
@@ -168,6 +184,7 @@ namespace JamKit.SkylineRepo
             EndingRequested = null; EndingReached = null;
             FloorStarted = null; RoomObjectiveDone = null; PlayerDied = null; RewindUsed = null; ShadowStepUsed = null;
             JobOffered = null; JobDone = null; JobFailed = null; ChapterStarted = null;
+            ComicPage = null; OpeningPage = null; ComicFinished = null;
             WaitingForPick = false;
             Stage = HellFlowStage.Title;
             HellRunStats.Current = null;
