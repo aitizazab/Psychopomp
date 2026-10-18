@@ -44,6 +44,10 @@ namespace JamKit.SkylineRepo
         /// <summary>Set by the capture boot before Start: a replay of a chapter run starts that chapter instead of the full
         /// game (its picks are granted by the replayer, so none are offered here).</summary>
         [System.NonSerialized] public int replayChapter = HellFlow.FullGame;
+        /// <summary><c>-hellChapter</c> starts its chapter once per launch (back at the title after the run, the title shows).</summary>
+        static bool _cliChapterUsed;
+        int _cliPicks;
+        System.Random _cliPickRng;
         int _chapter = -1, _chapterPicks, _chapterPicked;
         float _pickWait;
         float _lineAt = -1f;   // the objective line is re-read at most every LineEvery s (the objectives build their text on read)
@@ -150,8 +154,11 @@ namespace JamKit.SkylineRepo
                 }
                 Screens = HellScreens.Create(ps);
                 Screens.Done += OnScreenDone;
-                Screens.ShowTitle();
-                Debug.Log("HELL_FLOW title");
+                if (!StartCliChapter())
+                {
+                    Screens.ShowTitle();
+                    Debug.Log("HELL_FLOW title");
+                }
             }
             else
             {
@@ -163,6 +170,7 @@ namespace JamKit.SkylineRepo
                     Debug.Log("HELL_FLOW chapter " + replayChapter + " (a replay of a chapter run)");
                     TickChapter();
                 }
+                else if (StartCliChapter()) { }
                 else
                 {
                     Flow.StartGame();
@@ -297,9 +305,45 @@ namespace JamKit.SkylineRepo
             TickChapter();
         }
 
+        /// <summary><c>-hellChapter</c> (docs/HELL-CAPTURE.md): the title is skipped and the chapter starts on the next frame
+        /// (Update), after the recorder and the autopilot are listening; its picks are taken by a seeded choice there.</summary>
+        bool StartCliChapter()
+        {
+            if (_cliChapterUsed) return false;
+            var cli = HellChapterStart.Parse(System.Environment.GetCommandLineArgs());
+            foreach (var p in cli.problems) Debug.LogWarning("HELL_FLOW " + p);
+            if (!cli.Given) return false;
+            _cliChapterUsed = true;
+            SkylineSettings.Options.difficulty = (int)cli.difficulty;   // in memory: the saved options are untouched
+            if (cli.chapter == HellFlow.VesperChapter) HellJobs.AssumeErrands(cli.errands);
+            else HellJobs.ClearAssumedErrands();
+            int s = seed;
+            var v = SkylineRunArgs.Value("-hellSeed");
+            if (v != null && int.TryParse(v, out var parsed)) s = parsed;
+            if (s == 0) s = System.Environment.TickCount;
+            _cliPickRng = new System.Random(s * 31 + 7);
+            _cliPicks = HellChapterStart.PicksBefore(cli.chapter, HellRoomVariants.FloorCount);
+            _chapter = cli.chapter;
+            _chapterPicks = _chapterPicked = 0;
+            if (Screens != null) Screens.Hide();
+            Debug.Log("HELL_FLOW chapter " + cli.chapter + " from the command line (" + cli.difficulty + ", " + _cliPicks + " seeded picks"
+                      + (cli.chapter == HellFlow.VesperChapter ? ", errands " + (cli.errands ? "yes" : "no") : "") + ")");
+            return true;
+        }
+
+        void GrantSeededPick()
+        {
+            var ab = HellAbilities.Instance != null ? HellAbilities.Instance : (player != null ? player.GetComponent<HellAbilities>() : null);
+            if (ab == null) { Debug.LogWarning("HELL_FLOW no abilities for the chapter's pick"); return; }
+            var offer = HellSkillPool.Offer(HellSkills.All, new List<string>(ab.Owned), 3, _cliPickRng.Next);
+            if (offer.Count == 0) return;
+            ab.Grant(offer[_cliPickRng.Next(offer.Count)].id);
+        }
+
         void TickChapter()
         {
             if (_chapter < 0 || Flow.Stage != HellFlowStage.Title || HellRunEvents.WaitingForPick) return;
+            while (_cliPicks > 0) { _cliPicks--; GrantSeededPick(); }
             if (_chapterPicked < _chapterPicks)
             {
                 int f = _chapterPicked++;

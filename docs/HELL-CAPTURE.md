@@ -44,6 +44,12 @@ Or in the editor: **JamKit > Hell > Capture**, then "Play and record".
   skills picked on the title before a chapter. `-hell-replay` restores them: it starts the same chapter, grants those
   skills up front and sets the difficulty and the errands answer (in memory; the saved options are untouched). Files
   recorded before this (version 1) replay as START runs.
+- **A chapter from the command line** (capture and testing): `-hellChapter 1|2|3|4` skips the title and starts that
+  chapter (as the CHAPTERS menu counts them; 4 is the Vesper fight), once per launch. The skipped floors' skill picks
+  are a seeded choice (from `-hellSeed`, or the recording's seed). `-hellErrands yes|no` answers the Vesper errands
+  question (default yes); `-hellDifficulty easy|normal|hard` (default normal; in memory only). With `-hell-rec` the
+  recording starts with the chapter and stores all of it, so `-hell-replay` replays it without these switches. Works
+  with `-hellAutopilot` too (docs/HELL-AUTOPILOT.md). The log shows `HELL_FLOW chapter N from the command line`.
 - **Game time runs on a fixed step** (`-hell-rec-fps 60|90|120`, default 120) with the frame rate capped at that step.
   If the machine draws slower than the step, play slows down slightly. Record at the rate you will capture at: a replay
   captures only at its own rate.

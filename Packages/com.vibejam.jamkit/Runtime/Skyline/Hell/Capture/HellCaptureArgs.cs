@@ -87,6 +87,58 @@ namespace JamKit.Skyline
     }
 
     /// <summary>
+    /// A chapter started from the command line (docs/HELL-CAPTURE.md, docs/HELL-AUTOPILOT.md), for capture and testing:
+    /// <c>-hellChapter 1|2|3|4</c> (as the title's CHAPTERS menu counts them; 4 is the Vesper fight) skips the title and starts
+    /// that chapter. <c>-hellErrands yes|no</c> answers the Vesper chapter's errands question (default yes);
+    /// <c>-hellDifficulty easy|normal|hard</c> (default normal). The skipped floors' picks are taken by a seeded choice.
+    /// </summary>
+    public sealed class HellChapterStart
+    {
+        public const string ChapterSwitch = "-hellChapter", ErrandsSwitch = "-hellErrands", DifficultySwitch = "-hellDifficulty";
+
+        /// <summary>The flow's chapter (0-based: 0-2 a floor, <see cref="HellFlow.VesperChapter"/>), or
+        /// <see cref="HellFlow.FullGame"/> when none was asked for (or it was not understood).</summary>
+        public int chapter = HellFlow.FullGame;
+        public bool errands = true;
+        public HellDifficulty difficulty = HellDifficulty.Normal;
+        public readonly List<string> problems = new List<string>();
+
+        public bool Given => chapter >= 0;
+
+        public static HellChapterStart Parse(string[] args)
+        {
+            var r = new HellChapterStart();
+            if (args == null) return r;
+            for (int i = 0; i + 1 < args.Length; i++)
+            {
+                string v = (args[i + 1] ?? "").Trim().ToLowerInvariant();
+                if (args[i] == ChapterSwitch)
+                {
+                    if (int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out int c) && c >= 1 && c <= HellFlow.Chapters) r.chapter = c - 1;
+                    else r.problems.Add(ChapterSwitch + " " + args[i + 1] + ": 1 to " + HellFlow.Chapters);
+                }
+                else if (args[i] == ErrandsSwitch)
+                {
+                    if (v == "yes" || v == "y" || v == "true" || v == "1") r.errands = true;
+                    else if (v == "no" || v == "n" || v == "false" || v == "0") r.errands = false;
+                    else r.problems.Add(ErrandsSwitch + " " + args[i + 1] + ": yes or no");
+                }
+                else if (args[i] == DifficultySwitch)
+                {
+                    if (v == "easy") r.difficulty = HellDifficulty.Easy;
+                    else if (v == "normal") r.difficulty = HellDifficulty.Normal;
+                    else if (v == "hard") r.difficulty = HellDifficulty.Hard;
+                    else r.problems.Add(DifficultySwitch + " " + args[i + 1] + ": easy, normal or hard");
+                }
+            }
+            return r;
+        }
+
+        /// <summary>The picks the skipped floors give before <paramref name="chapter"/> (one per floor before it).</summary>
+        public static int PicksBefore(int chapter, int floorCount) => chapter <= 0 ? 0 : Math.Min(chapter, floorCount - 1);
+    }
+
+    /// <summary>
     /// The Hell capture tools' command line and numbers (docs/HELL-CAPTURE.md), ported from the Skyline trailer capture
     /// (<c>VibeJamKit-capture</c>, docs/SKYLINE-TRAILER-CAPTURE.md) with only what Hell needs: the fixed capture rate, size,
     /// codec and bitrate; the clean picture; recording and replaying play; camera shots; the frame-time check.

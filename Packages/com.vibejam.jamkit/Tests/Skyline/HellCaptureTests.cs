@@ -244,6 +244,38 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void ChapterStart_ParsesTheCommandLine()
+        {
+            var none = HellChapterStart.Parse(new[] { "-hell-rec", "a" });
+            Assert.That(none.Given, Is.False);
+            Assert.That(none.problems, Is.Empty);
+
+            var vesper = HellChapterStart.Parse(new[] { "-hellChapter", "4", "-hellErrands", "no", "-hellDifficulty", "Hard" });
+            Assert.That(vesper.chapter, Is.EqualTo(HellFlow.VesperChapter));
+            Assert.That(vesper.errands, Is.False);
+            Assert.That(vesper.difficulty, Is.EqualTo(HellDifficulty.Hard));
+
+            var floor2 = HellChapterStart.Parse(new[] { "-hellChapter", "2" });
+            Assert.That(floor2.chapter, Is.EqualTo(1));
+            Assert.That(floor2.errands, Is.True);
+            Assert.That(floor2.difficulty, Is.EqualTo(HellDifficulty.Normal));
+
+            var bad = HellChapterStart.Parse(new[] { "-hellChapter", "5", "-hellErrands", "maybe", "-hellDifficulty", "nightmare" });
+            Assert.That(bad.Given, Is.False);
+            Assert.That(bad.problems.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void ChapterStart_PicksOnePerSkippedFloor()
+        {
+            Assert.That(HellChapterStart.PicksBefore(0, 3), Is.EqualTo(0));
+            Assert.That(HellChapterStart.PicksBefore(1, 3), Is.EqualTo(1));
+            Assert.That(HellChapterStart.PicksBefore(2, 3), Is.EqualTo(2));
+            Assert.That(HellChapterStart.PicksBefore(HellFlow.VesperChapter, 3), Is.EqualTo(2));
+            Assert.That(HellChapterStart.PicksBefore(HellFlow.FullGame, 3), Is.EqualTo(0));
+        }
+
+        [Test]
         public void Replay_RejectsOtherFiles()
         {
             Assert.Throws<InvalidDataException>(() => HellReplay.Read(new MemoryStream(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0 })));

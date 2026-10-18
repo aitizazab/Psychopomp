@@ -138,7 +138,9 @@ namespace JamKit.SkylineRepo
             _timeLimit = ArgF("-hellAutopilotMinutes", 75f) * 60f;
             _noSkip = SkylineRunArgs.Has("-hellAutopilotNoSkip");
             _rewindCases = SkylineRunArgs.Has("-hellAutopilotRewind");
-            _toCredits = SkylineRunArgs.Has("-hellAutopilotToCredits");
+            // -hellChapter 4 starts at the Vesper fight, past the rooms: there is nothing to play unless it plays on to the credits
+            _toCredits = SkylineRunArgs.Has("-hellAutopilotToCredits")
+                || HellChapterStart.Parse(Environment.GetCommandLineArgs()).chapter == HellFlow.VesperChapter;
             _logPath = SkylineRunArgs.Value("-hellAutopilotLog") ?? "out/hell/autopilot.json";
             int seed = (int)ArgF("-hellSeed", 1);
             _rng = new System.Random(seed * 7919 + 17);

@@ -29,6 +29,7 @@ first real run (see "Known limits").
 | `-hellAutopilotNoSkip` | Never skip a room: a softlock then runs until the time limit. | off |
 | `-hellAutopilotMinutes M` | Time limit for the whole run. It ends with `result=timeout`. | 75 |
 | `-hellAutopilotToCredits` | Plays on after the rooms: it fights the boss on the spot and presses Enter on screens. It ends on the flow lane's `HELL_STATS` log line. **Use it only after the flow lane is merged.** Without flow, the end banner's Enter reloads the scene. | off (ends at `RunFinished`) |
+| `-hellChapter 1\|2\|3\|4` | Starts that chapter instead of the full run (as the title's CHAPTERS menu counts them; 4 is the Vesper fight). The skipped floors' skill picks are a seeded choice (from `-hellSeed`). With 4 the autopilot plays on to the credits by itself (`-hellAutopilotToCredits` implied): it strafes and shoots in the fight and the decision takes the scripted choice, `-hellEnding spare\|kill` (default kill). `-hellErrands yes\|no` answers the Vesper errands question (default yes); `-hellDifficulty easy\|normal\|hard` (default normal). | full run |
 | `-hellSkipTitle` | The flow lane's switch to skip the title. Not needed with the autopilot: it takes the player's input before the director starts, and a scripted player skips the screens by itself. Harmless to add. | |
 
 With the capture lane's switches:
@@ -163,6 +164,10 @@ after bedtime: replace `-batchmode` with `-screen-fullscreen 0 -screen-width 192
 
 # Rewind edge cases (seed 2 deals The Collapse and the Lantern on floor 1, so every case comes early)
 & $exe -batchmode -logFile out/hell/auto-rewind.log -hellAutopilot safe -hellSeed 2 -hellAutopilotRewind -hellAutopilotLog out/hell/auto-rewind.json
+
+# one chapter: floor 2 alone, or the Vesper fight to the credits (spare at the decision, recorded as a replay)
+& $exe -batchmode -logFile out/hell/auto-ch2.log -hellAutopilot safe -hellSeed 1 -hellChapter 2 -hellAutopilotLog out/hell/auto-ch2.json
+& $exe -batchmode -logFile out/hell/auto-vesper.log -hellAutopilot safe -hellSeed 1 -hellChapter 4 -hellErrands no -hellEnding spare -hell-rec auto-vesper
 ```
 
 **Reading a run:**
