@@ -4,6 +4,26 @@ Written by Claude at about 05:50 on Sunday 18 October 2026, while the creator sl
 creator submits at **09:00**. Most of the game was built in the last 8 hours, while you were asleep, so this page
 explains all of it. Read sections 1 to 4 first (about 10 minutes), then follow the checklist.
 
+## 0. Latest status (06:45, read this first; it supersedes the "State at 05:50" notes below)
+
+- **The game build is ready:** `C:\Users\User\Desktop\yougotgamesonyophone\HellDescent\out\hell\build\HellDescent.exe`
+  (built 06:41). New since 05:50: the opening and every ending are now **comic flip-throughs**; the Collapse room's
+  run-up has **real stalactites** to wall-kick between; **Shadow Step works if either your start or your landing is in
+  shadow**; Nightfall now damages and blinds; the Breacher (second gun) hits much harder up close; Vesper's phases open
+  gentler and escalate; the pause menu has **Return to title** and **Restart room**; Baja's job lines and Vesper's barks
+  are voiced (placeholder voices).
+- **The trailer:** every gameplay slot now has real footage (the creator's floor-1 run, floor-3 and Vesper autopilot
+  runs). A final pass is capturing the Vesper fight, the decision and the escape for act 3. The newest cut will be at
+  `C:\Users\User\Desktop\yougotgamesonyophone\FableAnimationTests\video\psychopomp-trailer\out\full-1080p60.mp4`
+  (also on the review hub's "Trailer edit" tab). What's still weak is listed in
+  `C:\Users\User\Desktop\yougotgamesonyophone\FableAnimationTests\video\psychopomp-trailer\RECORD-ME.md`, with exact
+  steps if you want to record a better take yourself.
+- **Recording a take yourself (optional):** `& .\out\hell\build\HellDescent.exe -hellChapter 4 -hell-rec my-vesper-run`
+  from the HellDescent folder starts the Vesper chapter and records it (chapters 1-3 work the same way). Tell Claude the
+  name and it cuts it in.
+- **Voices:** every line is still a placeholder voice. The creator records Baja and Vesper when they wake.
+- **The public repo:** https://github.com/aitizazab/Psychopomp (README written for judges).
+
 ## 1. The two-minute summary
 
 - **The game is PSYCHOPOMP** (the folder and the exe are still called HellDescent). It is a fast first-person shooter
