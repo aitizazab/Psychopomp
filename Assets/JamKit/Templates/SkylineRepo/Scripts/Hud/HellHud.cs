@@ -211,15 +211,8 @@ namespace JamKit.SkylineRepo
 
         // ------------------------------------------------------------------ drawing
 
-        /// <summary>Time Dilation's fuel, 1 full to 0 empty.
-        /// TODO(dilation fuel): read <c>HellAbilities.DilationFuel01</c> here once the fuel-gauge change (drains in 4 s,
-        /// recharges at half rate, needs 25% to start) is on main. Until then this stub reads the old hold: it drains while
-        /// the world is slowed and reads full otherwise.</summary>
-        static float DilationFuel01(HellAbilities a)
-        {
-            float hold = a.Dilation.HoldLeft01;
-            return hold > 0f ? hold : 1f;
-        }
+        /// <summary>Time Dilation's fuel, 1 full to 0 empty (drains in 4 s, recharges at half rate, needs 25% to start).</summary>
+        static float DilationFuel01(HellAbilities a) => HellAbilities.DilationFuel01;
 
         void Draw(MeshGenerationContext ctx)
         {

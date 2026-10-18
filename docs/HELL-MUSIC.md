@@ -108,3 +108,9 @@ Page: `FableAnimationTests/art/review/2026-10-18/hell-music.html` (round 2, laye
 
 
 The in-game music director (how cues play, moods, speeds, modifiers): `docs/HELL-MUSIC-DIRECTOR.md`.
+
+## Round 3 fixes (2026-10-18 ~05:00; the creator: "The new music is good.")
+- **Danger Flying** rebuilt as the most panicked layer in the game: blast beat (kick every 16th, snare every 8th, a crash every beat), the Riff tremolo-picked in 16ths on three guitars, strings in 32nds with a half-step shriek, the choir two octaves up, a siren (saw lead bending up an octave every 2 bars), the Vow on high horns. Same clock and loop length; 3 dB over Danger Fast, brighter (centroid 350 -> 470 Hz). All in-run stems re-exported (every mix sits 1.3 dB lower to keep the headroom; manifest `mix_lufs` updated).
+- **The opening fall** is now a 2-bar lead-in at 135 BPM resolving on a big D hit at **sample 170667 (3.555563 s)**: the in-run set starts on it (manifest `baja_opening.parts.fall.downbeat_sample`).
+- **Job stingers**: the closing chord now lands with the last of the five trumpet notes (brief; done and failed aligned the same way).
+- Game files now live in the main checkout (`HellDescent/Assets/.../SkylineAudio/hell-music/`), same names, metas kept.
