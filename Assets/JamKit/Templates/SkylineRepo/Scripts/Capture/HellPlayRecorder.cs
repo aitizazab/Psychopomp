@@ -10,6 +10,10 @@ namespace JamKit.SkylineRepo
     /// feet after the frame, plus each skill picked on the pick screen; the run's seed is chosen up front and stored. Frames
     /// while the pause menu or the pick screen hold the game are left out (the replay never pauses). Saved every 30 s and on
     /// exit to <c>out/hell/replays/&lt;name&gt;.hellrec</c> (or the path given).
+    /// <para>Both ways into a run start it: START (HellRunEvents.RunStarted, after the opening) and a chapter from the title's
+    /// CHAPTERS menu (HellRunEvents.ChapterStarted: a chapter skips the opening, so RunStarted never comes). How the run began
+    /// is stored for the replay: the chapter, the difficulty, the Vesper chapter's errands answer, and the skills picked on
+    /// the title before a chapter (its skipped floors' picks).</para>
     /// </summary>
     [DefaultExecutionOrder(-70)]
     public sealed class HellPlayRecorder : MonoBehaviour
@@ -28,29 +32,50 @@ namespace JamKit.SkylineRepo
             _player = player;
             _path = path;
             _rec = new HellReplay { fps = fps, seed = seed, scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, note = DateTime.Now.ToString("yyyy-MM-dd HH:mm") };
-            if (waitForRun) HellRunEvents.RunStarted += OnRunStarted;
+            if (waitForRun)
+            {
+                HellRunEvents.RunStarted += OnRunStarted;
+                HellRunEvents.ChapterStarted += OnChapterStarted;
+            }
             else Begin();
             Debug.Log("HELL_REC armed: " + path + " at " + fps + " fps, seed " + seed + (waitForRun ? " (starts with the run)" : ""));
         }
 
-        void OnRunStarted()
+        void OnRunStarted() => Begin();
+
+        void OnChapterStarted(int chapter)
+        {
+            // START raises ChapterStarted(FullGame) before its opening: that run starts with RunStarted after the opening
+            if (!HellReplay.StartsOnChapter(chapter)) return;
+            _rec.chapter = chapter;
+            Begin();
+        }
+
+        void Unhook()
         {
             HellRunEvents.RunStarted -= OnRunStarted;
-            Begin();
+            HellRunEvents.ChapterStarted -= OnChapterStarted;
         }
 
         void Begin()
         {
             if (_started) return;
             _started = true;
+            Unhook();
+            _rec.difficulty = SkylineSettings.Options.difficulty;
+            _rec.errands = HellJobs.AssumedErrands.HasValue ? (HellJobs.AssumedErrands.Value ? 1 : 0) : HellReplay.Unknown;
+            if (!HellReplay.StartsOnChapter(_rec.chapter)) _rec.startSkills.Clear();   // START has no picks before its run
             UnityEngine.Random.InitState(_rec.seed);   // the effects' random numbers, the same in the replay
             _nextSave = Time.realtimeSinceStartup + AutosaveSeconds;
-            Debug.Log("HELL_REC start frame " + Time.frameCount);
+            Debug.Log("HELL_REC start frame " + Time.frameCount + ": " + (_rec.chapter >= 0 ? "chapter " + _rec.chapter : "start")
+                      + ", difficulty " + _rec.difficulty + (_rec.errands >= 0 ? ", errands " + (_rec.errands == 1 ? "yes" : "no") : "")
+                      + (_rec.startSkills.Count > 0 ? ", start skills " + string.Join(",", _rec.startSkills) : ""));
+            _dirty = true;
         }
 
         void OnDestroy()
         {
-            HellRunEvents.RunStarted -= OnRunStarted;
+            Unhook();
             if (_abilities != null) _abilities.Granted -= OnGranted;
             Save("end");
         }
@@ -59,7 +84,13 @@ namespace JamKit.SkylineRepo
 
         void OnGranted(string id)
         {
-            if (!_started) return;
+            if (!_started)
+            {
+                // a chapter's picks on the title (before the run): granted up front in the replay
+                if (!_rec.startSkills.Contains(id)) _rec.startSkills.Add(id);
+                Debug.Log("HELL_REC start skill " + id);
+                return;
+            }
             _rec.AddEvent(_rec.FrameCount, "grant", id);   // replayed before the next recorded step
             Debug.Log("HELL_REC grant " + id + " before step " + _rec.FrameCount);
         }

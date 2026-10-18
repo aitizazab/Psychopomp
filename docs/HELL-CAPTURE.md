@@ -39,6 +39,11 @@ Or in the editor: **JamKit > Hell > Capture**, then "Play and record".
 - Recording starts on the frame the run starts. Each frame stores the input (stick, every button including Shadow Step,
   Rewind and the skill button), the view after the frame's look, and the feet after the frame. Skill picks and the run
   seed are stored too. Frames where the pause menu or the pick screen hold the game are left out.
+- START and the title's **CHAPTERS** both start it (a chapter skips the opening, so it starts on the chapter's start).
+  The file also stores how the run began: the chapter, the difficulty, the Vesper chapter's errands answer and the
+  skills picked on the title before a chapter. `-hell-replay` restores them: it starts the same chapter, grants those
+  skills up front and sets the difficulty and the errands answer (in memory; the saved options are untouched). Files
+  recorded before this (version 1) replay as START runs.
 - **Game time runs on a fixed step** (`-hell-rec-fps 60|90|120`, default 120) with the frame rate capped at that step.
   If the machine draws slower than the step, play slows down slightly. Record at the rate you will capture at: a replay
   captures only at its own rate.

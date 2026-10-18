@@ -41,6 +41,9 @@ namespace JamKit.SkylineRepo
         readonly HellMomentum _momentum = new HellMomentum();
         HellAbilities _stepSource;
         bool _skipScreens;
+        /// <summary>Set by the capture boot before Start: a replay of a chapter run starts that chapter instead of the full
+        /// game (its picks are granted by the replayer, so none are offered here).</summary>
+        [System.NonSerialized] public int replayChapter = HellFlow.FullGame;
         int _chapter = -1, _chapterPicks, _chapterPicked;
         float _pickWait;
         float _lineAt = -1f;   // the objective line is re-read at most every LineEvery s (the objectives build their text on read)
@@ -153,8 +156,18 @@ namespace JamKit.SkylineRepo
             else
             {
                 Debug.Log("HELL_FLOW screens skipped (scripted run or -hellSkipTitle)");
-                Flow.StartGame();
-                Flow.OpeningDone();
+                if (replayChapter >= 0)
+                {
+                    _chapter = replayChapter;
+                    _chapterPicks = _chapterPicked = 0;
+                    Debug.Log("HELL_FLOW chapter " + replayChapter + " (a replay of a chapter run)");
+                    TickChapter();
+                }
+                else
+                {
+                    Flow.StartGame();
+                    Flow.OpeningDone();
+                }
             }
         }
 

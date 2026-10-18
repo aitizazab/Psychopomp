@@ -196,6 +196,54 @@ namespace JamKit.Tests.Skyline
         }
 
         [Test]
+        public void Replay_ChapterRun_RoundTripsHowItBegan()
+        {
+            var r = Sample(10);
+            r.chapter = HellFlow.VesperChapter;
+            r.difficulty = 2;
+            r.errands = 0;
+            r.startSkills.Add("ambush");
+            r.startSkills.Add("ember");
+            var ms = new MemoryStream();
+            r.Write(ms);
+            ms.Position = 0;
+            var back = HellReplay.Read(ms);
+            Assert.That(back.chapter, Is.EqualTo(HellFlow.VesperChapter));
+            Assert.That(back.difficulty, Is.EqualTo(2));
+            Assert.That(back.errands, Is.EqualTo(0));
+            Assert.That(back.startSkills, Is.EqualTo(new[] { "ambush", "ember" }));
+            Assert.That(back.FrameCount, Is.EqualTo(10));
+            Assert.That(back.Describe(), Does.Contain("chapter 3"));
+        }
+
+        [Test]
+        public void Replay_Version1File_ReadsAsAStartRun()
+        {
+            var ms = new MemoryStream();
+            using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, true))
+            {
+                w.Write(HellReplay.Magic); w.Write(1); w.Write(120); w.Write(5); w.Write("HellDescent"); w.Write("old");
+                w.Write(0);   // frames
+                w.Write(0);   // events
+            }
+            ms.Position = 0;
+            var back = HellReplay.Read(ms);
+            Assert.That(back.seed, Is.EqualTo(5));
+            Assert.That(back.chapter, Is.EqualTo(HellFlow.FullGame));
+            Assert.That(back.difficulty, Is.EqualTo(HellReplay.Unknown));
+            Assert.That(back.errands, Is.EqualTo(HellReplay.Unknown));
+            Assert.That(back.startSkills, Is.Empty);
+        }
+
+        [Test]
+        public void Replay_ChaptersStartOnChapterStarted_StartOnRunStarted()
+        {
+            // START raises ChapterStarted(FullGame) before its opening; its recording starts with RunStarted after it
+            Assert.That(HellReplay.StartsOnChapter(HellFlow.FullGame), Is.False);
+            for (int c = 0; c < HellFlow.Chapters; c++) Assert.That(HellReplay.StartsOnChapter(c), Is.True);
+        }
+
+        [Test]
         public void Replay_RejectsOtherFiles()
         {
             Assert.Throws<InvalidDataException>(() => HellReplay.Read(new MemoryStream(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0 })));

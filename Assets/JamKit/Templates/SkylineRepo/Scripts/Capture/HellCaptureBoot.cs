@@ -151,6 +151,12 @@ namespace JamKit.SkylineRepo
                     if (director != null)
                     {
                         director.seed = _replay.seed;
+                        // how the recorded run began: a chapter from the title, its difficulty and the Vesper errands answer
+                        // (in memory only: the saved options are not touched)
+                        if (_replay.difficulty >= 0) SkylineSettings.Options.difficulty = _replay.difficulty;
+                        if (_replay.errands >= 0) HellJobs.AssumeErrands(_replay.errands == 1);
+                        else HellJobs.ClearAssumedErrands();
+                        if (HellReplay.StartsOnChapter(_replay.chapter)) director.replayChapter = _replay.chapter;
                         if (_args.seed != 0 && _args.seed != _replay.seed)
                             Debug.LogWarning("HELL_REPLAY -hellSeed " + _args.seed + " on the command line overrides the recording's seed " + _replay.seed + ": the run will differ");
                     }

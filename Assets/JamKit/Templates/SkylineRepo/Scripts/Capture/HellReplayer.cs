@@ -13,6 +13,9 @@ namespace JamKit.SkylineRepo
     /// (so shots go where they went), and the feet are put back on the recording if they drift past
     /// <see cref="HellReplayDrift.tolerance"/> (logged; a recording made in the same editor normally never drifts).</item>
     /// <item>Skill picks are replayed on the pick screen (<see cref="HellSkillPick.PickById"/>).</item>
+    /// <item><b>A chapter run</b> (recorded from the title's CHAPTERS menu): the boot sets the recorded difficulty and the
+    /// Vesper errands answer and has the director start that chapter; the skills picked before it are granted up front, and
+    /// the replay starts with HellRunEvents.ChapterStarted (a chapter never raises RunStarted).</item>
     /// <item><b>Jump to a time:</b> with a start time, the frames before it run with every camera off and the sound silent
     /// (simulation only, many times faster than real time), then the picture comes on.</item>
     /// <item><b>Capture:</b> at the start time the editor is paused (<c>Debug.Break</c>) so the Recorder starts on exactly that
@@ -32,7 +35,7 @@ namespace JamKit.SkylineRepo
         SkylinePlayer _player;
         HellReplay _rep;
         int _fromFrame, _toFrame;
-        bool _capture, _started, _fastForward, _done, _released;
+        bool _capture, _started, _fastForward, _done, _released, _grantedStart;
         HellReplayFrame _cur;
         readonly HellReplayDrift _drift = new HellReplayDrift();
         readonly List<HellReplayEvent> _due = new List<HellReplayEvent>();
@@ -56,22 +59,41 @@ namespace JamKit.SkylineRepo
             if (_player == null) { Debug.LogError("HELL_REPLAY no player in the scene"); enabled = false; return; }
             _player.ScriptedInput = Input;
             HellAbilities.ScriptedButtons = Buttons;
-            if (waitForRun) HellRunEvents.RunStarted += OnRunStarted;
-            else Begin();
+            if (!waitForRun) Begin();
+            else if (HellReplay.StartsOnChapter(replay.chapter)) HellRunEvents.ChapterStarted += OnChapterStarted;
+            else HellRunEvents.RunStarted += OnRunStarted;
             Debug.Log("HELL_REPLAY armed: steps " + _fromFrame + ".." + _toFrame + " of " + replay.FrameCount +
                       (_shotName.Length > 0 ? ", shot " + _shotName : "") + (capture ? ", capture" : ""));
         }
 
-        void OnRunStarted()
+        void OnRunStarted() => Begin();
+
+        void OnChapterStarted(int chapter)
         {
-            HellRunEvents.RunStarted -= OnRunStarted;
+            if (chapter != _rep.chapter) Debug.LogWarning("HELL_REPLAY chapter " + chapter + " started, the recording is of chapter " + _rep.chapter);
             Begin();
+        }
+
+        // before the director's Start (this runs at -70): the chapter's picks are owned before the chapter starts, as recorded
+        void Start() => GrantStartSkills();
+
+        void GrantStartSkills()
+        {
+            if (_grantedStart || _rep == null || _rep.startSkills.Count == 0) return;
+            var ab = HellAbilities.Instance != null ? HellAbilities.Instance : (_player != null ? _player.GetComponent<HellAbilities>() : null);
+            if (ab == null) return;
+            _grantedStart = true;
+            foreach (var id in _rep.startSkills) ab.Grant(id);
+            Debug.Log("HELL_REPLAY start skills " + string.Join(",", _rep.startSkills));
         }
 
         void Begin()
         {
             if (_started) return;
             _started = true;
+            HellRunEvents.RunStarted -= OnRunStarted;
+            HellRunEvents.ChapterStarted -= OnChapterStarted;
+            GrantStartSkills();   // if the abilities were not there at Start
             UnityEngine.Random.InitState(_rep.seed);
             if (_shotName.Length > 0) _shot = HellShotCamera.Create(_player, _shotName);
             if (_fromFrame > 0) FastForward(true);
@@ -81,6 +103,7 @@ namespace JamKit.SkylineRepo
         void OnDestroy()
         {
             HellRunEvents.RunStarted -= OnRunStarted;
+            HellRunEvents.ChapterStarted -= OnChapterStarted;
             Release();
             if (_fastForward) FastForward(false);
             ReadyForRecording = false;

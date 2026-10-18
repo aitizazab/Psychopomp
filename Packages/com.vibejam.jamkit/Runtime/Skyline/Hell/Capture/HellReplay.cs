@@ -46,12 +46,17 @@ namespace JamKit.Skyline
     /// A recording of the creator's play (docs/HELL-CAPTURE.md): every fixed step's input, view and feet, the run's seed and
     /// the skill picks. The game runs on a fixed step while recording (<see cref="fps"/>), so replaying the same input on the
     /// same step from the same seed plays the same run again; the stored view and feet keep the player exact even if
-    /// something drifts. Frame 0 is the frame the run started (HellRunEvents.RunStarted). Pure; a small binary file.
+    /// something drifts. Frame 0 is the frame the run started (HellRunEvents.RunStarted for START, ChapterStarted for a
+    /// chapter from the title). Version 2 adds how the run began: the chapter, the difficulty, the Vesper chapter's errands
+    /// answer and the skill picks made before a chapter (version 1 files read as START with nothing else). Pure; a small
+    /// binary file.
     /// </summary>
     public sealed class HellReplay
     {
         public const uint Magic = 0x50455248;   // "HREP"
-        public const int Version = 1;
+        public const int Version = 2;
+        /// <summary>Not recorded (version 1 files, or nothing chosen): the replay keeps what the game has.</summary>
+        public const int Unknown = -1;
 
         public int fps = HellCapture.DefaultFps;
         public int seed;
@@ -59,6 +64,18 @@ namespace JamKit.Skyline
         public string note = "";
         public readonly List<HellReplayFrame> frames = new List<HellReplayFrame>();
         public readonly List<HellReplayEvent> events = new List<HellReplayEvent>();
+        /// <summary>The title's choice: <see cref="HellFlow.FullGame"/> (START) or a chapter (0-2 a floor, 3 the Vesper fight).</summary>
+        public int chapter = HellFlow.FullGame;
+        /// <summary>The difficulty (SkylineOptions.difficulty: 0 Easy, 1 Normal, 2 Hard) or <see cref="Unknown"/>.</summary>
+        public int difficulty = Unknown;
+        /// <summary>The Vesper chapter's errands answer: 1 ran them, 0 did not, <see cref="Unknown"/> not asked.</summary>
+        public int errands = Unknown;
+        /// <summary>The skills picked before a chapter began (the picks its skipped floors give), granted before frame 0.</summary>
+        public readonly List<string> startSkills = new List<string>();
+
+        /// <summary>Whether a run begun this way starts on HellRunEvents.ChapterStarted (a chapter from the title: it never
+        /// passes the opening, so RunStarted is not raised) rather than on RunStarted (START: after the opening).</summary>
+        public static bool StartsOnChapter(int chapter) => chapter >= 0;
 
         public int FrameCount => frames.Count;
         public float Step => HellCapture.Step(fps);
@@ -110,6 +127,11 @@ namespace JamKit.Skyline
                     w.Write(events[i].kind ?? "");
                     w.Write(events[i].value ?? "");
                 }
+                w.Write(chapter);
+                w.Write(difficulty);
+                w.Write(errands);
+                w.Write(startSkills.Count);
+                for (int i = 0; i < startSkills.Count; i++) w.Write(startSkills[i] ?? "");
             }
         }
 
@@ -119,7 +141,7 @@ namespace JamKit.Skyline
             {
                 if (r.ReadUInt32() != Magic) throw new InvalidDataException("not a Hell replay");
                 int version = r.ReadInt32();
-                if (version != Version) throw new InvalidDataException("replay version " + version + " (this build reads " + Version + ")");
+                if (version != 1 && version != Version) throw new InvalidDataException("replay version " + version + " (this build reads " + Version + ")");
                 var rep = new HellReplay { fps = r.ReadInt32(), seed = r.ReadInt32(), scene = r.ReadString(), note = r.ReadString() };
                 if (!HellCapture.ValidFps(rep.fps)) throw new InvalidDataException("replay fps " + rep.fps);
                 int n = r.ReadInt32();
@@ -136,6 +158,15 @@ namespace JamKit.Skyline
                 int e = r.ReadInt32();
                 if (e < 0 || e > 100000) throw new InvalidDataException("replay event count " + e);
                 for (int i = 0; i < e; i++) rep.events.Add(new HellReplayEvent { frame = r.ReadInt32(), kind = r.ReadString(), value = r.ReadString() });
+                if (version >= 2)
+                {
+                    rep.chapter = r.ReadInt32();
+                    rep.difficulty = r.ReadInt32();
+                    rep.errands = r.ReadInt32();
+                    int k = r.ReadInt32();
+                    if (k < 0 || k > 1000) throw new InvalidDataException("replay start skill count " + k);
+                    for (int i = 0; i < k; i++) rep.startSkills.Add(r.ReadString());
+                }
                 return rep;
             }
         }
@@ -158,7 +189,10 @@ namespace JamKit.Skyline
         /// <summary>One line for the log: length, steps, seed, picks.</summary>
         public string Describe() =>
             Seconds.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " s (" + frames.Count + " steps at " + fps +
-            " fps), seed " + seed + ", scene " + (scene.Length > 0 ? scene : "?") + ", " + events.Count + " event(s)";
+            " fps), seed " + seed + ", scene " + (scene.Length > 0 ? scene : "?") + ", " + events.Count + " event(s), " +
+            (chapter >= 0 ? "chapter " + chapter : "start") + ", difficulty " + (difficulty >= 0 ? difficulty.ToString() : "?") +
+            (errands >= 0 ? ", errands " + (errands == 1 ? "yes" : "no") : "") +
+            (startSkills.Count > 0 ? ", start skills " + string.Join(",", startSkills) : "");
     }
 
     /// <summary>
