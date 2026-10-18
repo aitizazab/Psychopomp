@@ -62,6 +62,8 @@ namespace JamKit.SkylineRepo
         bool _nightfall, _subscribed, _hintRewind, _hintHunt;
         int _nightZone = -1, _impSeq;
         Color _ambient, _fog;
+        UnityEngine.Rendering.SphericalHarmonicsL2 _probe;
+        bool _ambientSaved;
         string _lastAttacker;
         float _lastAttackTime;
         Func<bool> _prevIntercept;
@@ -127,6 +129,8 @@ namespace JamKit.SkylineRepo
                 HellCaptureCheats.ScaleBoss(tuning, cheats.bossHealth);
                 Debug.Log("HELL_CAPTURE cheats: Vesper's health x" + cheats.bossHealth.ToString("0.###") + " (" + tuning.maxHealth.ToString("0") + ")");
             }
+            _cheatPhase = -1;
+            if (cheats.bossPhaseSeconds > 0f) Debug.Log("HELL_CAPTURE cheats: Vesper's phases forced over after " + cheats.bossPhaseSeconds.ToString("0.#") + " s each");
             Fight = new VesperFight(tuning, seed);
             var perches = HellVesperArena.Perches(Def);
             Fight.SetArena(perches, Def.bounds);
@@ -248,7 +252,29 @@ namespace JamKit.SkylineRepo
             Fight.Tick(input, _ev);
             Process();
             if (!Active) return;
+            ForcePhaseCheat();
+            if (!Active) return;
             Show();
+        }
+
+        int _cheatPhase = -1;
+        float _cheatPhaseClock;
+
+        /// <summary>CAPTURE-ONLY -hellBossPhaseSeconds (docs/HELL-CAPTURE.md): a phase that lasts longer than that is forced over
+        /// (the damage to her phase's floor in one hit, so she shifts, or kneels in the last), so a capture always reaches the end.</summary>
+        void ForcePhaseCheat()
+        {
+            float limit = HellCaptureCheats.Current.bossPhaseSeconds;
+            if (!(limit > 0f) || Fight.Defeated) return;
+            if (Fight.S.phase != _cheatPhase) { _cheatPhase = Fight.S.phase; _cheatPhaseClock = 0f; }
+            _cheatPhaseClock += Time.deltaTime;
+            if (_cheatPhaseClock < limit || Fight.S.action == VesperAction.Shift || !Fight.Vulnerable) return;
+            int phase = Fight.S.phase;
+            float done = Fight.Hit(1e7f, false, 1f, _ev);
+            if (done <= 0f) return;
+            _cheatPhaseClock = 0f;
+            Debug.Log("HELL_CAPTURE cheats: Vesper's phase " + phase + " forced over after " + limit.ToString("0.#") + " s (-" + done.ToString("0") + ")");
+            Process();
         }
 
         /// <summary>Everything she shows comes from her state (so a Rewind shows right at once).</summary>
@@ -531,6 +557,7 @@ namespace JamKit.SkylineRepo
         {
             if (on == _nightfall) return;
             _nightfall = on;
+            // the braziers (the fire lights) go out; the lava's own lights keep burning, so the arena stays navigable by the lava
             if (_arena != null) foreach (var l in _arena.fireLights) if (l != null) l.enabled = !on;
             if (on)
             {
@@ -539,18 +566,28 @@ namespace JamKit.SkylineRepo
                 var bd = new Bounds();
                 bd.SetMinMax(U(Def.bounds.min), U(Def.bounds.max));
                 _nightZone = HellDarkness.RegisterZone(bd);
+                // darker, not black: the whole ambient (the look's gradient probe too) at half, the fog a deep violet
                 _ambient = RenderSettings.ambientLight;
                 _fog = RenderSettings.fogColor;
-                RenderSettings.ambientLight = _ambient * 0.3f;
-                RenderSettings.fogColor = new Color(0.02f, 0.0f, 0.03f);
+                _probe = RenderSettings.ambientProbe;
+                _ambientSaved = true;
+                var dim = _probe;
+                dim *= 0.5f;
+                RenderSettings.ambientProbe = dim;
+                RenderSettings.fogColor = Color.Lerp(_fog, new Color(0.05f, 0.015f, 0.08f), 0.6f);
                 HellAbilityAudio.Play("vesper/nightfall", Body != null ? Body.transform.position : transform.position);
             }
             else
             {
                 if (_nightZone >= 0) { HellDarkness.UnregisterZone(_nightZone); _nightZone = -1; }
                 if (Def != null && Active) foreach (var l in Def.lights) _lightIds.Add(HellDarkness.RegisterLight(U(l.position), l.radius));
-                RenderSettings.ambientLight = _ambient;
-                RenderSettings.fogColor = _fog;
+                if (_ambientSaved)
+                {
+                    _ambientSaved = false;
+                    RenderSettings.ambientLight = _ambient;
+                    RenderSettings.fogColor = _fog;
+                    RenderSettings.ambientProbe = _probe;
+                }
             }
         }
 

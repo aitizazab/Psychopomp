@@ -198,6 +198,34 @@ namespace JamKit.SkylineRepo
             LogPipeline();
         }
 
+        /// <summary>The light rig the look built (null before <see cref="Apply"/> or without a look).</summary>
+        public HellLightRig Rig => _rig;
+
+        /// <summary>Restyles geometry built at run time after <see cref="Apply"/> (Vesper's arena, built when her fight begins):
+        /// every renderer under <paramref name="root"/> with a builder-named material (SK_Hell_Stone_F2, SK_Emissive_Lava_F2, ...)
+        /// gets the floor's look exactly as the scene's rooms got it. Returns the renderers restyled.</summary>
+        public int Restyle(Transform root, int floor)
+        {
+            if (!_applied || look == HellLookDirection.None || root == null) return 0;
+            floor = Mathf.Clamp(floor, 0, 2);
+            if (_L[floor] == null) return 0;
+            int swapped = 0;
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var m = r.sharedMaterial;
+                if (m == null || !m.name.StartsWith("SK_")) continue;
+                string key = Key(m.name);
+                bool lava = key == "Lava" || key == "Lava_Well" || key == "WellLava";
+                if (lava) BoxUv(r, 7f);
+                var mf = r.GetComponent<MeshFilter>();
+                bool ramp = mf != null && mf.sharedMesh != null && mf.sharedMesh.name.StartsWith("Wedge");
+                var made = Swap(m, floor, ramp);
+                if (made != null && made != m) { r.sharedMaterial = made; swapped++; }
+                if (lava && _dir[floor] != HellLookDirection.B) ShoreRim(r);
+            }
+            return swapped;
+        }
+
         /// <summary>The proof lines for docs/HELL-LIGHTING.md: the pipeline as the player runs it.</summary>
         static void LogPipeline()
         {

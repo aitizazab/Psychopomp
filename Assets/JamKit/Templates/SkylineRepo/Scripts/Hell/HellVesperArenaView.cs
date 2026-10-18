@@ -19,6 +19,7 @@ namespace JamKit.SkylineRepo
         {
             public Transform root;
             public GameObject exitGate;
+            /// <summary>The lights Nightfall puts out (the braziers under the look; the builder's lava lights without it).</summary>
             public readonly List<Light> fireLights = new List<Light>();
             public readonly List<Renderer> lavaRenderers = new List<Renderer>();
             public readonly List<Renderer> haze = new List<Renderer>();
@@ -39,14 +40,22 @@ namespace JamKit.SkylineRepo
             var b = new Built();
             b.root = new GameObject("Vesper Arena").transform;
             b.root.SetParent(parent, false);
-            var stone = SkylineBotLook.Lit(Stone);
-            var wall = SkylineBotLook.Lit(Wall);
-            var cover = SkylineBotLook.Lit(Wall * 1.25f);
-            var deck = SkylineBotLook.Lit(Stone * 1.2f);
-            var gate = SkylineBotLook.Lit(GateRed);
-            var lava = SkylineBotLook.Glow(LavaHot);
+            // named as the scene builder names the rooms' materials (SK_Hell_<kind>_F<floor>), so the look restyles them like a room's
+            string F = "_F" + HellVesperArena.Floor;
+            var stone = Named(SkylineBotLook.Lit(Stone), "SK_Hell_Stone" + F);
+            var wall = Named(SkylineBotLook.Lit(Wall), "SK_Hell_Wall" + F);
+            var wallRun = Named(SkylineBotLook.Lit(Wall), "SK_Hell_WallRun" + F);
+            var cover = Named(SkylineBotLook.Lit(Wall * 1.25f), "SK_Hell_Cover" + F);
+            var deck = Named(SkylineBotLook.Lit(Stone * 1.2f), "SK_Hell_Deck" + F);
+            var ramp = Named(SkylineBotLook.Lit(Stone * 1.2f), "SK_Hell_Ramp" + F);
+            var gate = Named(SkylineBotLook.Lit(GateRed), "SK_Hell_Gate" + F);
+            var lava = Named(SkylineBotLook.Glow(LavaHot), "SK_Emissive_Lava" + F);
             var ember = SkylineBotLook.Glow(Ember);
-            var obsidian = SkylineBotLook.Lit(Obsidian);
+            var obsidian = Named(SkylineBotLook.Lit(Obsidian), "SK_Hell_Obsidian" + F);
+            var lavaGroup = new GameObject("Lava").transform;
+            lavaGroup.SetParent(b.root, false);
+            var fireGroup = new GameObject("Fire Lights").transform;
+            fireGroup.SetParent(b.root, false);
             var haze = SkylineBotLook.Glow(Haze * 0.6f);
 
             foreach (var s in d.solids)
@@ -55,10 +64,11 @@ namespace JamKit.SkylineRepo
                 switch (s.role)
                 {
                     case "floor": m = stone; break;
-                    case "deck": case "ramp": m = deck; break;
+                    case "deck": m = deck; break;
+                    case "ramp": m = s.ramp ? ramp : deck; break;
                     case "cover": m = cover; break;
                     case "gate": m = gate; break;
-                    default: m = wall; break;
+                    default: m = s.runnable ? wallRun : wall; break;
                 }
                 var go = s.ramp ? Ramp(b.root, s, m) : Box(b.root, s.id, U(s.box.min), U(s.box.max), m, true, s.runnable);
                 if (s.id == d.exitGateId) b.exitGate = go;
@@ -71,7 +81,7 @@ namespace JamKit.SkylineRepo
             foreach (var h in d.hazards)
             {
                 if (h.kind != HellHazardKind.Lava) continue;
-                var go = Box(b.root, h.id, U(h.box.min), U(h.box.max), lava, true, false);
+                var go = Box(lavaGroup, h.id, U(h.box.min), U(h.box.max), lava, true, false);
                 b.lavaRenderers.Add(go.GetComponent<Renderer>());
             }
             // her darkness: an obsidian plate on the floor of each zone, a thin violet haze ring at its rim
@@ -84,17 +94,51 @@ namespace JamKit.SkylineRepo
             foreach (var li in d.lights)
             {
                 var go = new GameObject("Lava Light");
-                go.transform.SetParent(b.root, false);
+                go.transform.SetParent(fireGroup, false);
                 go.transform.position = U(li.position);
                 var l = go.AddComponent<Light>();
                 l.type = LightType.Point;
                 l.color = new Color(1f, 0.42f, 0.12f);
                 l.range = li.radius;
-                l.intensity = 2.2f;
+                l.intensity = 6f;
                 l.shadows = LightShadows.None;
                 b.fireLights.Add(l);
             }
+            ApplyLook(b, d);
             return b;
+        }
+
+        static Material Named(Material shared, string name) => new Material(shared) { name = name };
+
+        /// <summary>The look system's dressing (docs/HELL-LIGHTING.md), which the scene's rooms get at load and this arena,
+        /// built later, never did (it rendered almost black: dark flat materials, a few short lava lights, no braziers): the
+        /// floor's Hell/Surface materials and lava, the rig's lava lights and braziers (kept clear of her dark zones, so they
+        /// still read dark). Without a look in force the builder's own lights stay (brighter than before).</summary>
+        static void ApplyLook(Built b, HellRoomDef d)
+        {
+            var look = HellLookSwitch.Instance;
+            if (look == null || HellLookSwitch.ActiveLook == HellLookDirection.None) return;
+            try
+            {
+                int restyled = look.Restyle(b.root, HellVesperArena.Floor);
+                var rig = look.Rig;
+                if (rig == null) { Debug.Log("HELL_VESPER arena look: " + restyled + " restyled, no light rig"); return; }
+                var palls = new List<Bounds>();
+                foreach (var z in d.darkZones)
+                {
+                    var pb = new Bounds();
+                    pb.SetMinMax(U(z.min), U(z.max));
+                    palls.Add(pb);
+                }
+                var made = rig.BuildArena(b.root, d, HellVesperArena.Floor, palls, out var braziers);
+                b.fireLights.Clear();            // the rig replaced the builder's lava lights (destroyed)
+                b.fireLights.AddRange(braziers); // Nightfall puts the braziers out; the lava's lights keep burning
+                Debug.Log("HELL_VESPER arena look " + look.DirectionOn(HellVesperArena.Floor) + ": " + restyled + " renderers restyled, " + made + " lava lights, " + braziers.Count + " braziers");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("HELL_VESPER arena look failed: " + e.GetType().Name + ": " + e.Message);
+            }
         }
 
         static GameObject Box(Transform parent, string name, Vector3 min, Vector3 max, Material m, bool collider, bool runnable)

@@ -279,6 +279,15 @@ namespace JamKit.Tests.Skyline
             Assert.That(on.bossHealth, Is.EqualTo(0.35f).Within(1e-6f));
             Assert.That(on.Describe(), Is.EqualTo("invulnerable, boss health 0.35"));
 
+            var phase = HellCaptureCheats.Parse(new[] { "-hellBossPhaseSeconds", "45" });
+            Assert.That(phase.bossPhaseSeconds, Is.EqualTo(45f));
+            Assert.That(phase.Any, Is.True);
+            Assert.That(phase.Describe(), Is.EqualTo("boss phase seconds 45"));
+            var badPhase = HellCaptureCheats.Parse(new[] { "-hellBossPhaseSeconds", "-3" });
+            Assert.That(badPhase.bossPhaseSeconds, Is.EqualTo(0f));
+            Assert.That(badPhase.problems.Count, Is.EqualTo(1));
+            Assert.That(none.bossPhaseSeconds, Is.EqualTo(0f));
+
             var tiny = HellCaptureCheats.Parse(new[] { "-hellBossHealth", "0.001" });
             Assert.That(tiny.bossHealth, Is.EqualTo(HellCaptureCheats.MinBossHealth));
 

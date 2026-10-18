@@ -1006,9 +1006,9 @@ namespace JamKit.SkylineRepo
             return _anchorTarget;
         }
 
-        void TriggerOn(Func<Collider, bool> isTarget)
+        void TriggerOn(Func<Collider, bool> isTarget, float range = FightRange + 5f)
         {
-            if (!Physics.Raycast(_player.EyePosition, _player.AimDirection, out var hit, FightRange + 5f, SkylineShooting.ShotMask, QueryTriggerInteraction.Ignore)) return;
+            if (!Physics.Raycast(_player.EyePosition, _player.AimDirection, out var hit, range, SkylineShooting.ShotMask, QueryTriggerInteraction.Ignore)) return;
             if (!isTarget(hit.collider)) return;
             if (Time.time - _lastFire < _nextFireGap) { _fireHeldOnly = true; return; }
             _fire = true;
@@ -1105,12 +1105,120 @@ namespace JamKit.SkylineRepo
         /// look round when there is none. It never walks off: the arena's ground is not in the room data.</summary>
         void TickFreeFight()
         {
-            PickTarget(false);
             if (_player == null) return;
+            if (HellVesperFight.Active && HellVesperFight.Instance != null && TickVesper(HellVesperFight.Instance)) return;
+            PickTarget(false);
             StrafeAround(_player.transform.position, 0.1f);
             if (_target == null) LookAround();
             else TickAmmo(true);
             _action = "free fight";
+        }
+
+        // ------------------------------------------------------------------ Vesper
+
+        // where it stands to shoot her (her arena's own frame, the entry at 0,0,-4): walkway spots round the pit, in a chain it
+        // only walks along (a straight line between neighbours never crosses the lava): west back, west corner, south, east
+        // corner, east back (and on to the north walkway on both sides, for her throne)
+        static readonly Vector3[] VesperSpots =
+        {
+            new Vector3(-20f, 0f, 50f), new Vector3(-20f, 0f, 30f), new Vector3(-19f, 0f, 9f), new Vector3(0f, 0f, 7f),
+            new Vector3(17f, 0f, 9f), new Vector3(17f, 0f, 30f), new Vector3(17f, 0f, 50f),
+        };
+        const float VesperRange = 75f;
+        int _vesperSpot = 3, _vesperDir = 1;
+        float _vesperBlocked, _vesperSpreadUntil;
+        Vector3 _vesperSpread;
+        bool _vesperSeen;
+
+        Vector3 VesperSpot(HellVesperFight f, int i)
+        {
+            var e = f.Def.entry;
+            return new Vector3(e.X, e.Y, e.Z) + VesperSpots[i] - new Vector3(0f, 0f, -4f);
+        }
+
+        /// <summary>The Vesper fight (her body is not a bot, so the free fight never aimed at her): walk into the arena to a
+        /// walkway spot, track her with the human hand (a beat on first sight, capped turn, overshoot), aim at her heart with
+        /// a little spread (so some shots land on the body), fire only when the view's ray is on her, and move along the
+        /// walkway when she is out of sight for a while. An imp close by is fought first.</summary>
+        bool TickVesper(HellVesperFight f)
+        {
+            var body = f.Body;
+            if (f.Def == null || body == null) return false;
+            var eye = _player.EyePosition;
+            // an imp in the face first
+            PickTarget(false);
+            if (_target != null && Vector3.Distance(_target.Center, eye) < 12f)
+            {
+                StrafeAround(VesperSpot(f, _vesperSpot), 1.5f);
+                _action = "vesper: imp";
+                return true;
+            }
+            _target = null;
+            _wantAimPoint = false;
+
+            var spot = VesperSpot(f, _vesperSpot);
+            var feet = _player.transform.position;
+            if (Flat(spot - feet).magnitude > 2.5f) MoveTo(feet, spot, false);
+            else StrafeAround(spot, 1.5f);
+
+            bool visible = body.gameObject.activeInHierarchy && f.Fight != null && f.Fight.Visible;
+            var heart = body.Center;
+            bool inRange = Vector3.Distance(eye, heart) <= GunRange() * 0.95f;
+            bool clear = visible && ClearShotAt(eye, heart, body);
+            if (visible)
+            {
+                if (!_vesperSeen) { _hand.React(Range(0.18f, 0.32f)); _vesperSeen = true; }
+                if (Time.time >= _vesperSpreadUntil)
+                {
+                    _vesperSpread = UnityEngine.Random.insideUnitSphere * 0.32f + Vector3.down * Range(0f, 0.35f);
+                    _vesperSpreadUntil = Time.time + Range(0.3f, 0.6f);
+                }
+                _wantAimPoint = true;
+                _aimPoint = heart + _vesperSpread;
+                if (body.Alive && clear && inRange)
+                {
+                    TriggerOn(c => c.TryGetComponent<SkylineHitZone>(out var z) && z.owner == body, VesperRange);
+                    _action = "vesper: shoot";
+                }
+                else _action = "vesper: track";
+            }
+            else
+            {
+                _vesperSeen = false;
+                _action = "vesper: wait";
+                LookAround();
+            }
+            // out of sight (a pillar, the gallery's lip, her darkness) or out of the gun's reach for a while: the next spot
+            // along the walkway, toward her when that is nearer
+            _vesperBlocked = clear && inRange ? 0f : _vesperBlocked + Time.deltaTime;
+            if (_vesperBlocked > 3f)
+            {
+                _vesperBlocked = 0f;
+                int a = _vesperSpot - 1, c = _vesperSpot + 1;
+                float da = a >= 0 ? Vector3.Distance(VesperSpot(f, a), heart) : float.MaxValue;
+                float dc = c < VesperSpots.Length ? Vector3.Distance(VesperSpot(f, c), heart) : float.MaxValue;
+                if (!inRange && Mathf.Min(da, dc) < float.MaxValue) _vesperDir = da < dc ? -1 : 1;
+                else if (_vesperSpot + _vesperDir < 0 || _vesperSpot + _vesperDir >= VesperSpots.Length) _vesperDir = -_vesperDir;
+                _vesperSpot = Mathf.Clamp(_vesperSpot + _vesperDir, 0, VesperSpots.Length - 1);
+            }
+            TickAmmo(clear);
+            return true;
+        }
+
+        float GunRange()
+        {
+            var lo = _player.Loadout;
+            if (lo == null) return 40f;
+            var g = lo.Active;
+            return g != null && g.Def != null ? g.Def.range : 40f;
+        }
+
+        bool ClearShotAt(Vector3 eye, Vector3 at, MonoBehaviour owner)
+        {
+            var to = at - eye;
+            if (to.magnitude > VesperRange) return false;
+            if (!Physics.Raycast(eye, to.normalized, out var hit, to.magnitude + 1f, SkylineShooting.ShotMask, QueryTriggerInteraction.Ignore)) return false;
+            return hit.collider.TryGetComponent<SkylineHitZone>(out var z) && z.owner == owner;
         }
 
         // ------------------------------------------------------------------ the hands' frame

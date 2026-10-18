@@ -143,20 +143,23 @@ namespace JamKit.Skyline
     /// decision and the escape for trailer footage. They exist only on the command line (no menu, no save):
     /// <c>-hellInvulnerable</c> (no death: a hit that would wreck you leaves you whole; a sink or a fall goes back to the last
     /// safe spot, The Collapse included, without a restart; the hit effects still play) and <c>-hellBossHealth 0..1</c>
-    /// (Vesper's health and phase thresholds scaled, e.g. 0.35).
+    /// (Vesper's health and phase thresholds scaled, e.g. 0.35) and <c>-hellBossPhaseSeconds s</c> (a phase of hers that lasts
+    /// longer than that many seconds is forced over: she shifts to the next phase, or kneels in the last).
     /// </summary>
     public sealed class HellCaptureCheats
     {
-        public const string InvulnerableSwitch = "-hellInvulnerable", BossHealthSwitch = "-hellBossHealth";
+        public const string InvulnerableSwitch = "-hellInvulnerable", BossHealthSwitch = "-hellBossHealth", BossPhaseSecondsSwitch = "-hellBossPhaseSeconds";
         /// <summary>The smallest boss scale (a phase still has some health to take off).</summary>
         public const float MinBossHealth = 0.05f;
 
         public bool invulnerable;
         /// <summary>Vesper's health scale (1: as tuned).</summary>
         public float bossHealth = 1f;
+        /// <summary>Seconds a phase of Vesper's may last before it is forced over (0: never).</summary>
+        public float bossPhaseSeconds;
         public readonly List<string> problems = new List<string>();
 
-        public bool Any => invulnerable || bossHealth < 1f;
+        public bool Any => invulnerable || bossHealth < 1f || bossPhaseSeconds > 0f;
 
         static HellCaptureCheats _current;
         /// <summary>This launch's cheats (read once from the process's command line).</summary>
@@ -178,6 +181,13 @@ namespace JamKit.Skyline
                         r.bossHealth = Math.Max(MinBossHealth, k);
                     else r.problems.Add(BossHealthSwitch + " " + v + ": a number above 0, up to 1");
                 }
+                else if (args[i] == BossPhaseSecondsSwitch)
+                {
+                    string v = i + 1 < args.Length ? (args[i + 1] ?? "").Trim() : "";
+                    if (float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float sec) && sec > 0f && sec <= 3600f)
+                        r.bossPhaseSeconds = sec;
+                    else r.problems.Add(BossPhaseSecondsSwitch + " " + v + ": seconds above 0, up to 3600");
+                }
             }
             return r;
         }
@@ -197,6 +207,7 @@ namespace JamKit.Skyline
             var parts = new List<string>();
             if (invulnerable) parts.Add("invulnerable");
             if (bossHealth < 1f) parts.Add("boss health " + bossHealth.ToString("0.###", CultureInfo.InvariantCulture));
+            if (bossPhaseSeconds > 0f) parts.Add("boss phase seconds " + bossPhaseSeconds.ToString("0.###", CultureInfo.InvariantCulture));
             foreach (var p in problems) parts.Add("ignored " + p);
             return parts.Count == 0 ? "none" : string.Join(", ", parts);
         }

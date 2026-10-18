@@ -147,6 +147,7 @@ exist **only on the command line** (no menu, no save, nothing in normal play), a
 |---|---|
 | `-hellInvulnerable` | No death. A hit that would wreck you leaves you whole (the armour refills); every hit still plays its hurt sound, knock, vignette and plating flash, so the footage reads. A sink in lava or a fall goes back to the last safe spot without a restart, The Collapse (and the escape) included; only a second sink within 1.5 s there (the safe spot fell too) restarts it as usual. Vesper's arena already sends you back to safety. |
 | `-hellBossHealth 0..1` | Scales Vesper's health and both phase thresholds together (e.g. `0.35`: 560 instead of 1600), so the three phases pass quickly. Values under 0.05 count as 0.05. The log adds `HELL_CAPTURE cheats: Vesper's health x0.35 (560)` when the fight starts. |
+| `-hellBossPhaseSeconds s` | A safety net: a phase of Vesper's that lasts longer than `s` seconds is forced over (she shifts to the next phase, or kneels in the last), so a capture always reaches the ending even if the shots miss. The log adds `HELL_CAPTURE cheats: Vesper's phases forced over after s s each` when the fight starts and `... phase N forced over` each time it acts. |
 
 **To the credits:** with `-hellAutopilot` and `-hellChapter 4` the autopilot strafes and shoots in the fight, holds fire
 while she kneels (the ending director makes the `-hellEnding spare|kill` choice by itself after 2 s), then **plays the

@@ -55,17 +55,35 @@ namespace JamKit.SkylineRepo
         void BuildRoom(HellRoom room)
         {
             var def = HellWorld.Room(room.floor, room.kind);
-            var L = lookFor(room.floor);
             var palls = new List<Bounds>();
             foreach (var r in room.GetComponentsInChildren<Renderer>(true))
                 if (r.name == "Shadow Pall") palls.Add(r.bounds);
+            BuildRoom(room.transform, def, room.floor, palls, 4f, null);
+        }
+
+        /// <summary>Vesper's arena (built at run time when her fight begins, after the scene's rooms got their rig): the same
+        /// lava lights and braziers as a room, kept clear of <paramref name="palls"/> (her dark zones). Lava lights may be a
+        /// little shorter than a room's (her pit is crowded with dark pillars). Returns the lava lights made; the braziers'
+        /// lights come back in <paramref name="braziersMade"/> (Nightfall puts them out).</summary>
+        public int BuildArena(Transform root, HellRoomDef def, int floor, List<Bounds> palls, out List<Light> braziersMade)
+        {
+            braziersMade = new List<Light>();
+            int before = lavaLights, bBefore = braziers;
+            BuildRoom(root, def, floor, palls, 2.5f, braziersMade);
+            Debug.Log("HELL_LIGHT arena rig: " + (lavaLights - before) + " lava lights, " + (braziers - bBefore) + " braziers");
+            return lavaLights - before;
+        }
+
+        void BuildRoom(Transform roomT, HellRoomDef def, int floorIndex, List<Bounds> palls, float minLavaRange, List<Light> braziersMade)
+        {
+            var L = lookFor(floorIndex);
 
             // the builder's lava lights: gone (see the summary)
-            var fire = room.transform.Find("Fire Lights");
-            if (fire == null) { fire = new GameObject("Fire Lights").transform; fire.SetParent(room.transform, false); }
+            var fire = roomT.Find("Fire Lights");
+            if (fire == null) { fire = new GameObject("Fire Lights").transform; fire.SetParent(roomT, false); }
             for (int i = fire.childCount - 1; i >= 0; i--) { Destroy(fire.GetChild(i).gameObject); removed++; }
 
-            var lava = room.transform.Find("Lava");
+            var lava = roomT.Find("Lava");
             if (lava != null)
                 foreach (Transform t in lava)
                 {
@@ -79,17 +97,17 @@ namespace JamKit.SkylineRepo
                         {
                             var p = new Vector3(b.min.x + sx * (i + 0.5f) / nx, b.max.y + L.lavaHeight, b.min.z + sz * (j + 0.5f) / nz);
                             float range = ClearOf(p, L.lavaRange, palls);
-                            if (range < 4f) continue;
+                            if (range < minLavaRange) continue;
                             var l = MakeLight(fire, "Lava Light", p, L.lavaLight, L.lavaIntensity * Mathf.Lerp(0.6f, 1f, range / L.lavaRange), range);
                             _flames.Add(new Flame { light = l, baseIntensity = l.intensity, amp = L.lavaFlicker, speed = 0.9f, seed = Random.value * 100f });
                             lavaLights++;
                         }
-                    Haze(t, b, L, room.floor);
+                    Haze(t, b, L, floorIndex);
                 }
 
             // braziers on the tall walls' inner faces and on the rim's parapets
             var group = new GameObject("Braziers").transform;
-            group.SetParent(room.transform, false);
+            group.SetParent(roomT, false);
             var c = (V(def.bounds.min) + V(def.bounds.max)) * 0.5f;
             foreach (var s in def.solids)
             {
@@ -113,7 +131,8 @@ namespace JamKit.SkylineRepo
                     at += normal * 0.45f;
                     float range = ClearOf(at, L.brazierRange, palls);
                     if (range < 6f) continue;
-                    Brazier(group, at, normal, L, range);
+                    var bl = Brazier(group, at, normal, L, range);
+                    if (braziersMade != null && bl != null) braziersMade.Add(bl);
                     braziers++;
                 }
             }
@@ -153,7 +172,7 @@ namespace JamKit.SkylineRepo
             return m;
         }
 
-        void Brazier(Transform group, Vector3 at, Vector3 normal, HellFloorLook L, float range)
+        Light Brazier(Transform group, Vector3 at, Vector3 normal, HellFloorLook L, float range)
         {
             var root = new GameObject("Brazier").transform;
             root.SetParent(group, false);
@@ -173,6 +192,7 @@ namespace JamKit.SkylineRepo
             l.transform.SetParent(root, true);
             _braziers.Add(l);
             _flames.Add(new Flame { light = l, baseIntensity = l.intensity, amp = L.brazierFlicker, speed = 2.6f, seed = Random.value * 100f, flame = flame.transform, flameScale = flame.transform.localScale });
+            return l;
         }
 
         static GameObject Part(PrimitiveType t, Transform parent, Vector3 local, Vector3 scale, Material m)
