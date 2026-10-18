@@ -194,5 +194,5 @@ Credit lines (CC BY: required; CC0: thanks):
 - "Ambient F Sharp Minor Ethereal Choir Pad 1" by deadrobotmusic (https://freesound.org/people/deadrobotmusic/sounds/808032/), CC0 1.0
 - "Sacred Rune Lock 02 - Arcane Seal Activation" by TommasoMotteran (https://freesound.org/people/TommasoMotteran/sounds/854670/) licensed under CC BY 4.0
 
-Music: none yet (the creator composes it with us).
+Music: original, composed for this game with the creator, rendered from MIDI with the GeneralUser GS and SGM SoundFonts via FluidSynth (no recordings from other games).
 <!-- HELL-AUDIO:END -->
