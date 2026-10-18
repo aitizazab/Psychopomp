@@ -110,6 +110,7 @@ namespace JamKit.SkylineRepo
             HellRunEvents.JobFailed += OnJobFailed;
             HellRunEvents.EndingReached += OnEndingReached;
             HellRunEvents.RunStarted += OnRunStarted;
+            HellRunEvents.OpeningPage += OnOpeningPage;
         }
 
         void OnDestroy()
@@ -122,6 +123,7 @@ namespace JamKit.SkylineRepo
             HellRunEvents.JobFailed -= OnJobFailed;
             HellRunEvents.EndingReached -= OnEndingReached;
             HellRunEvents.RunStarted -= OnRunStarted;
+            HellRunEvents.OpeningPage -= OnOpeningPage;
         }
 
         /// <summary>(Re)reads the manifest: the composer flips cues from pending to ready as the files land.</summary>
@@ -188,6 +190,58 @@ namespace JamKit.SkylineRepo
         void OnJobFailed(string id) => Sting(HellMusicManifest.JobFailed);
         void OnEndingReached(string id) { _endingId = id; }
 
+        string _openingPart;
+
+        /// <summary>The opening's comic turned a page (docs/HELL-COMIC.md): its music part (sister, hall, wait then idea). A
+        /// loop part crossfades in; the "wait" stinger stops the loop dead and the "idea" loop follows it when it ends.</summary>
+        void OnOpeningPage(int page)
+        {
+            if (Scene != HellMusicScene.Opening) return;
+            string part = HellComics.OpeningMusic(page);
+            var cue = Manifest.Ready(HellMusicManifest.Opening);
+            if (part == null || cue == null || part == _openingPart) return;
+            if (page == 0 && _openingPart == null) { _openingPart = part; return; }   // the scene's bed is already its first loop (sister)
+            _openingPart = part;
+            double dsp = AudioSettings.dspTime;
+            var p = cue.Part(part);
+            if (p == null || p.resource == null) return;
+            if (p.kind == "stinger")
+            {
+                var clip = Resources.Load<AudioClip>(p.resource);
+                if (clip == null) return;
+                FadeOutVoice(_bedA, dsp, 0.03);
+                FadeOutVoice(_bedB, dsp, 0.03);
+                PlayStingerAt(clip, 0, dsp + StartLead);
+                var idea = cue.Part(HellComics.MusicIdea);
+                if (idea != null && idea.resource != null) PlayBedResource(idea.resource, dsp + StartLead + clip.length, 0.05, false);
+                return;
+            }
+            PlayBedResource(p.resource, dsp + StartLead, SceneFade);
+        }
+
+        /// <summary>A looping bed from a resource at <paramref name="at"/> (dsp), crossfading from the one that plays.</summary>
+        void PlayBedResource(string res, double at, double fade, bool fadeOthers = true)
+        {
+            var clip = Resources.Load<AudioClip>(res);
+            if (clip == null) return;
+            _bedCue = HellMusicManifest.Opening + ":" + res;
+            if (fadeOthers)
+            {
+                FadeOutVoice(_bedA, at, fade);
+                FadeOutVoice(_bedB, at, fade);
+            }
+            var v = _bedAOn ? _bedB : _bedA;
+            _bedAOn = !_bedAOn;
+            v.src.Stop();
+            v.src.clip = clip;
+            v.src.loop = true;
+            v.src.timeSamples = 0;
+            v.src.PlayScheduled(at);
+            v.playing = true; v.stopAt = -1;
+            v.fade = HellMusicFade.Hold(0f);
+            v.fade.Retarget(1f, at, fade);
+        }
+
         /// <summary>Plays a stinger cue now (skipped while pending); the loops duck by its duck_db for its length.</summary>
         public void Sting(string cueId)
         {
@@ -251,6 +305,7 @@ namespace JamKit.SkylineRepo
             var from = Scene;
             Scene = scene;
             if (scene == HellMusicScene.Title && from != HellMusicScene.Silence) LoadManifest();
+            if (scene == HellMusicScene.Opening) _openingPart = null;
             if (from == HellMusicScene.Opening && scene == HellMusicScene.InRun && FallIntoInRun(dsp)) return;
             string cue = HellMusicStageRules.Resolve(Manifest, HellMusicStageRules.CueFor(scene, _endingId));
 

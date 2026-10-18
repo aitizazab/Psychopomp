@@ -88,9 +88,11 @@ namespace JamKit.SkylineRepo
             _text.SetWrap(true, TextAnchor.MiddleCenter);
             _text.style.maxWidth = 1300f;
             _column.Add(_text);
-            _title = new KeylinedLabel(96f, 5f, Display);
+            _title = new KeylinedLabel(72f, 4f, Display);   // wraps inside the column (the ending's name clipped at 96 px, one line)
             _title.SetColor(Ember);
-            foreach (var ch in _title.Children()) ch.style.letterSpacing = 10f;
+            _title.SetWrap(true, TextAnchor.MiddleCenter);
+            _title.style.maxWidth = 1300f;
+            foreach (var ch in _title.Children()) { ch.style.letterSpacing = 6f; ch.style.maxWidth = 1300f; }
             _column.Add(_title);
             Apply();
         }

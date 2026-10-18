@@ -59,7 +59,7 @@ namespace JamKit.SkylineRepo
         Vector3 _kneelAt, _decisionSpot;
         float _decisionYaw;
         bool _killed, _scripted, _autoSpare, _skipSweep, _damned;
-        float _phaseT, _nextLineAt, _rumbleAt, _cardUntil, _cardShownAt;
+        float _phaseT, _nextLineAt, _rumbleAt, _cardShownAt;
         readonly Queue<string> _lines = new Queue<string>();
         HellRoom _room;
         HellSoulPickup _soul;
@@ -69,8 +69,7 @@ namespace JamKit.SkylineRepo
         GameObject _lantern, _lanternVesper, _lanternSister;
         Light _lanternLight;
         string _endingId;
-        string[] _cardKeys;
-        int _cardIndex, _escapeTries;
+        int _escapeTries;
         AudioSource _voice;
         double _lastPad = -1, _lastKbm;
         bool _subscribed;
@@ -672,48 +671,29 @@ namespace JamKit.SkylineRepo
             if (hour != null) hour.Stop();
             _endingId = HellHourEndings.Pick(_killed, HellJobs.OfferedCount, HellJobs.DoneCount, HellJobs.AssumedErrands, _damned,
                 hour != null ? hour.Left : float.PositiveInfinity);
-            _cardKeys = HellHourEndings.Sequence(_endingId);
-            _cardIndex = -1;
+            _cardShownAt = Time.unscaledTime;
             _phase = Phase.Cards;
             Debug.Log("HELL_ENDING ending " + _endingId + " (" + (_killed ? "killed" : "spared") + ", jobs " + HellJobs.DoneCount + "/" + HellJobs.OfferedCount
                 + (HellJobs.AssumedErrands.HasValue ? ", errands assumed " + (HellJobs.AssumedErrands.Value ? "yes" : "no")
                     : HellJobs.Favoured ? ", favoured" : "") + ")");
-            NextCard();
+            // the ending as a comic flip-through (docs/HELL-COMIC.md): Baja's lines in balloons, the epilogue as a caption,
+            // the ending's name as a splash that fits the screen; then the credits, the stats, the title (Finish)
+            HellComicPlayer.Play(HellComics.Ending(_endingId), Finish, false);
         }
 
         void TickCards()
         {
-            if (Time.unscaledTime >= _cardUntil || (Time.unscaledTime - _cardShownAt > 0.5f && SkipPressed())) NextCard();
-        }
-
-        void NextCard()
-        {
-            _cardIndex++;
-            _cardShownAt = Time.unscaledTime;
-            float hold = _scripted ? 0.2f : 1f;
-            if (_cardIndex < _cardKeys.Length)
+            // the comic player runs the ending's pages and calls Finish; this only guards a comic that went missing
+            if (!HellComicPlayer.Playing && Time.unscaledTime - _cardShownAt > 1f && _phase == Phase.Cards)
             {
-                var line = HellEndingLines.Get(_cardKeys[_cardIndex]);
-                float clip = PlayVoice(line);
-                _cards.Show(HellEndingLines.Display(line.speaker), line.text);
-                if (!line.Voiced) SkylineSounds.PlayViewmodel(HellEndingCues.Card);
-                _cardUntil = Time.unscaledTime + (_scripted ? 0.3f : HellEndingLines.Seconds(line, clip) + hold);
-                Debug.Log("HELL_ENDING card " + line.key);
-                return;
+                Debug.LogWarning("HELL_ENDING no comic playing: on to the credits");
+                Finish();
             }
-            if (_cardIndex == _cardKeys.Length)
-            {
-                HushVoice();
-                _cards.ShowTitle(HellEndings.Title(_endingId));
-                SkylineSounds.PlayViewmodel(HellEndingCues.Card);
-                _cardUntil = Time.unscaledTime + (_scripted ? 0.3f : 3.2f);
-                return;
-            }
-            Finish();
         }
 
         void Finish()
         {
+            if (_phase != Phase.Cards) return;
             _phase = Phase.Done;
             HushVoice();
             SkylineDeviceInput.Paused = false;
