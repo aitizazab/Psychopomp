@@ -34,10 +34,14 @@ namespace JamKit.SkylineRepo
         }
 
         AudioSource _voice;
+        /// <summary>One source per speaker for the voiced cards and barks (<see cref="PlayVoice"/>): a new line of a speaker
+        /// stops that speaker's last one.</summary>
+        readonly System.Collections.Generic.Dictionary<string, AudioSource> _speakerVoice = new System.Collections.Generic.Dictionary<string, AudioSource>();
+        readonly System.Collections.Generic.Dictionary<string, float> _speakerUntil = new System.Collections.Generic.Dictionary<string, float>();
         VisualElement _hintBox, _barTop, _barBottom;
         KeylinedLabel _hint;
         float _letterbox, _letterboxTarget, _voiceUntil;
-        string _hintText = "";
+        string _hintText = "", _voiceSpeaker = "";
 
         void Awake()
         {
@@ -65,6 +69,8 @@ namespace JamKit.SkylineRepo
             float seconds = HellLines.Seconds(line.text, clip != null ? clip.length : 0f);
             if (clip != null)
             {
+                if (_speakerVoice.TryGetValue(line.speaker, out var other) && other != null) other.Stop();
+                _voiceSpeaker = line.speaker;
                 _voice.Stop();
                 _voice.clip = clip;
                 _voice.volume = VoiceGain();
@@ -78,9 +84,36 @@ namespace JamKit.SkylineRepo
             return seconds;
         }
 
+        /// <summary>Plays the voice clip <c>hell-voice/&lt;speaker&gt;/&lt;key&gt;</c> with no subtitle (the caller shows its own
+        /// text: the job cards, Vesper's fight barks). Stops the speaker's previous line first (here and in <see cref="Say"/>).
+        /// A missing clip plays nothing. Returns the clip's length (0 when there is none).</summary>
+        public float PlayVoice(string speaker, string key)
+        {
+            var clip = LoadVoice(speaker, key);
+            if (clip == null) return 0f;
+            if (!_speakerVoice.TryGetValue(speaker, out var src) || src == null)
+            {
+                src = gameObject.AddComponent<AudioSource>();
+                src.playOnAwake = false;
+                src.spatialBlend = 0f;
+                src.ignoreListenerPause = false;
+                _speakerVoice[speaker] = src;
+            }
+            if (_voice != null && _voice.isPlaying && _voiceSpeaker == speaker) _voice.Stop();
+            src.Stop();
+            src.clip = clip;
+            src.volume = VoiceGain();
+            src.Play();
+            _speakerUntil[speaker] = Time.unscaledTime + clip.length;
+            SkylineSounds.NoteSpeech(src, clip.length);
+            Debug.Log("HELL_VOICE " + speaker + "/" + key);
+            return clip.length;
+        }
+
         /// <summary>Stops a voice line now (its subtitle too).</summary>
         public void Hush()
         {
+            foreach (var kv in _speakerVoice) if (kv.Value != null) kv.Value.Stop();
             if (_voice != null) _voice.Stop();
             if (SkylineHud.Instance != null) SkylineHud.Instance.EndSay();
         }
@@ -150,6 +183,13 @@ namespace JamKit.SkylineRepo
             {
                 _voice.volume = VoiceGain();
                 if (Time.unscaledTime > _voiceUntil + 0.5f) _voice.Stop();
+            }
+            foreach (var kv in _speakerVoice)
+            {
+                var src = kv.Value;
+                if (src == null || !src.isPlaying) continue;
+                src.volume = VoiceGain();
+                if (_speakerUntil.TryGetValue(kv.Key, out var until) && Time.unscaledTime > until + 0.5f) src.Stop();
             }
             if (_hintBox != null)
             {

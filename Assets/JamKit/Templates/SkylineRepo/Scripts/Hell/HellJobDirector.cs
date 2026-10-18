@@ -120,6 +120,7 @@ namespace JamKit.SkylineRepo
             _lineText = HellJobLineText.Of(def.objective);
             _nearShown = false;
             ShowCard("BAJA", def.briefing, def.name.ToUpperInvariant() + ":  " + def.objective, CardSeconds);
+            Voice(def, "brief");
             Debug.Log("HELL_JOB offered " + def.id + " in " + room.Def.name);
         }
 
@@ -151,10 +152,17 @@ namespace JamKit.SkylineRepo
             if ((ev & HellJobEvent.Done) != 0)
             {
                 string paid = HellJobs.RaiseDone(def);
-                if (paid != null) ShowResult("DONE:  " + def.name.ToUpperInvariant(), def.doneLine, paid);
+                if (paid != null)
+                {
+                    ShowResult("DONE:  " + def.name.ToUpperInvariant(), def.doneLine, paid);
+                    Voice(def, "done");
+                }
             }
             else if ((ev & HellJobEvent.Failed) != 0)
+            {
                 ShowResult("FAILED:  " + def.name.ToUpperInvariant(), def.failLine, Fail(_site.Job.State.failReason));
+                Voice(def, "fail");
+            }
             else if ((ev & HellJobEvent.Alerted) != 0) Flash(def.verb == HellJobVerb.Destroy ? "HE'S FILING IT!" : "HE'S SEEN YOU!");
             else if ((ev & HellJobEvent.Undone) != 0) Flash("HE TOOK THE SECONDS BACK");
             else if ((ev & HellJobEvent.Reforged) != 0) Flash("THE SMITH RE-FORGED A CHAIN");
@@ -166,6 +174,22 @@ namespace JamKit.SkylineRepo
         {
             if (job.Status == HellJobStatus.Failed) HellJobs.RaiseFailed(job.def, job.State.failReason);
             else if (job.Status == HellJobStatus.Done) HellJobs.RaiseDone(job.def);
+        }
+
+        /// <summary>Baja speaks the card's line: <c>hell-voice/god/job-&lt;id&gt;-&lt;part&gt;</c> (docs/HELL-VOICE-SCRIPT.md),
+        /// when the file exists (else the card stays text only). A new line stops her previous one.</summary>
+        static void Voice(HellJobDef def, string part) =>
+            HellLinePlayer.Instance.PlayVoice(HellSpeakers.Death, "job-" + VoiceId(def.id) + "-" + part);
+
+        /// <summary>The job's id as the voice files name it (the script's short ids).</summary>
+        static string VoiceId(string id)
+        {
+            switch (id)
+            {
+                case HellJobCatalog.OverdueSoul: return "overdue";
+                case HellJobCatalog.SecondsThief: return "thief";
+                default: return id.Replace('_', '-');
+            }
         }
 
         static string Fail(string why)

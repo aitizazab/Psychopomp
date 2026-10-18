@@ -340,7 +340,10 @@ namespace JamKit.SkylineRepo
                 case VesperEventKind.Line:
                     string text = VesperLines.Text(e.line);
                     Debug.Log("HELL_VESPER line " + e.line + ": " + text);
-                    if (SkylineHud.Instance != null) SkylineHud.Instance.Subtitles.Say("VESPER", text, false, Mathf.Max(3f, text.Length / 14f));
+                    // her voice (hell-voice/vesper/boss-<id>, docs/HELL-VOICE-SCRIPT.md) when the file exists, else text only;
+                    // the fight's own cooldowns pace the lines and a new one stops her last
+                    float voiced = HellLinePlayer.Instance.PlayVoice(HellSpeakers.Vesper, "boss-" + e.line);
+                    if (SkylineHud.Instance != null) SkylineHud.Instance.Subtitles.Say("VESPER", text, false, Mathf.Max(3f, text.Length / 14f, voiced + 0.3f));
                     break;
                 case VesperEventKind.PhaseBegan:
                     Debug.Log("HELL_VESPER phase " + e.index);

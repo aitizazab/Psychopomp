@@ -409,7 +409,9 @@ centuries-tired.
 - Voice files: `Resources/SkylineAudio/hell-voice/god/<file>.wav` and `.../vesper/<file>.wav`, where `<file>` is the
   key with dots turned into dashes (`tut.shadowstep.1` -> `tut-shadowstep-1.wav`; `HellLinePlayer.LoadVoice` tries that).
 - Played with voice today: the opening comic (`open-*`), the tutorials (`tut.*`), Vesper's beats (`beat.vesper.*`),
-  the hour (`hour.*`), the decision/escape/endings. **Text only in code today:** the job briefings/results
-  (`HellJobDirector` shows cards) and Vesper's fight barks (`HellVesperFight` only subtitles `VesperLines`; the files
-  would be `vesper/boss-<id>.wav`). They need a `LoadVoice` call to be heard.
+  the hour (`hour.*`), the decision/escape/endings, and (since 2026-10-18) the job briefings/results
+  (`HellJobDirector` plays `god/job-<id>-brief|done|fail.wav` with its cards; the ids `overdue_soul` and
+  `seconds_thief` are `overdue` and `thief`) and Vesper's fight barks (`HellVesperFight` plays `vesper/boss-<id>.wav`),
+  through `HellLinePlayer.PlayVoice` (Voices volume; a new line stops the same speaker's last one). A missing file
+  stays text only.
 - Dropped from the old script (not in the code): `death-01..05`, `sting`, `v1-god`, `tr-03`, the old `tut-*`, `v1/v2/v3-*`.
